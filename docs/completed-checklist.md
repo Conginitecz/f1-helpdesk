@@ -5,7 +5,53 @@ moving on" item from `docs/development-check-list.md`, marked passed or
 failed with a note on how it was verified.
 
 ---
----
+
+## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
+
+Built all four tables defined by the checklist's Milestone 4
+(`partners`, `inventory_items`, `configurations`,
+`status_change_requests`) via a TypeORM migration, `synchronize: false`,
+connection via `DATABASE_URL_UNPOOLED`.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | All remaining tables exist with correct columns and foreign keys | ✅ Passed | `psql "…\d"` on `partners`, `inventory_items`, `configurations`, `status_change_requests` after `migration:run` — every column/type/NOT NULL/default matches `development-docs.md` §1.5/§1.7/§1.8/§1.9. 13 FKs total. `partners.reference_id` correctly has **no FK** (polymorphic admin/partner, validated in app layer per the docs note). |
+| 2 | Can manually insert one vendor-shaped and one engineer-shaped partner row, both succeed | ✅ Passed | Via a throwaway `psql` script (with temp location + admin to satisfy FKs): vendor row (`partner_type_id=1`, `email`/`address` set, `skill_id`/`category_id`/`reference_type_id`/`reference_id` all NULL) and engineer row (`partner_type_id=2`, `reference_type_id=3`, `reference_id=<admin id>`, engineer-only fields NULL) both inserted; count=2. Confirms the nullable fields are genuinely nullable. |
+| 3 | *(verified, beyond checklist)* FKs enforce and rollback/re-run works | ✅ Passed | Bad `partner_type_id=999999` → rejected (`not present in table "master_data"`); bad `created_by_admin_id=999999` → rejected (`not present in table "admins"`); count stayed 2, cleanup left 0 rows. `migration:revert` → M4 tables 4→0 + migration record removed; `migration:run` → tables back to 4 + record re-inserted (id 5). |
+| 4 | Backend still starts cleanly on port 7676 | ✅ Passed | Fresh watch-mode compile: "Found 0 errors" → "Nest application successfully started" → "listening on port 7676" → "Database connection established: true"; `GET http://localhost:7676/` → HTTP 200. `grep -rn 'synchronize: true' backend/src/` → none. |
+
+### Summary of changes
+- **Entities**: `partners.entity.ts`, `inventory.entity.ts`,
+  `configurations.entity.ts`, `status-requests.entity.ts` (integer
+  identity PKs, snake_case columns, defaults per docs).
+- **Modules**: `partners.module.ts`, `inventory.module.ts`,
+  `configurations.module.ts`, `status-requests.module.ts` now call
+  `TypeOrmModule.forFeature([...])`.
+- **Migration**: `backend/src/migrations/1791479985733-M4PartnerInventory.ts`
+  (creates 4 tables + 13 FKs; `down()` drops them).
+- **Tables affected (Neon `neondb`)**: created `partners`,
+  `inventory_items`, `configurations`, `status_change_requests`;
+  `migrations` gained the M4 record.
+
+### Pending errors or issues
+- Transient during development: an initial migration emitted a camelCase
+  `referenceId` column on `partners`; fixed by re-generating so the
+  column is `reference_id`. The watch-mode compiler logged one
+  "File … not found" error when the first (bad) migration file was
+  deleted — it recovered on the next compile and the final boot is
+  clean.
+- Carried forward: backend installs still need `--legacy-peer-deps`; `pg`
+  SSL-mode future-deprecation warning is informational only.
+
+### Deviations from the docs
+- **Scope:** built all four M4 tables (partners, inventory_items,
+  configurations, status_change_requests) rather than only partners +
+  inventory, because the checklist's Milestone 4 requires "all remaining
+  tables" and lists all four. Confirmed with the user before building.
+- **None** on columns/types/constraints — §1.5–§1.9 followed exactly,
+  including the deliberate absence of a DB FK on `partners.reference_id`.
 
 ## Milestone 3 — Core Schema: Auth & Org Structure — Completed 2026-10-08
 

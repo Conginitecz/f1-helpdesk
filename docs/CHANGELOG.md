@@ -4,6 +4,62 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-08 — Milestone 4: Core Schema (Partners & Supporting Tables) via TypeORM migrations
+
+Scope note: despite an instruction to build "only" partners +
+inventory, the checklist's Milestone 4 defines **four** tables
+(partners, inventory_items, configurations, status_change_requests) and
+its check is "all remaining tables exist". User was asked and confirmed
+all four are in scope for M4, so all four were built.
+
+### Added
+- **Entities** (integer identity PKs, snake_case columns, all per
+  `development-docs.md` §1.5 / §1.7 / §1.8 / §1.9):
+  - `backend/src/partners/partners.entity.ts` — merged vendor/engineer
+    table. FKs: `partner_type_id`, `skill_id`, `category_id`,
+    `reference_type_id` → `master_data.id`; `created_by_admin_id` →
+    `admins.id` (NOT NULL). `reference_id` is a plain nullable INTEGER
+    with **no FK** (polymorphic admin/partner — validated in app layer,
+    per the docs note). Vendor-only fields (`email`, `address`,
+    `skill_id`, `category_id`, `reference_type_id`, `reference_id`) are
+    nullable.
+  - `backend/src/inventory/inventory.entity.ts` — FKs: `type_id`,
+    `category_id` → `master_data.id`; `location_id` → `locations.id`
+    (NOT NULL); `created_by_admin_id` → `admins.id`;
+    `created_by_super_admin_id` → `super_admins.id`.
+  - `backend/src/configurations/configurations.entity.ts` — unique
+    `config_key`; FK `updated_by_super_admin_id` → `super_admins.id`.
+  - `backend/src/status-requests/status-requests.entity.ts` — FKs
+    `requested_by_admin_id` → `admins.id` (NOT NULL),
+    `resolved_by_super_admin_id` → `super_admins.id`; `status` default
+    `'pending'`.
+- **Modules** register their entity via
+  `TypeOrmModule.forFeature([...])`: `partners.module.ts`,
+  `inventory.module.ts`, `configurations.module.ts`,
+  `status-requests.module.ts`.
+- **Migration**
+  `backend/src/migrations/1791479985733-M4PartnerInventory.ts` — creates
+  the 4 tables + 13 FKs; `down()` drops them. Generated with
+  `synchronize: false`, run via `npm run migration:run`.
+
+### Fixed
+- Migration initially emitted a camelCase `referenceId` column on
+  `partners`; re-generated so the column is `reference_id` (snake_case),
+  matching the docs.
+
+### Tables affected (Neon `neondb`)
+- Created: `partners`, `inventory_items`, `configurations`,
+  `status_change_requests`. `migrations` gained the M4 record.
+
+### Decisions
+- Build all four M4 tables (see scope note) — confirmed with user.
+- Keep `synchronize: false`; schema via migrations only (unchanged
+  policy).
+- No M5+ tables or functionality created (auth, controllers, services
+  out of scope here).
+
+---
+
 ## 2026-10-08 — Milestone 3: Core Schema (Auth & Org Structure) via TypeORM migrations
 
 ### Added
