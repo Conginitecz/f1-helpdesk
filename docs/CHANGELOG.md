@@ -4,6 +4,64 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 7: Super Admin Master Data & Configuration
+
+Added guarded super-admin endpoints for listing, creating, and relabeling
+master data, plus listing, creating, and updating configuration values.
+
+### Added
+- `backend/src/master-data/create-master-data.dto.ts` and
+  `update-master-data.dto.ts` — strict DTO validation, trimming, the approved
+  six-type allowlist, and a 255-character label limit.
+- `backend/src/master-data/master-data.controller.ts` and
+  `master-data.service.ts` — type filtering, stable ordering, duplicate checks,
+  label edits, and explicit responses containing only `master_data` columns.
+- `backend/src/configurations/create-configuration.dto.ts` and
+  `update-configuration.dto.ts` — non-empty string validation and strict
+  request whitelisting.
+- `backend/src/configurations/configurations.controller.ts` and
+  `configurations.service.ts` — GET, approved POST for new keys, and PATCH for
+  existing keys; updater IDs come from the JWT.
+
+### Modified
+- `backend/src/master-data/master-data.module.ts` and
+  `backend/src/configurations/configurations.module.ts` — register controllers,
+  services, and their entities with `TypeOrmModule.forFeature`.
+- `backend/src/configurations/configurations.entity.ts` — expose the existing
+  updater FK ID for explicit API serialization; no database column added.
+- `docs/completed-checklist.md` — Milestone 7 verification, deviations, and
+  retained test-data purge list.
+
+### Tables touched
+- Neon `master_data`: added test row ID 5, `TEST-M7-1791502495989`.
+- Neon `configurations`: added test row ID 1, key `TEST-M7-smoke-config`,
+  restored value `100`, updater super admin ID 1.
+- No schema changes or migrations; no other tables were modified.
+
+### Decisions
+- Used the six documented example master-data types as the allowlist; unknown
+  GET filters return `200 []`; duplicate `(type, text)` values are rejected
+  case-insensitively.
+- Master-data PATCH edits labels only. Its existing schema contains timestamps
+  but no actor-ID audit columns, so timestamps are maintained without adding
+  schema; this limitation was explicitly accepted.
+- Configuration keys were absent in the before snapshot. A separate
+  `POST /super-admin/config` was approved with `config_key`, `config_value`,
+  optional `description`, JWT-derived updater, and duplicate-key rejection.
+- Config values are non-empty strings as stored by the documented VARCHAR
+  column. DTO limits are 255 characters for keys/values and labels, and 500 for
+  descriptions because the schema itself declares unbounded VARCHAR columns.
+- The M6 admin password is not present in the repo or environment. Guard tests
+  used a locally signed short-lived admin-role token for the active M6 admin
+  ID 7; no admin password was changed.
+
+### Verification
+- Backend build passed; oxlint reported no errors and one pre-existing
+  `no-unused-vars` warning in `backend/src/auth/auth.service.ts`.
+- Live HTTP checks covered master data, configuration, validation, and guards;
+  detailed numbered results are in `docs/completed-checklist.md`.
+- Final backend restart on port 7676 logged `Database connection established: true`.
+
 ## 2026-10-08 — Milestone 4: Core Schema (Partners & Supporting Tables) via TypeORM migrations
 
 Scope note: despite an instruction to build "only" partners +

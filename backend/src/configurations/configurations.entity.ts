@@ -4,6 +4,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { SuperAdmin } from '../super-admins/super-admins.entity.js';
@@ -34,6 +35,9 @@ export class Configuration {
   @ManyToOne(() => SuperAdmin, { nullable: true })
   @JoinColumn({ name: 'updated_by_super_admin_id' })
   updatedBySuperAdmin: SuperAdmin | null;
+
+  @RelationId((configuration: Configuration) => configuration.updatedBySuperAdmin)
+  updatedBySuperAdminId: number | null;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
