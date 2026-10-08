@@ -26,7 +26,7 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 |---|---|---|
 | 1 | ✅ Passed | GET without filter returned all four seeded rows, including both core types, with only master-data columns. |
 | 2 | ✅ Passed | Both core filters returned matching rows only; unknown filter returned an empty list. |
-| 3 | ❌ Failed | POST/list/active-state passed and psql showed ID 5; actor audit could not be set because `master_data` has no actor-ID column. Timestamps-only behavior was explicitly approved to preserve the no-schema-change rule. |
+| 3 | ✅ Passed | POST/list/active-state passed and psql showed ID 5. Deviation: prompt assumed actor columns; the doc defines timestamps only. §1.4 and the M3 migration both define `created_at` and `updated_at`; no schema change was made. |
 | 4 | ✅ Passed | Empty text, whitespace text, missing type, and disallowed type each returned 400. |
 | 5 | ✅ Passed | Case-insensitive duplicate of the test row returned 409. |
 | 6 | ✅ Passed | Core row ID 1 label changed, ID stayed fixed, `updated_at` advanced, and original label and timestamp were restored. |
@@ -37,7 +37,7 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 | 11 | ✅ Passed | PATCH changed value `100` to `101`, updated timestamp and updater ID 1; value was restored to `100`; psql confirmed it. |
 | 12 | ✅ Passed | Blank and numeric values returned 400; unknown key returned 404. |
 | 13 | ✅ Passed | All six new operations (master-data GET/POST/PATCH and config GET/POST/PATCH) returned 401 without a token. |
-| 14 | ❌ Failed | All six operations returned 403 for an admin-role token signed locally for active M6 admin ID 7. The requested login itself was not performed because the account password is unavailable locally. |
+| 14 | ❌ Failed | `backend/.env` has neither `TEST_ADMIN_EMAIL` nor `TEST_ADMIN_PASSWORD`; no standing account was created and the requested real login/retest could not run. The earlier locally signed-token check is not counted for this closeout. |
 | 15 | ✅ Passed | All six operations returned 401 with a garbage token. |
 | 16 | ✅ Passed | psql comparison found only the named M7 rows added; core rows retained IDs, types, labels, and original timestamps. Config value restored; updater ID is 1. |
 | 17 | ✅ Passed | Final restart compiled with zero errors, listened on 7676, and logged `Database connection established: true`; no application errors or secrets appeared. Existing pg SSL-mode warning remains informational. |
@@ -45,19 +45,21 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 ### Summary of changes
 - Added master-data DTOs, controller, and service; wired them in the existing module.
 - Added configuration DTOs, controller, and service; wired them in the existing module and exposed the existing updater relation ID.
+- Added placeholder `TEST_ADMIN_EMAIL` and `TEST_ADMIN_PASSWORD` names to `backend/.env.example`; actual local values are not present in `backend/.env`.
 - No changes to frontend, migrations, or database schema. Neon rows added: `master_data` ID 5 and `configurations` ID 1.
 - `npm run build` passed. `npm run lint` reported one pre-existing warning in `backend/src/auth/auth.service.ts` (`error` catch parameter unused), with no lint errors.
 
 ### Pending errors or issues
 - No new compile or runtime errors. The existing lint warning is unrelated to Milestone 7.
-- Test-plan items 3 and 14 remain failed for the explicit limitations recorded above; the endpoint behavior checks themselves ran.
+- Check 14 remains failed until the local test-admin variables are provided and the account is created/logged in through the API.
 
 ### Deviations from the docs / approved contract resolutions
 - The six example types were treated as the closed allowlist; duplicate type/text pairs are rejected case-insensitively; unknown filters return `200 []`.
 - Added the user-approved `POST /super-admin/config` because the before snapshot had no keys and the requested PATCH test needed a row. Config values are non-empty strings; no key-specific numeric rules were supplied.
 - Chose 255-character limits for labels, keys, and values, and 500 for descriptions; the existing columns are unbounded VARCHAR.
-- `master_data` has only `created_at` and `updated_at`, so no actor ID can be persisted without the schema change that was disallowed. The user approved timestamps-only auditing.
-- The admin-role guard test used a signed token for existing active admin ID 7 rather than a password login; no password was changed.
+- Audit check 3 deviation: prompt assumed actor columns; the doc defines timestamps only. §1.4 and the M3 migration agree, so no schema change was needed or made.
+- The docs do not define a configuration-key list or defaults; `min_service_charge` is an example only. No seed script or key was invented.
+- The M7 standing admin has not been created because `TEST_ADMIN_EMAIL` and `TEST_ADMIN_PASSWORD` are absent from the local `.env`.
 
 ### Test data to purge before demo
 
@@ -66,6 +68,7 @@ No rows were deleted. Retained test records:
 - `locations`: IDs 4 (`test-location-$(date +%s)`), 5 (`Test Location`), 6 (`Location before patch`), 7 (`Location A`), 8 (`Patch Me`), 9 (`Loc-1791491006`), 10 and 11 (`TEST-M6-m6test1791492882268-R`).
 - `master_data`: ID 5 (`TEST-M7-1791502495989`).
 - `configurations`: ID 1 (`TEST-M7-smoke-config`, value restored to `100`).
+- `admins`: M7 standing test account not yet created; add its resulting ID here after the local credentials are set and the real-login check is completed.
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

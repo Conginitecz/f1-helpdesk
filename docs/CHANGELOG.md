@@ -29,6 +29,8 @@ master data, plus listing, creating, and updating configuration values.
   services, and their entities with `TypeOrmModule.forFeature`.
 - `backend/src/configurations/configurations.entity.ts` — expose the existing
   updater FK ID for explicit API serialization; no database column added.
+- `backend/.env.example` — add placeholder names for the standing M6–M11 test
+  admin credentials; real values remain local to the ignored `.env`.
 - `docs/completed-checklist.md` — Milestone 7 verification, deviations, and
   retained test-data purge list.
 
@@ -43,17 +45,20 @@ master data, plus listing, creating, and updating configuration values.
   GET filters return `200 []`; duplicate `(type, text)` values are rejected
   case-insensitively.
 - Master-data PATCH edits labels only. Its existing schema contains timestamps
-  but no actor-ID audit columns, so timestamps are maintained without adding
-  schema; this limitation was explicitly accepted.
+  but no actor-ID audit columns. The prompt assumed actor columns; the doc
+  defines timestamps only. No schema change was needed or made.
 - Configuration keys were absent in the before snapshot. A separate
   `POST /super-admin/config` was approved with `config_key`, `config_value`,
   optional `description`, JWT-derived updater, and duplicate-key rejection.
+- The docs list no expected configuration keys or default values; they mention
+  `min_service_charge` only as an example. No configuration seed script or
+  invented key was added.
 - Config values are non-empty strings as stored by the documented VARCHAR
   column. DTO limits are 255 characters for keys/values and labels, and 500 for
   descriptions because the schema itself declares unbounded VARCHAR columns.
-- The M6 admin password is not present in the repo or environment. Guard tests
-  used a locally signed short-lived admin-role token for the active M6 admin
-  ID 7; no admin password was changed.
+- `backend/.env` does not define `TEST_ADMIN_EMAIL` or `TEST_ADMIN_PASSWORD`.
+  Placeholders were added to `.env.example`, but no standing admin was created
+  and the real-login check remains pending those local values.
 
 ### Verification
 - Backend build passed; oxlint reported no errors and one pre-existing
@@ -61,6 +66,8 @@ master data, plus listing, creating, and updating configuration values.
 - Live HTTP checks covered master data, configuration, validation, and guards;
   detailed numbered results are in `docs/completed-checklist.md`.
 - Final backend restart on port 7676 logged `Database connection established: true`.
+- Audit review of §1.4 and the M3 migration confirmed both define only
+  `created_at` and `updated_at` on `master_data`.
 
 ## 2026-10-08 — Milestone 4: Core Schema (Partners & Supporting Tables) via TypeORM migrations
 
