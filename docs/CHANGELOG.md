@@ -4,6 +4,87 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-08 — Milestone 2: Connect NestJS to PostgreSQL (TypeORM + Neon)
+
+### Added
+- **TypeORM wiring in `AppModule`** (`backend/src/app.module.ts`):
+  `TypeOrmModule.forRoot({ type: 'postgres',
+  url: process.env.DATABASE_URL_UNPOOLED,
+  ssl: { rejectUnauthorized: false }, autoLoadEntities: true,
+  synchronize: false })`.
+- **Startup DB status log** in `backend/src/main.ts`: fails fast with
+  a clear error if `DATABASE_URL_UNPOOLED` is unset, then logs
+  `Database connection established: <true|false>` after listen —
+  never prints the URL.
+- **Dependencies**: `@nestjs/typeorm`, `typeorm`, `pg` (installed
+  with `--legacy-peer-deps`).
+- `backend/.env.example`: added placeholder-only
+  `DATABASE_URL_UNPOOLED` (fake Neon-style URL); pooled
+  `DATABASE_URL` comment clarified as Neon-CLI-tooling's.
+
+### Verification (milestone checks)
+- **Test phase** (temporary): throwaway entity `M2ThrowawayEntity` →
+  table `m2_connection_probe` with `synchronize: true` + query
+  logging. Boot log recorded the executed statement against Neon:
+  `CREATE TABLE "m2_connection_probe" ("id" SERIAL NOT NULL, "note"
+  character varying(64) NOT NULL, CONSTRAINT "PK_…" PRIMARY KEY
+  ("id"))`, and `psql` immediately confirmed the table existed
+  (count=1). A table was created **from code**, not just configured.
+- **Cleanup**: entity deleted (zero references left in `src/`),
+  table dropped via psql (probe count=0; public schema has zero
+  tables), and a fresh restart after the drop did **not** recreate it.
+- **Final fresh boot**: "Found 0 errors" → "Nest application
+  successfully started" → "F1 Help Desk backend listening on port
+  7676" → "Database connection established: true"; `GET :7676/` →
+  HTTP 200; frontend `:3000` still HTTP 200.
+- `synchronize: false` is the only synchronize value present in
+  `backend/src/` (grep verified).
+
+### Decisions
+- **ORM: TypeORM** (`@nestjs/typeorm` + `typeorm` + `pg`) — standard
+  NestJS pairing and supports the integer identity PKs
+  (SERIAL/IDENTITY) the schema doc requires. Recorded in the
+  `development-docs.md` stack line (user-approved doc edit).
+- **Connection uses `DATABASE_URL_UNPOOLED`** (Neon direct host), not
+  the pooled `DATABASE_URL` — schema creation and migrations don't
+  work reliably through the pooler. Read from the environment; never
+  printed, never committed.
+- **Explicit TLS**: `ssl: { rejectUnauthorized: false }` set on the
+  TypeORM connection (Neon requires SSL) rather than relying only on
+  `sslmode` in the URL.
+- **`synchronize: false` in the final config** — schema is created
+  via migrations from Milestone 3 onward; `synchronize: true` was
+  enabled only briefly for the throwaway probe, then turned off
+  immediately after (per user approval).
+- **Backend process replaced**: the previous foreground `nest start`
+  (started 2026-10-07 22:48) doesn't reload code changes, so it was
+  stopped and replaced with a detached `npm run start:dev` (watch)
+  instance on :7676. The foreign project's process on :3001 was not
+  touched.
+
+### Changed
+- `backend/src/app.module.ts` (TypeORM root config),
+  `backend/src/main.ts` (env guard + connection status log),
+  `backend/.env.example`, `backend/package.json`,
+  `backend/package-lock.json`, `docs/development-docs.md` (stack line
+  + ORM, user-approved).
+
+### Pending errors or observations
+- Non-blocking `pg` startup warning: "SECURITY WARNING: The SSL
+  modes 'prefer', 'require', and 'verify-ca' are treated as aliases
+  for 'verify-full'…" — informational notice about a future pg v9
+  behavior change; current connections work fine.
+- Carried forward from Milestone 0/1: backend full-tree
+  `npm install` may need `--legacy-peer-deps`; one M1 diagnostic
+  printed the Neon URL password into the terminal transcript only
+  (rotate via `neon credentials` if desired).
+
+### Tables affected
+- None remaining. Transient: `m2_connection_probe` was created and
+  then dropped — full cleanup verified via psql.
+
+---
+
 ## 2026-10-08 — Milestone 1 verification vs Neon, port standardization, approved doc updates
 
 ### Verified (Milestone 1 re-check against Neon, per user instructions)

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -13,6 +14,17 @@ import { StatusRequestsModule } from './status-requests/status-requests.module.j
 
 @Module({
   imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      // Neon direct (unpooled) connection — schema/migrations are unreliable
+      // through the pooler. Read from environment; never hardcode.
+      url: process.env.DATABASE_URL_UNPOOLED,
+      // Neon requires TLS — configured explicitly on the connection.
+      ssl: { rejectUnauthorized: false },
+      autoLoadEntities: true,
+      // Never auto-sync schema: Milestone 3+ creates schema via migrations.
+      synchronize: false,
+    }),
     AuthModule,
     AdminsModule,
     SuperAdminsModule,

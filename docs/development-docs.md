@@ -2,7 +2,8 @@
 ## Developer Reference Documentation (V0 scope)
 
 Stack: Next.js (frontend) + NestJS (backend) + PostgreSQL (database,
-hosted on Neon)
+hosted on Neon) — ORM: TypeORM (@nestjs/typeorm, typeorm, pg; integer
+identity PKs)
 Scope: Admin & Super Admin web dashboard only. Does NOT cover the Customer
 or Service Engineer mobile apps, request-matching engine, payments, or
 the state-machine workflows from the main Product Checkpoint document.

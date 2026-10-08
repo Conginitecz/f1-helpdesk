@@ -6,6 +6,64 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 2 — Connect NestJS to PostgreSQL — Completed 2026-10-08
+
+ORM choice: **TypeORM** (`@nestjs/typeorm`, `typeorm`, `pg`);
+connection via `DATABASE_URL_UNPOOLED` (Neon direct host).
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Backend logs show a successful DB connection on startup | ✅ Passed | Fresh boot of `npm run start:dev` with the final config logged "Found 0 errors" → "Nest application successfully started" → "F1 Help Desk backend listening on port 7676" → **"Database connection established: true"** (DataSource.isInitialized) in `/tmp/backend_m2_final.log`. |
+| 2 | You've proven a table can be created from code, not just configured | ✅ Passed | Temporary entity + `synchronize: true` made TypeORM execute `CREATE TABLE "m2_connection_probe" ("id" SERIAL NOT NULL … PRIMARY KEY ("id"))` against Neon — captured in the boot log (ANSI-stripped) — and `psql` immediately showed the table existed (count=1). |
+| 3 | *(user-added)* No throwaway table or entity remains | ✅ Passed | `backend/src/m2-throwaway.entity.ts` deleted; `grep -rn 'M2ThrowawayEntity\|m2-throwaway\|m2_connection_probe' backend/src/` → no matches; psql: probe count=0 and **zero tables in public schema**; a fresh restart after the drop did not recreate it. |
+| 4 | *(user-added)* Backend still starts cleanly on port 7676 | ✅ Passed | Fresh restart after cleanup: 0 compile errors, clean startup log with `Database connection established: true`, `GET http://localhost:7676/` → HTTP 200 ("Hello World!"). |
+
+### Summary of changes
+- `backend/src/app.module.ts` — `TypeOrmModule.forRoot(...)` with
+  `url: DATABASE_URL_UNPOOLED` (env), explicit
+  `ssl: { rejectUnauthorized: false }`, `autoLoadEntities: true`,
+  **`synchronize: false`**.
+- `backend/src/main.ts` — fails fast if `DATABASE_URL_UNPOOLED` is
+  unset; logs `Database connection established: <bool>` after listen
+  (URL never printed).
+- `backend/package.json` / `package-lock.json` — `@nestjs/typeorm`,
+  `typeorm`, `pg` (installed with `--legacy-peer-deps`).
+- `backend/.env.example` — placeholder-only `DATABASE_URL_UNPOOLED`
+  (fake Neon-style URL) added.
+- `docs/development-docs.md` — stack line now records TypeORM
+  (user-approved).
+- Processes: old foreground `nest start` (2026-10-07 22:48) replaced
+  by detached `npm run start:dev` watch instance on :7676; foreign
+  :3001 process untouched; frontend :3000 left running.
+- Tables: none remain (transient `m2_connection_probe` created →
+  dropped).
+
+### Pending errors or issues
+- Non-blocking `pg` startup warning: "SECURITY WARNING: The SSL
+  modes 'prefer', 'require', and 'verify-ca' are treated as aliases
+  for 'verify-full'…" — informational, concerns a future pg v9
+  behavior change; connections work as-is. No action needed now;
+  revisit before any pg major upgrade.
+- Carried forward (non-blocking, unchanged): backend full-tree
+  `npm install` may need `--legacy-peer-deps` (npm 10.9.4 arborist
+  bug); the M1 diagnostic that printed the Neon URL password lives
+  only in the terminal transcript (rotate via `neon credentials` if
+  desired).
+- Otherwise: None.
+
+### Deviations from the docs
+- Docs edit (user-approved): `development-docs.md` stack line now
+  records the ORM (TypeORM, integer identity PKs) — reason: user
+  decision to standardize on TypeORM; recorded in the changelog.
+- `main.ts` env guard + connection-status log go slightly beyond the
+  checklist wording — they exist to satisfy its "logs show a
+  successful DB connection" check without ever printing the URL.
+- Backend switched from a foreground `nest start` to a detached
+  watch-mode instance — required so code changes actually reload
+  during later milestones; behavior otherwise identical.
+
 ## Milestone 1 — PostgreSQL Setup — Completed 2026-10-08
 
 Provisioned as a **hosted Neon instance** (checklist step 1's second
