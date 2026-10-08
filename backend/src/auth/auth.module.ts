@@ -18,6 +18,7 @@ import { Admin } from '../admins/admins.entity.js';
   imports: [
     TypeOrmModule.forFeature([SuperAdmin, Admin]),
     JwtModule.registerAsync({
+      global: true,
       useFactory: () => {
         const secret = process.env.JWT_SECRET;
         if (!secret) {

@@ -72,7 +72,7 @@ Only production files; no M6 endpoints, no frontend changes.
 - backend/src/auth/roles.guard.ts + roles.decorator.ts - reusable RolesGuard + @Roles(...); 403 Insufficient role.
 - backend/src/auth/current-user.decorator.ts - @CurrentUser() parameter decorator.
 - backend/src/auth/auth.service.ts - login(email, password): checks super_admins first, then admins; bcryptjs verify; rejects inactive/soft-deleted with the generic error; issueToken builds JWT payload { sub, role } and body { access_token, token_type, expires_in, user: { id, role } }. logout() is a stateless ack (client discards token). Generic error returned for unknown email, wrong password, and inactive admins - response never reveals whether an account exists, never logs passwords/tokens, never returns hashes.
-- backend/src/auth/auth.controller.ts - POST /auth/login (auth-guarded), POST /auth/logout (stateless).
+- backend/src/auth/auth.controller.ts - POST /auth/login (PUBLIC — no JWT guard; must be reachable without a token), POST /auth/logout (stateless). FIX (2026-10-09): earlier changelog said /auth/login was auth-guarded; it is public by design and login/logout are intentionally unprotected.
 - Temporary verification routes were added (auth-test controller, 3 routes) and REMOVED after checks passed.
 - backend/src/auth/auth.module.ts - JwtModule.registerAsync (secret + expiresIn from env, fails fast if unset), TypeOrmModule.forFeature([SuperAdmin, Admin]), exports AuthService, JwtAuthGuard, RolesGuard, JwtModule for reuse.
 - backend/src/main.ts - fails fast if DATABASE_URL_UNPOOLED or JWT_SECRET unset; global ValidationPipe (whitelist + forbidNonWhitelisted + transform).
@@ -80,35 +80,100 @@ Only production files; no M6 endpoints, no frontend changes.
 - backend/.env.example - added JWT_EXPIRES_IN=7d placeholder (real secret stays in .env only).
 
 ### Decisions
-- Login identifier is email only (docs development-docs.md sec 1.1 login identifier). Username field deliberately not accepted.
-- JWT payload = { sub, role } only (no acl/scope/extra claims). Response body = { access_token, token_type: Bearer, expires_in, user: { id, role } }.
-- Password hashed with bcryptjs (same lib as M3 super-admin seed). Secret from JWT_SECRET env, expiry from JWT_EXPIRES_IN env - never hardcoded.
 
-### Check before moving on (all verified with real HTTP against the running backend on :7676)
+---
+
+## 2026-10-09 — Milestone 6: Super Admin Backend (Admins & Locations) - Completed 2026-10-09
+
+Super-admin management of admins and locations. Every endpoint is guarded by
+`JwtAuthGuard` + `RolesGuard` with `@Roles(Role.SUPER_ADMIN)` at class level.
+Only the endpoints in `development-docs.md` §3 were built (no DELETE, no Milestone 7 work).
+
+### FIRST CHECK — `POST /auth/login` is public (M5 "auth-guarded" label corrected)
+- The M5 summary said `/auth/login` was "auth-guarded". That was wrong.
+- Verified against the live :7676 server: a request with **no token** and a wrong
+  password returned the login's own `401 Invalid email or password` (not the guard's
+  `Missing authentication token`). A correct password with no token returned `201`
+  with `access_token`, `token_type`, `expires_in`, `user`.
+- `auth.controller.ts` has no guard on `login`/`logout`. The code was already
+  correct; only the M5 changelog wording was wrong, and it is corrected in M5's entry.
+
+### Added
+- `backend/src/admins/create-admin.dto.ts` — `CreateAdminDto` (class-validator): email,
+  username, password, first_name, last_name, phone_number, address (non-empty strings),
+  location_id (integer ≥ 1). Snake_case keys match §1.2 / §3. Unknown keys (including
+  audit columns and `is_active`) are rejected by the global ValidationPipe.
+- `backend/src/admins/admins.service.ts` — `AdminsService`:
+  - `findAll()` — explicit column `select` (no `password_hash`), mapped through `toResponse()`.
+  - `create()` — 409 on duplicate email **or** username (both UNIQUE per §1.2); 400 if
+    `location_id` does not exist or is not active; bcryptjs hash (10 rounds, same library
+    as auth); `created_by_super_admin_id` taken from the JWT, never the body; DB
+    unique-violation (23505) caught as a race backstop → 409.
+  - `activate()` / `deactivate()` — set `is_active`; already-in-state is a harmless no-op
+    (no write, no error); unknown id → 404.
+- `backend/src/admins/admins.controller.ts` — `GET /super-admin/admins`,
+  `POST /super-admin/admins`, `PATCH /super-admin/admins/:id/activate`,
+  `PATCH /super-admin/admins/:id/deactivate`. `:id` via `ParseIntPipe` (non-integer → 400).
+- `backend/src/admins/admins.module.ts` — imports `TypeOrmModule.forFeature([Admin, Location])`
+  and `AuthModule` (guards). No self/cross-module loops.
+- `backend/src/locations/create-location.dto.ts` — `CreateLocationDto`: `name` required.
+- `backend/src/locations/update-location.dto.ts` — `UpdateLocationDto`: optional `name`
+  (non-empty string) and optional `is_active` (boolean).
+- `backend/src/locations/locations.service.ts` — `LocationsService`: `findAll`, `create`
+  (is_active = true), `update` (name / is_active, only the fields present in the body);
+  unknown id → 404. Explicit `LocationResponse` whitelist.
+- `backend/src/locations/locations.controller.ts` — `GET`, `POST /super-admin/locations`,
+  `PATCH /super-admin/locations/:id`.
+- `backend/src/locations/locations.module.ts` — `TypeOrmModule.forFeature([Location])` + `AuthModule`.
+
+### Fixed (during build, before commit)
+- Draft staged earlier in this milestone returned the raw entity (exposing
+  `password_hash`) from create/activate/deactivate; replaced with explicit whitelist responses.
+- Draft added an undocumented `DELETE /super-admin/admins/:id`; removed (not in §3).
+- Draft enforced location-name uniqueness, which §1.3 does not specify; removed.
+- `update-location.dto.ts` held a duplicated `CreateLocationDto`; `locations.module.ts`
+  imported itself; both fixed.
+- `import type` required for `AuthenticatedUser`, `AdminResponse`, `LocationResponse`
+  under `isolatedModules` + `emitDecoratorMetadata` (TS1272).
+- `jwt-auth.guard.ts`: removed a stray blank line left by an earlier edit.
+
+### Check before moving on (verified with real HTTP against the running :7676 backend, plus psql)
 | # | Item | Result |
 |---|---|---|
-| 1 | Login as the seeded super admin returns a valid token, payload role super_admin | PASSED |
-| 2 | Wrong password rejected; nonexistent email returns the identical generic 401 | PASSED |
-| 3 | No token on protected route -> 401 | PASSED |
-| 4 | Garbage token / expired token -> 401 Invalid or expired token | PASSED |
-| 5 | Role identification: super-admin token rejected (403) on admin-only route; admin token rejected (403) on super-only route | PASSED |
-| 6 | Temporary ACTIVE admin (hashed pw) -> 201 role:admin, accepted on admin-only, rejected on super-only; INACTIVE admin -> 401 | PASSED |
-| 7 | Test routes + temp admins removed; DB left with only the seeded super admin (admins=0, locations=0, super_admins=1) | PASSED |
-| 8 | Backend restarts cleanly on 7676, Database connection established: true | PASSED |
+| 1 | POST /auth/login publicly reachable (no JWT guard) | PASSED — no token → login's own 401 for bad password, 201 for correct password |
+| 2 | Create admin via API, visible in DB, bcrypt hash stored | PASSED — 201; DB `password_hash` is 60 chars, `$2b$10$…`, no plaintext match |
+| 3 | Activate / deactivate toggles is_active; deactivated admin cannot log in, reactivated can | PASSED — DB is_active true→false→true; login 201→401→201 |
+| 4 | Admin-role token rejected (403) on all super-admin endpoints | PASSED — 7 routes × 403 |
+| 5 | No token rejected (401) on all super-admin endpoints | PASSED — 7 routes × 401 |
+| 6 | Duplicate email → 409; duplicate username → 409 | PASSED |
+| 7 | Nonexistent location_id → 400; inactive location_id → 400 | PASSED |
+| 8 | Unknown id → 404 (admin activate/deactivate, location PATCH) | PASSED |
+| 9 | Activate/deactivate already-in-state → 200 no-op | PASSED |
+| 10 | No password / hash in any response | PASSED — list bodies and PATCH responses scanned, 0 hits |
+| 11 | Audit column from authenticated user, not body | PASSED — `created_by_super_admin_id = 1` from JWT; body attempt with `created_by_super_admin_id` / `is_active` → 400 |
+| 12 | Backend starts cleanly on 7676 | PASSED — "successfully started", "listening on port 7676", "Database connection established: true" |
+| 13 | Build/type-check | PASSED — `nest build` exit 0; `tsc` clean for `src/` |
 
-### Summary of changes
-- New files under backend/src/auth/: roles.enum.ts, login.dto.ts, jwt-auth.guard.ts, roles.guard.ts, roles.decorator.ts, current-user.decorator.ts, authenticated-user.ts, auth.service.ts, auth.controller.ts, auth-test.controller.ts (removed after use)
-- Modified: auth.module.ts, main.ts (global ValidationPipe)
-- .env / .env.example - JWT_SECRET, JWT_EXPIRES_IN=7d
-- Deps added: @nestjs/jwt@^12.0.2, class-validator@^0.15.1, class-transformer@^0.5.1
-- Migrations, seed tables, and M4 tables untouched.
-
-### Pending errors or issues
-- Informational: pg prints a future-deprecation SSL-mode warning (see M3 record); no impact on the current connection. Backend still starts cleanly on 7676.
-- --legacy-peer-deps still required for backend full-tree installs.
+### Test data left in the database (deliberately kept; clearly named)
+- Admin `m6test1791492882268` (id 7, `…@example.com`), created by this milestone's tests.
+- Locations `TEST-M6-m6test1791492882268-R` (ids 10 and 11). Id 11 is a second copy
+  created to prove duplicate location names are allowed.
+- Earlier M5/M6 test rows (`admin6_test@example.com`, `Loc-1791491006`, `Test Location`,
+  `Patch Me`, etc.) are still present from the earlier session, and the M6 draft's
+  verification left them in place too. They are not part of this milestone's cleanup.
 
 ### Deviations from the docs
-- None in behavior. The docs specify role + token and the user id without fixing JSON keys or the JWT payload; the names { access_token, token_type, expires_in, user: { id, role } } / { sub, role } were chosen to satisfy both and are recorded here for easy adjustment.
+- None in endpoints or behaviour. Body and response keys are snake_case
+  (`location_id`, `first_name`, `is_active`) to match §1.2/§3 and the M5 response shape.
+- Duplicate location names are allowed because §1.3 does not make `name` unique.
+  (The earlier draft enforced uniqueness; that was an invented rule and was removed.)
+- Duplicate admin **username** also returns 409: §1.2 marks `username` UNIQUE.
+
+### Pending errors or issues
+- `npx tsc --noEmit` reports one error in `test/app.e2e-spec.ts`
+  (`Cannot find module 'supertest/types'`). Pre-existing, unrelated to M6; not fixed here.
+- `oxlint` warns about an unused `error` variable in M5's `auth.service.ts`. Pre-existing; not fixed here.
+- pg prints its SSL-mode future-deprecation notice on boot (informational, as before).
 
 ## 2026-10-08 — Milestone 3: Core Schema (Auth & Org Structure) via TypeORM migrations
 

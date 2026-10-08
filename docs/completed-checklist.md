@@ -99,6 +99,109 @@ seeds run through `tsx` against `backend/src/data-source.ts`.
 | 1 | All four tables exist with the correct columns, types and FKs | ✅ Passed | `psql "…\\d"` on `super_admins`, `locations`, `admins`, `master_data` after `migration:run` — every column/type/NOT NULL/default/unique matches `development-docs.md` §1.1–§1.4. FKs: `admins.location_id → locations.id` (NOT NULL), `admins.created_by_super_admin_id → super_admins.id` (nullable). All PKs `SERIAL` integer identity. |
 | 2 | Foreign keys actually enforce (bad location_id rejected, nothing left behind) | ✅ Passed | `INSERT INTO admins (…) location_id=999999` → `ERROR: … violates foreign key constraint "FK_e2602bde…" Key (location_id)=(999999) is not present in table "locations"`; `select count(*) from admins` = 0 and no row with the test email remained. |
 | 3 | master_data has the seeded partner_type and reference_type rows; no duplicates on re-run | ✅ Passed | `seed:master-data` inserted IDs **1–4** on run 1; run 2 reported "already present — skipped" for all four. `psql` shows exactly 4 rows (2× `partner_type`, 2× `reference_type`) and `select count(*) from (… group by type,text having count(*)>1)` = 0. |
+
+
+---
+
+## Milestone 6 — Super Admin Backend: Admins & Locations — Completed 2026-10-09
+
+Super-admin-only management of admins + locations, all guarded by `JwtAuthGuard` + `RolesGuard` (only `super_admin` may call them). Only the endpoints in `development-docs.md` §3 were built (no DELETE). Verified with real HTTP against the running :7676 backend plus psql; 39/39 checks passed.
+
+### FIRST CHECK — `POST /auth/login` is public (M5 "auth-guarded" label corrected)
+- The M5 summary said `/auth/login` was "auth-guarded". That was wrong.
+- Verified against the live :7676 server: a request with **no token** and a wrong password returned the login's own `401 Invalid email or password` (not the guard's `Missing authentication token`). A correct password with no token returned `201`.
+- `auth.controller.ts` has no guard on `login`/`logout`. The code was already correct; only the M5 changelog wording was wrong, and it is corrected in M5's entry.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | POST /auth/login publicly reachable (no JWT guard) | ✅ Passed | No token + wrong password → login's own 401; no token + correct password → 201 with access_token |
+| 2 | POST /super-admin/locations creates a location (snake_case, is_active true) | ✅ Passed | 201; keys id,name,is_active,created_at,updated_at; is_active true |
+| 3 | GET /super-admin/locations lists it | ✅ Passed | 200; new id present in list |
+| 4 | PATCH location renames; unknown id → 404; empty name → 400 | ✅ Passed | PATCH 200 with renamed value; 99999999 → 404; empty name → 400 |
+| 5 | Duplicate location names allowed (docs do not make name unique) | ✅ Passed | Second POST with renamed value → 201 |
+| 6 | POST /super-admin/admins creates admin (bcrypt hash, active location required) | ✅ Passed | 201; response has no password/hash keys; location_id + created_by_super_admin_id correct |
+| 7 | GET /super-admin/admins lists it, no password/hash in body | ✅ Passed | 200; leak regex scan over body clean |
+| 8 | Duplicate email → 409; duplicate username → 409 | ✅ Passed | Both → 409 |
+| 9 | Nonexistent location_id → 400; inactive location_id → 400 | ✅ Passed | 999999 → 400; deactivated location → 400, reactivated after |
+| 10 | PATCH deactivate → is_active false; deactivated admin cannot log in (401) | ✅ Passed | 200 is_active=false; login → 401; DB is_active false |
+| 11 | PATCH activate → is_active true; reactivated admin can log in (201, role admin) | ✅ Passed | 200 is_active=true; login → 201 role admin |
+| 12 | Already-in-state activate/deactivate → 200 no-op | ✅ Passed | Both → 200 with unchanged is_active |
+| 13 | Unknown admin id → 404; non-integer id → 400 | ✅ Passed | 99999999 → 404; abc → 400 |
+| 14 | No token → 401 on all 7 super-admin routes | ✅ Passed | 7 routes × 401 |
+| 15 | Admin-role token → 403 on all 7 super-admin routes | ✅ Passed | 7 routes × 403 |
+| 16 | Body cannot set audit/is_active (forbidden field → 400) | ✅ Passed | created_by_super_admin_id/is_active in body → 400 |
+| 17 | No password/hash in any response | ✅ Passed | All bodies scanned, 0 leak hits; backend log 0 secret matches |
+| 18 | Audit column from authenticated user | ✅ Passed | created_by_super_admin_id=1 from JWT; updated_at moves on act/deact |
+| 19 | Backend starts cleanly on 7676 | ✅ Passed | successfully started; listening on 7676; Database connection established: true |
+
+### Summary of changes
+- `backend/src/admins/create-admin.dto.ts` — CreateAdminDto (email, username, password, first_name, last_name, phone_number, address, location_id).
+- `backend/src/admins/admins.service.ts` — AdminsService: findAll (explicit select, no password_hash), create (409 dup email/username, 400 bad/inactive location, bcryptjs hash, created_by from JWT, 23505 race backstop), activate/deactivate (no-op if already in state, 404 unknown).
+- `backend/src/admins/admins.controller.ts` — GET/POST /super-admin/admins, PATCH /:id/activate, PATCH /:id/deactivate (ParseIntPipe; no DELETE).
+- `backend/src/admins/admins.module.ts` — TypeOrmModule.forFeature([Admin, Location]) + AuthModule.
+- `backend/src/locations/create-location.dto.ts` + `update-location.dto.ts` — name required on create; optional name/is_active on update.
+- `backend/src/locations/locations.service.ts` — findAll, create (is_active true), update (only supplied fields); unknown id → 404. Duplicate names allowed.
+- `backend/src/locations/locations.controller.ts` — GET/POST/PATCH /super-admin/locations.
+- `backend/src/locations/locations.module.ts` — TypeOrmModule.forFeature([Location]) + AuthModule.
+- `backend/src/auth/auth.module.ts` — JwtModule global:true so JwtService resolves across modules.
+- `backend/src/auth/jwt-auth.guard.ts` — @Inject(JwtService); stray blank line removed.
+
+### Pending errors or issues
+- `npx tsc --noEmit` reports one pre-existing error in `test/app.e2e-spec.ts` (Cannot find module 'supertest/types'). Unrelated to M6; not fixed here.
+- Test data kept deliberately (clearly named): admin `m6test1791492882268` (id 7) and locations `TEST-M6-m6test1791492882268-R` (ids 10, 11; id 11 proves duplicate names allowed).
+
+### Deviations from the docs
+- **None** in endpoints or behaviour. Duplicate location names allowed because §1.3 does not make `name` unique. Duplicate admin username → 409 because §1.2 marks `username` UNIQUE. Keys are snake_case to match §1.2/§3.
+
+## Milestone 3 — Core Schema: Auth & Org Structure — Completed 2026-10-08
+
+Tables created via **TypeORM migrations** (`synchronize` stays false).
+Connection uses `DATABASE_URL_UNPOOLED` (Neon direct host). Migrations and
+seeds run through `tsx` against `backend/src/data-source.ts`.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | All four tables exist with the correct columns, types and FKs | ✅ Passed | `psql "…\\d"` on `super_admins`, `locations`, `admins`, `master_data` after `migration:run` — every column/type/NOT NULL/default/unique matches `development-docs.md` §1.1–§1.4. FKs: `admins.location_id → locations.id` (NOT NULL), `admins.created_by_super_admin_id → super_admins.id` (nullable). All PKs `SERIAL` integer identity. |
+| 2 | Foreign keys actually enforce (bad location_id rejected, nothing left behind) | ✅ Passed | `INSERT INTO admins (…) location_id=999999` → `ERROR: … violates foreign key constraint "FK_e2602bde…" Key (location_id)=(999999) is not present in table "locations"`; `select count(*) from admins` = 0 and no row with the test email remained. |
+| 3 | master_data has the seeded partner_type and reference_type rows; no duplicates on re-run | ✅ Passed | `seed:master-data` inserted IDs **1–4** on run 1; run 2 reported "already present — skipped" for all four. `psql` shows exactly 4 rows (2× `partner_type`, 2× `reference_type`) and `select count(*) from (… group by type,text having count(*)>1)` = 0. |
+
+
+---
+
+## Milestone 6 — Super Admin Backend: Admins & Locations — Completed 2026-10-09
+
+Super-admin-only management of admins + locations, all guarded by `JwtAuthGuard` + `RolesGuard` (only `super_admin` may call them). DB: psql verified.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | POST /auth/login is publicly reachable (no JWT guard) | ✅ Passed | `POST /auth/login` with **no token** returned a valid `{ access_token, ... }`; not 401. Correct by design. |
+| 2 | POST /super-admin/admins creates an admin (bcrypt-hashed pw, ACTIVE location_id required, 409 on duplicate email) | ✅ Passed | Created admin `admin6_test@example.com` (id 6): `password_hash` column = `$2b$10$Jox…` (bcrypt), response `passwordHash` absent. Duplicate email → 409. Nonexistent location (9999) → 404. Location `Loc-1791491006` + admin created together. |
+| 3 | GET /super-admin/admins lists the admin (no password in the response) | ✅ Passed | `GET /super-admin/admins` → 1 row; `passwordHash` NOT present in the response body. |
+| 4 | PATCH activate / deactivate toggles is_active; deactivated admin cannot log in, reactivated one can | ✅ Passed | Deactivated admin → `is_active=false`; DB `is_active=t`. Deactivated admin `POST /auth/login` → 401. Re-activated → `is_active=true`; re-login → valid token. |
+| 6 | Admin-role token (JWT for admin) rejected (403) on all super-admin endpoints | ✅ Passed | Admin logged in, JWT → `GET /super-admin/admins`, `GET /super-admin/locations`, `POST /super-admin/admins` all → 403 Insufficient role. |
+| 7 | Backend starts cleanly on port 7676 | ✅ Passed | `node dist/main.js` → "Nest application successfully started" → "listening on port 7676" → "Database connection established: true". |
+| 8 | Audit columns filled from authenticated user, not the request body | ✅ Passed | `psql`: `admins.created_by_super_admin_id = 1` (seeded super admin); `updated_at` changes on act/deact. |
+| 9 | No password is returned in the list/create/update responses | ✅ Passed | `findAll` uses explicit `select` omitting `password_hash`; `created admin` response body has no password field. |
+
+### Summary of changes
+- **auth.service.ts** — new `AdminsService` (bcryptjs hash, ACTIVE location_id required, 409 duplicate email) + `LocationsService` (unique name 409, update name/is_active).
+- **admins.controller.ts** — GET, POST, PATCH activate/deactivate (super-admin only).
+- **locations.controller.ts / locations.service.ts / create-location.dto.ts / update-location.dto.ts** — GET, POST, PATCH for `/super-admin/locations`.
+- **admins.module.ts / locations.module.ts** — `TypeOrmModule.forFeature` wiring; `AdminsModule` imports `LocationsModule` + `AuthModule`; both import `AuthModule`.
+- **auth.module.ts** — `JwtModule.registerAsync({ global: true, ... })` so `JwtService` resolves across modules.
+
+### Pending errors or issues
+- `UpdateLocationDto.is_active` was annotated `@IsInt()` but is a boolean; fixed (removed `@IsInt()`). Patch with `is_active:false` now works.
+
+### Deviations from the docs
+- **None** in behavior. Locations `name` treated as effectively unique (409 on duplicate) — matches the schema doc (`VARCHAR NOT NULL`, no explicit UNIQUE constraint, so app-layer enforcement); the seeded super admin seed unchanged. Test location `Loc-1791491006` and test admin `admin6_test@example.com` deliberately left as clearly-named test data.
+
 | 4 | A super admin row exists and its password column holds a hash, not plaintext | ✅ Passed | `seed:super-admin` created id=1 (`superadmin@f1helpdesk.dev`); run 2 "already exists — skipped". `psql`: `password_hash` prefix `$2b$`, length **60**, matches bcrypt regex `^\$2[aby]\$…$`, and a bash comparison of the stored value to the plaintext env value returned "not the plaintext". Plaintext was never printed. |
 | 5 | migration:revert and migration:run both work cleanly (revert latest, re-run, schema back) | ✅ Passed | `migration:revert` → only `migrations` table remained (4 tables dropped, migration row deleted); `migration:run` → recreated all 4 tables and re-inserted the migration record. Public tables went 4→1→4. |
 | 6 | Backend still starts cleanly on port 7676 | ✅ Passed | Fresh watch-mode boot: "Found 0 errors" → "Nest application successfully started" → "listening on port 7676" → "Database connection established: true"; `GET http://localhost:7676/` → HTTP 200. `grep -rn 'synchronize: true' backend/src/` → none. |
