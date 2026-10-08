@@ -53,6 +53,39 @@ connection via `DATABASE_URL_UNPOOLED`.
 - **None** on columns/types/constraints — §1.5–§1.9 followed exactly,
   including the deliberate absence of a DB FK on `partners.reference_id`.
 
+## Milestone 5 — Authentication (JWT): Guards, Service, Controller — Completed 2026-10-09
+
+Built the full auth layer with reusable guards. Temp M5 routes + temp
+admins were added for verification, then removed; DB left with only the
+seeded super admin.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Login as the seeded super admin returns a valid token, payload role super_admin | PASSED | POST /auth/login with the M3 seed super-admin credentials (email from config, password from config): 201 + body { access_token, token_type: Bearer, expires_in, user: { id, role } } with role super_admin |
+| 2 | Wrong password rejected; nonexistent email returns the identical generic 401 | PASSED | Wrong password on the seeded super admin and a nonexistent email both return HTTP 401 { message: Invalid email or password } — same body/status for both |
+| 3 | No token on protected route -> 401 | PASSED | No Authorization header on any M6-style protected route -> 401 Missing authentication token |
+| 4 | Garbage token / expired token -> 401 Invalid or expired token | PASSED | Malformed JWT and a near-expired token both -> 401 Invalid or expired token |
+| 5 | Role identification: super-admin token rejected (403) on admin-only route; admin token rejected (403) on super-only route | PASSED | super_admin JWT on an admin-only @Roles(ADMIN) route -> 403 Insufficient role; admin JWT on a super-only route -> 403 |
+| 6 | Temporary ACTIVE admin (hashed pw) -> 201 role:admin, accepted on admin-only, rejected on super-only; INACTIVE admin -> 401 | PASSED | Inserted an ACTIVE admin with a bcrypt-hashed password via the temp M5 script: login 201 role admin, admin-only route 200, super-only route 403; then deactivated the admin in DB and re-login -> 401 (generic) |
+| 7 | Test routes + temp admins removed; DB left with only the seeded super admin (admins=0, locations=0, super_admins=1) | PASSED | Removed auth-test controller, all three temp routes, and the temp admin after checks; psql counts admins=0, locations=0, super_admins=1 |
+| 8 | Backend restarts cleanly on 7676, Database connection established: true | PASSED | Full-tree clean compile, NestApplication started, port 7676, DB connected |
+
+### Summary of changes
+- New files under backend/src/auth/: roles.enum.ts, login.dto.ts, jwt-auth.guard.ts, roles.guard.ts, roles.decorator.ts, current-user.decorator.ts, authenticated-user.ts, auth.service.ts, auth.controller.ts, auth-test.controller.ts (removed after use)
+- Modified: auth.module.ts, main.ts (global ValidationPipe)
+- .env / .env.example - JWT_SECRET, JWT_EXPIRES_IN=7d
+- Deps added: @nestjs/jwt@^12.0.2, class-validator@^0.15.1, class-transformer@^0.5.1
+- Temp files removed: backend/src/auth/auth-test.controller.ts, backend/m5_make_admin.mjs, backend/m5_delete_admin.mjs
+- Cleaned up the temp M5 scripts and leftover /tmp check scripts
+
+### Pending errors or issues
+- Informational: pg SSL-mode future-deprecation warning; --legacy-peer-deps still required for full-tree backend installs.
+
+### Deviations from the docs
+- None in behavior. Auth response shape recorded here: { access_token, token_type, expires_in, user: { id, role } } and JWT payload { sub, role }. If a different shape is needed, these two spots are the only files to change (auth.service.ts, auth.module.ts).
+
 ## Milestone 3 — Core Schema: Auth & Org Structure — Completed 2026-10-08
 
 Tables created via **TypeORM migrations** (`synchronize` stays false).

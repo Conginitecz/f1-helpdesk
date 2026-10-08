@@ -60,6 +60,56 @@ all four are in scope for M4, so all four were built.
 
 ---
 
+## 2026-10-09 - Milestone 5: Authentication (JWT) - Completed 2026-10-09
+
+Added the full auth layer with reusable guards (reusable for Milestones 6-11).
+Only production files; no M6 endpoints, no frontend changes.
+
+### Added
+- backend/src/auth/roles.enum.ts - Role { SUPER_ADMIN='super_admin', ADMIN='admin' }, string values match docs sec 2.
+- backend/src/auth/login.dto.ts - class-validator LoginDto (email required+email format, password required non-empty string).
+- backend/src/auth/jwt-auth.guard.ts - reusable JwtAuthGuard: Bearer JWT -> attaches { userId, role } to request.user; same generic 401 for missing/invalid/expired token.
+- backend/src/auth/roles.guard.ts + roles.decorator.ts - reusable RolesGuard + @Roles(...); 403 Insufficient role.
+- backend/src/auth/current-user.decorator.ts - @CurrentUser() parameter decorator.
+- backend/src/auth/auth.service.ts - login(email, password): checks super_admins first, then admins; bcryptjs verify; rejects inactive/soft-deleted with the generic error; issueToken builds JWT payload { sub, role } and body { access_token, token_type, expires_in, user: { id, role } }. logout() is a stateless ack (client discards token). Generic error returned for unknown email, wrong password, and inactive admins - response never reveals whether an account exists, never logs passwords/tokens, never returns hashes.
+- backend/src/auth/auth.controller.ts - POST /auth/login (auth-guarded), POST /auth/logout (stateless).
+- Temporary verification routes were added (auth-test controller, 3 routes) and REMOVED after checks passed.
+- backend/src/auth/auth.module.ts - JwtModule.registerAsync (secret + expiresIn from env, fails fast if unset), TypeOrmModule.forFeature([SuperAdmin, Admin]), exports AuthService, JwtAuthGuard, RolesGuard, JwtModule for reuse.
+- backend/src/main.ts - fails fast if DATABASE_URL_UNPOOLED or JWT_SECRET unset; global ValidationPipe (whitelist + forbidNonWhitelisted + transform).
+- backend/.env - JWT_SECRET and JWT_EXPIRES_IN=7d set from env.
+- backend/.env.example - added JWT_EXPIRES_IN=7d placeholder (real secret stays in .env only).
+
+### Decisions
+- Login identifier is email only (docs development-docs.md sec 1.1 login identifier). Username field deliberately not accepted.
+- JWT payload = { sub, role } only (no acl/scope/extra claims). Response body = { access_token, token_type: Bearer, expires_in, user: { id, role } }.
+- Password hashed with bcryptjs (same lib as M3 super-admin seed). Secret from JWT_SECRET env, expiry from JWT_EXPIRES_IN env - never hardcoded.
+
+### Check before moving on (all verified with real HTTP against the running backend on :7676)
+| # | Item | Result |
+|---|---|---|
+| 1 | Login as the seeded super admin returns a valid token, payload role super_admin | PASSED |
+| 2 | Wrong password rejected; nonexistent email returns the identical generic 401 | PASSED |
+| 3 | No token on protected route -> 401 | PASSED |
+| 4 | Garbage token / expired token -> 401 Invalid or expired token | PASSED |
+| 5 | Role identification: super-admin token rejected (403) on admin-only route; admin token rejected (403) on super-only route | PASSED |
+| 6 | Temporary ACTIVE admin (hashed pw) -> 201 role:admin, accepted on admin-only, rejected on super-only; INACTIVE admin -> 401 | PASSED |
+| 7 | Test routes + temp admins removed; DB left with only the seeded super admin (admins=0, locations=0, super_admins=1) | PASSED |
+| 8 | Backend restarts cleanly on 7676, Database connection established: true | PASSED |
+
+### Summary of changes
+- New files under backend/src/auth/: roles.enum.ts, login.dto.ts, jwt-auth.guard.ts, roles.guard.ts, roles.decorator.ts, current-user.decorator.ts, authenticated-user.ts, auth.service.ts, auth.controller.ts, auth-test.controller.ts (removed after use)
+- Modified: auth.module.ts, main.ts (global ValidationPipe)
+- .env / .env.example - JWT_SECRET, JWT_EXPIRES_IN=7d
+- Deps added: @nestjs/jwt@^12.0.2, class-validator@^0.15.1, class-transformer@^0.5.1
+- Migrations, seed tables, and M4 tables untouched.
+
+### Pending errors or issues
+- Informational: pg prints a future-deprecation SSL-mode warning (see M3 record); no impact on the current connection. Backend still starts cleanly on 7676.
+- --legacy-peer-deps still required for backend full-tree installs.
+
+### Deviations from the docs
+- None in behavior. The docs specify role + token and the user id without fixing JSON keys or the JWT payload; the names { access_token, token_type, expires_in, user: { id, role } } / { sub, role } were chosen to satisfy both and are recorded here for easy adjustment.
+
 ## 2026-10-08 — Milestone 3: Core Schema (Auth & Org Structure) via TypeORM migrations
 
 ### Added
