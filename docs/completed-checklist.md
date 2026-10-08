@@ -5,6 +5,94 @@ moving on" item from `docs/development-check-list.md`, marked passed or
 failed with a note on how it was verified.
 
 ---
+---
+
+## Milestone 3 — Core Schema: Auth & Org Structure — Completed 2026-10-08
+
+Tables created via **TypeORM migrations** (`synchronize` stays false).
+Connection uses `DATABASE_URL_UNPOOLED` (Neon direct host). Migrations and
+seeds run through `tsx` against `backend/src/data-source.ts`.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | All four tables exist with the correct columns, types and FKs | ✅ Passed | `psql "…\\d"` on `super_admins`, `locations`, `admins`, `master_data` after `migration:run` — every column/type/NOT NULL/default/unique matches `development-docs.md` §1.1–§1.4. FKs: `admins.location_id → locations.id` (NOT NULL), `admins.created_by_super_admin_id → super_admins.id` (nullable). All PKs `SERIAL` integer identity. |
+| 2 | Foreign keys actually enforce (bad location_id rejected, nothing left behind) | ✅ Passed | `INSERT INTO admins (…) location_id=999999` → `ERROR: … violates foreign key constraint "FK_e2602bde…" Key (location_id)=(999999) is not present in table "locations"`; `select count(*) from admins` = 0 and no row with the test email remained. |
+| 3 | master_data has the seeded partner_type and reference_type rows; no duplicates on re-run | ✅ Passed | `seed:master-data` inserted IDs **1–4** on run 1; run 2 reported "already present — skipped" for all four. `psql` shows exactly 4 rows (2× `partner_type`, 2× `reference_type`) and `select count(*) from (… group by type,text having count(*)>1)` = 0. |
+| 4 | A super admin row exists and its password column holds a hash, not plaintext | ✅ Passed | `seed:super-admin` created id=1 (`superadmin@f1helpdesk.dev`); run 2 "already exists — skipped". `psql`: `password_hash` prefix `$2b$`, length **60**, matches bcrypt regex `^\$2[aby]\$…$`, and a bash comparison of the stored value to the plaintext env value returned "not the plaintext". Plaintext was never printed. |
+| 5 | migration:revert and migration:run both work cleanly (revert latest, re-run, schema back) | ✅ Passed | `migration:revert` → only `migrations` table remained (4 tables dropped, migration row deleted); `migration:run` → recreated all 4 tables and re-inserted the migration record. Public tables went 4→1→4. |
+| 6 | Backend still starts cleanly on port 7676 | ✅ Passed | Fresh watch-mode boot: "Found 0 errors" → "Nest application successfully started" → "listening on port 7676" → "Database connection established: true"; `GET http://localhost:7676/` → HTTP 200. `grep -rn 'synchronize: true' backend/src/` → none. |
+
+### Seeded master_data IDs (recorded per milestone requirement)
+
+| id | type | text (opaque code) | meaning (kept here, not in the token) |
+|---|---|---|---|
+| 1 | partner_type | `q7Kf2mZ9xRw4tB6y` | vendor |
+| 2 | partner_type | `h3Np8Ld1Qs5Vc2Jw` | engineer (service engineer) |
+| 3 | reference_type | `z9Wm4Yt7Bn2kF8xR` | admin ("onboarded by admin") |
+| 4 | reference_type | `d6Rq1Ae3Uv9sH5pM` | vendor ("onboarded by vendor") |
+
+Seeded super admin: `id=1`, email `superadmin@f1helpdesk.dev`
+(username derived = `superadmin`), password stored as a bcrypt hash
+(`$2b$10$…`, 60 chars). The plaintext lives only in `backend/.env`
+(gitignored) and was never printed or committed.
+
+---
+
+
+
+### Summary of changes
+- **Entities** (TypeORM, integer identity PKs, snake_case columns):
+  `backend/src/super-admins/super-admins.entity.ts`,
+  `backend/src/locations/locations.entity.ts`,
+  `backend/src/admins/admins.entity.ts` (FKs to locations + super_admins),
+  `backend/src/master-data/master-data.entity.ts`.
+- **Modules** updated to register the entity via
+  `TypeOrmModule.forFeature([...])`: `super-admins.module.ts`,
+  `locations.module.ts`, `admins.module.ts`, `master-data.module.ts`.
+- **Migrations infra**: `backend/src/data-source.ts` (TypeORM
+  `DataSource`, `synchronize: false`, `DATABASE_URL_UNPOOLED`, explicit
+  `ssl: { rejectUnauthorized: true }`); npm scripts
+  `migration:generate` / `migration:run` / `migration:revert`.
+- **Migration**: `backend/src/migrations/1791477876792-InitCoreSchema.ts`
+  (creates the 4 tables + both FKs; `down()` drops them).
+- **Seed scripts**: `backend/src/scripts/seed-master-data.ts` (4 opaque
+  core rows, idempotent via `WHERE NOT EXISTS`), and
+  `backend/src/scripts/seed-super-admin.ts` (bcrypt hash, idempotent).
+  npm scripts `seed:master-data`, `seed:super-admin`.
+- **`backend/src/app.module.ts`** — `ssl.rejectUnauthorized` tightened
+  `false → true` (approved first step; connects fine).
+- **`backend/.env.example`** — added `SEED_SUPER_ADMIN_EMAIL` and
+  `SEED_SUPER_ADMIN_PASSWORD` placeholders (fake values only).
+- **Tables affected (Neon `neondb`)**: `super_admins`, `locations`,
+  `admins`, `master_data` created; `migrations` (TypeORM bookkeeping).
+  `partners`, `inventory_items`, `configurations`,
+  `status_change_requests` deliberately **not** created (Milestone 4).
+
+### Pending errors or issues
+- **Fixed during this milestone:** the master-data seed first failed with
+  `QueryFailedError: inconsistent types deduced for parameter $1 …
+  text versus character varying` (Postgres couldn't reconcile the param
+  type between `SELECT $1` and the `type`/`text` column comparison).
+  Fixed by adding explicit `$1::varchar` / `$2::varchar` casts in
+  `seed-master-data.ts`. Re-ran clean and idempotent.
+- Informational: `pg` prints a future-deprecation SSL-mode warning
+  (`'require' treated as alias for 'verify-full'`). No impact on the
+  current connection; revisit before a `pg` v9 upgrade.
+- Carried forward: backend full-tree installs still need
+  `--legacy-peer-deps`; the M2 note about rotating the Neon password via
+  `neon credentials` still stands.
+
+### Deviations from the docs
+- **None.** Columns, types, NOT NULL/defaults, unique constraints and
+  FKs follow `development-docs.md` §1.1–§1.4 exactly. The opaque
+  `master_data` codes are non-human-readable tokens as the docs require;
+  the docs intentionally don't specify literal strings, so generated
+  tokens were used and their meanings recorded above.
+
+---
+
 
 ## Milestone 2 — Connect NestJS to PostgreSQL — Completed 2026-10-08
 

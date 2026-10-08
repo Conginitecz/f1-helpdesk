@@ -4,6 +4,66 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-08 — Milestone 3: Core Schema (Auth & Org Structure) via TypeORM migrations
+
+### Added
+- **Four entities** (integer identity PKs, snake_case columns, exactly
+  per `development-docs.md` §1.1–§1.4): `super_admins`, `locations`,
+  `admins` (FKs → `locations.id` NOT NULL, → `super_admins.id` nullable),
+  `master_data`. Under `backend/src/{super-admins,locations,admins,master-data}/*.entity.ts`.
+- **Migration infrastructure**: `backend/src/data-source.ts` (TypeORM
+  `DataSource`, `synchronize: false`, `DATABASE_URL_UNPOOLED`, explicit
+  `ssl: { rejectUnauthorized: true }`) + npm scripts
+  `migration:generate` / `migration:run` / `migration:revert`.
+- **Migration** `backend/src/migrations/1791477876792-InitCoreSchema.ts`
+  creating all four tables + both FKs (down() drops them).
+- **Idempotent seed scripts**: `backend/src/scripts/seed-master-data.ts`
+  (4 opaque `partner_type`/`reference_type` rows) and
+  `backend/src/scripts/seed-super-admin.ts` (bcrypt-hashed password).
+  npm scripts `seed:master-data`, `seed:super-admin`.
+- **`.env.example`**: `SEED_SUPER_ADMIN_EMAIL` / `SEED_SUPER_ADMIN_PASSWORD`
+  placeholders (fake values only).
+
+### Changed
+- `backend/src/app.module.ts` — `ssl.rejectUnauthorized` `false → true`
+  (approved hardening; still connects). `synchronize` stays `false`.
+- The four `*.module.ts` files now register their entity via
+  `TypeOrmModule.forFeature([...])`.
+
+### Decisions (with reasons)
+- **Schema via migrations, not `synchronize`.** `synchronize` stays
+  `false`; tables come from a checked-in TypeORM migration so schema is
+  version-controlled and reversible (`revert`/`run` verified). Reason:
+  user-approved; migrations are the reliable path through Neon's direct
+  (non-pooler) host.
+- **Seeds are repeatable scripts**, not one-off inserts, using
+  `WHERE NOT EXISTS` (master_data) / email existence check (super admin),
+  so re-running never creates duplicates — verified by running each twice.
+- **Opaque master_data codes** are generated non-human-readable tokens
+  (`q7Kf2mZ9xRw4tB6y`, …). The docs specify the *kind* of codes
+  (opaque) but not literal strings; assigned IDs 1–4 recorded in
+  `completed-checklist.md`.
+- **Super admin password** hashed with bcrypt (cost 10) before storage;
+  plaintext only ever in gitignored `backend/.env`.
+
+### Tables affected (Neon `neondb`)
+Created: `super_admins`, `locations`, `admins`, `master_data`
+(+ TypeORM `migrations`). Deliberately **not** created (Milestone 4):
+`partners`, `inventory_items`, `configurations`, `status_change_requests`.
+
+### Files
+`backend/src/data-source.ts`, `backend/src/app.module.ts`,
+`backend/package.json`, the 4 entity files + 4 module files,
+`backend/src/migrations/1791477876792-InitCoreSchema.ts`,
+`backend/src/scripts/seed-master-data.ts`,
+`backend/src/scripts/seed-super-admin.ts`,
+`backend/.env.example`, `docs/completed-checklist.md`.
+
+---
+
+
+---
+
 ## 2026-10-08 — Milestone 2: Connect NestJS to PostgreSQL (TypeORM + Neon)
 
 ### Added

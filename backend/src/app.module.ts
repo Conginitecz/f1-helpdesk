@@ -20,7 +20,7 @@ import { StatusRequestsModule } from './status-requests/status-requests.module.j
       // through the pooler. Read from environment; never hardcode.
       url: process.env.DATABASE_URL_UNPOOLED,
       // Neon requires TLS — configured explicitly on the connection.
-      ssl: { rejectUnauthorized: false },
+      ssl: { rejectUnauthorized: true },
       autoLoadEntities: true,
       // Never auto-sync schema: Milestone 3+ creates schema via migrations.
       synchronize: false,
