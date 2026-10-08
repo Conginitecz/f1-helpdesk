@@ -30,18 +30,21 @@ Check before moving on:
 
 ---
 
-## Milestone 1 — PostgreSQL Setup
+## Milestone 1 — PostgreSQL Setup (Neon)
 
-Goal: a running Postgres database the backend can reach.
+Goal: a running Neon (hosted PostgreSQL) database the backend can reach.
 
 Steps:
-1. Install PostgreSQL locally, or provision a hosted instance if you're
-   going straight to something like Supabase/Railway/Neon.
-2. Create the database for this project (e.g. f1_helpdesk_db).
-3. Create a dedicated DB user with a password, not the default
-   superuser, and grant it rights on that database.
+1. Create a Neon project, database and role in the Neon console
+   (hosted PostgreSQL — do not set up, use, or modify a local Postgres
+   install for this project).
+2. Create the database for this project on the Neon branch.
+3. Use the dedicated Neon role that comes with the project (an owner
+   role with a password, not a superuser); it has rights on that
+   database.
 4. Confirm you can connect to it with a plain client (psql or a GUI
-   tool like TablePlus/DBeaver) using that user before touching code.
+   tool like TablePlus/DBeaver) using that role's connection string
+   before touching code.
 5. Put the connection string into the backend's .env.
 
 Check before moving on:

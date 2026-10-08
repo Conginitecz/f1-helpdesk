@@ -4,6 +4,69 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-08 — Milestone 1 verification vs Neon, port standardization, approved doc updates
+
+### Verified (Milestone 1 re-check against Neon, per user instructions)
+- Connected with plain `psql` using `DATABASE_URL` from `backend/.env`
+  (read internally by script — never printed, never committed):
+  - first attempt succeeded (no suspend-retry needed): role
+    `neondb_owner`, database `neondb`,
+    `has_database_privilege(current_user, current_database(), 'CREATE') = t`;
+  - created throwaway table `f1_helpdesk_m1_probe_tmp` (verified
+    exists=1) and dropped it (verified exists=0) — full create/drop
+    round-trip passed.
+- Local PostgreSQL untouched: no connections attempted against it, no
+  superuser use, no `pg_hba.conf`/auth changes, no objects created —
+  per user instruction it is ignored entirely.
+- Observation (no change made): `DATABASE_URL` currently points at
+  Neon's **pooler** host (`-pooler`); the direct/unpooled URL is in
+  `DATABASE_URL_UNPOOLED`.
+- Services re-tested after stopping the stale process: backend
+  `:7676` → HTTP 200 "Hello World!", frontend `:3000` → HTTP 200
+  ("/" and "/admin").
+
+### Decisions
+- **Port: KEEP 7676** (user-approved decision). `backend/.env` and
+  `frontend/.env` already agreed on 7676; `backend/.env.example`,
+  `frontend/.env.example`, and the prior CHANGELOG/completed-checklist
+  mentions (which said 3001 from Milestone 0) were updated so all
+  artifacts now agree. History: the scaffold originally used 3001, the
+  `.env` files were switched to 7676 on 2026-10-07, and 7676 is now the
+  recorded standard. Side note: port 3001 is currently occupied by a
+  different project's app (Ryo Academy), which was left untouched.
+- **Stale process stopped**: terminated the leftover
+  `npm run start:dev` + `nest start --watch` pair from the Milestone 0
+  session (PIDs 216140/216151). Current backend (`:7676`) and frontend
+  (`:3000`) left running as instructed.
+
+### Changed (docs edits — approved by user; recorded as a deviation)
+- Reason: the database is **hosted on Neon**, so the original
+  local-Postgres instructions were obsolete and would mislead future
+  contributors; user explicitly approved rewriting them.
+- `docs/development-check-list.md` — Milestone 1 rewritten: local
+  install step replaced with "Create a Neon project, database and role
+  in the Neon console"; goal and remaining steps reworded for Neon;
+  both "Check before moving on" items unchanged.
+- `docs/development-docs.md` — stack line now reads "PostgreSQL
+  (database, hosted on Neon)".
+- `backend/.env.example` — still placeholder-only: `PORT=7676` and a
+  **fake** Neon-style `DATABASE_URL` (no real host or credential).
+- `frontend/.env.example` — `NEXT_PUBLIC_API_BASE_URL` updated to
+  port 7676.
+
+### Files affected
+- Modified: `docs/development-check-list.md`, `docs/development-docs.md`,
+  `docs/CHANGELOG.md`, `docs/completed-checklist.md`,
+  `backend/.env.example`, `frontend/.env.example`.
+- Unchanged (already correct, gitignored): `backend/.env`,
+  `frontend/.env`.
+
+### Tables affected
+- None (throwaway probe table created and dropped; Neon database
+  otherwise empty pending Milestone 3).
+
+---
+
 ## 2026-10-08 — Milestone 1: PostgreSQL Setup (Neon hosted instance)
 
 ### Added
@@ -48,9 +111,9 @@ All notable changes to the F1 Help Desk project. Newest entries first.
   Persistent via `npm config set prefix`.
 - Kept the tool-added `*env` ignore rule (superset of the existing
   `.env` rules; harmless for this repo).
-- Backend port remains **7676** in `backend/.env` (changed from 3001
-  by a parallel session on 2026-10-07 22:48; not yet reflected in the
-  Milestone 0 records — see completed-checklist).
+- Backend port **7676** in `backend/.env` (changed from 3001 on
+  2026-10-07 22:48; docs aligned to 7676 on 2026-10-08 — see the
+  port-standardization entry above).
 
 ### Verified
 - `psql` connects outside app code using the `.env` URL:
@@ -94,10 +157,10 @@ All notable changes to the F1 Help Desk project. Newest entries first.
     "F1 Help Desk".
 - **Environment files** (`.env` is gitignored; `.env.example` is
   committed):
-  - `backend/.env` — `PORT=3001`, `DATABASE_URL` (placeholder
+  - `backend/.env` — `PORT=7676`, `DATABASE_URL` (placeholder
     credentials until Milestone 1), `JWT_SECRET` (dev value).
   - `backend/.env.example`
-  - `frontend/.env` — `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`.
+  - `frontend/.env` — `NEXT_PUBLIC_API_BASE_URL=http://localhost:7676`.
   - `frontend/.env.example`
 - **Git ignore rules**: root `.gitignore`, `backend/.gitignore`, and an
   added `!.env.example` exception in `frontend/.gitignore` (its default
@@ -107,7 +170,7 @@ All notable changes to the F1 Help Desk project. Newest entries first.
   from `.env`.
 
 ### Decisions
-- **Ports**: backend on **3001**, frontend on **3000** — avoids the
+- **Ports**: backend on **7676**, frontend on **3000** — avoids the
   default-port collision between NestJS and Next.js during parallel dev.
 - **Backend dependency install uses `npm install --legacy-peer-deps`**:
   npm 10.9.4 crashed with `TypeError: Cannot read properties of null
