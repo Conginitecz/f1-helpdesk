@@ -17,7 +17,7 @@ const navigation: Record<UserRole, Array<{ label: string; href?: string }>> = {
     { label: "Partners", href: "/super-admin/partners" },
     { label: "Status requests", href: "/super-admin/status-requests" },
     { label: "Configuration" },
-    { label: "Inventory" },
+    { label: "Inventory", href: "/super-admin/inventory" },
   ],
   admin: [{ label: "Service engineers" }, { label: "Vendors" }, { label: "Inventory" }],
 };

@@ -642,6 +642,112 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.inventory-form {
+  margin-top: 28px;
+  border-top: 1px solid #d6dfd7;
+  padding-top: 18px;
+}
+
+.form-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.form-section-title h2,
+.inventory-list-heading h2 {
+  margin: 5px 0 0;
+  color: #183b30;
+  font-size: 18px;
+}
+
+.inventory-toggle {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #d8e1d9;
+  border-radius: 3px;
+  padding: 0 10px;
+}
+
+.inventory-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #1c5a43;
+}
+
+.field-help,
+.field-error {
+  color: #728077;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.field-error {
+  color: #9a4035;
+}
+
+.assigned-location {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  border: 1px solid #e0e6e0;
+  border-radius: 3px;
+  padding: 0 10px;
+  background: #f5f7f4;
+  color: #607067;
+  font-weight: 400;
+}
+
+.inventory-list-section {
+  margin-top: 38px;
+}
+
+.inventory-list-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #d6dfd7;
+  padding-top: 16px;
+}
+
+.inventory-filter {
+  display: grid;
+  min-width: min(260px, 45%);
+  gap: 5px;
+  color: #526358;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.inventory-filter select {
+  min-height: 36px;
+  border: 1px solid #cbd5cc;
+  border-radius: 3px;
+  padding: 0 9px;
+  background: #fff;
+  color: #263b30;
+  font: inherit;
+  font-size: 12px;
+}
+
+.inventory-table-wrap {
+  margin-top: 14px;
+}
+
+.inventory-table {
+  min-width: 1040px;
+}
+
+.inventory-table td:nth-child(4),
+.inventory-table td:nth-child(5) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .page-heading h1 {
   margin: 8px 0;
   color: #183b30;
@@ -765,5 +871,15 @@ body {
 
   .data-table {
     min-width: 660px;
+  }
+
+  .inventory-list-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inventory-filter {
+    width: 100%;
+    min-width: 0;
   }
 }

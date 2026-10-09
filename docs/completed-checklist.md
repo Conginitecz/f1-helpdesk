@@ -6,6 +6,33 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 15 — Super-Admin Inventory UI — Completed with Configuration Cut 2026-10-09
+
+Configuration editors were intentionally omitted per the demo scope request; no M16 or later work was started.
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | List all inventory across locations and filter by location | PASS | Real browser loaded all inventory rows, then selected location ID 4; four matching rows appeared, including the M15 item. The list shows type/category labels, units, price, tax, location, creator and active status. |
+| 2 | Create and edit inventory with API-backed validation | PASS | Browser created TEST-M15 item ID 8 at location 4, then edited its name and units using `PATCH /super-admin/inventory/8`. The refreshed row showed the edited values. |
+| 3 | Use active lookup rows and readable labels | PASS | The category dropdown used active `inventory_category` rows and showed the row label; Neon confirmed category ID 5’s label. Inactive category ID 6 was not offered. No active `inventory_type` rows currently exist, so the optional type selector reports none configured. |
+| 4 | Verify persisted item and creator in Neon | PASS | Neon confirmed item ID 8: edited TEST-M15 name, category 5, 11 units, price 23.45, no tax, location 4, `created_by_super_admin_id=1`, and active. |
+
+### Summary of changes
+- Added reusable inventory list and form components. The shared form has a selectable-location mode for super admins and an assigned-location presentation mode for later admin reuse; M16 was not started.
+- Added super-admin inventory listing, location filtering, create, and edit using existing GET/POST/PATCH endpoints. No delete control was added because the backend exposes no delete endpoint.
+- Enabled the Inventory shell link. Configuration remains disabled and was cut from this demo milestone.
+- No backend or schema changes.
+
+### Verification and API gaps
+- Real browser at `http://localhost:3000`: create, visible list refresh, edit, location filter; no browser console/page errors.
+- Frontend lint and production build passed.
+- No super-admin active-only master-data endpoint exists. The admin active-only endpoint is role-guarded, so this UI reads the existing super-admin master-data endpoint and filters `is_active` client-side. No active inventory types are seeded; category rows are available. No API change was made.
+- Inventory delete is not supported by the API and is omitted.
+
+---
+
 ## Milestone 14 — Super-Admin UI: Demo Minimum — Completed 2026-10-09
 
 ### Check before moving on
@@ -253,6 +280,7 @@ No rows were deleted. Retained test records:
 - Previous M12 journey: `locations` ID 12; `admins` ID 10; `partners` IDs 10–12 (vendor and two engineers); `status_change_requests` ID 4; `inventory_items` IDs 4–5.
 - Final M12 journey: `locations` ID 13; `admins` ID 11; `partners` IDs 13–15 (vendor and two engineers); `status_change_requests` ID 5 (approved); `inventory_items` IDs 6–7.
 - M14 browser flow: `locations` ID 14 (`TEST-M14-Location-1791564887345`); `admins` ID 12 (`test-m14-admin-1791564917141@example.com`); `partners` IDs 16/17 (TEST direct engineers); `status_change_requests` IDs 6/7 (approved/rejected respectively).
+- M15 browser flow: `inventory_items` ID 8 (`TEST-M15-1791566009132-edited`, location 4, category 5, edited to 11 units at 23.45, created by super admin 1).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

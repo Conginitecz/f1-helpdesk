@@ -4,6 +4,25 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 15: Super-Admin Inventory UI
+
+Added the inventory portion of the super-admin UI. Configuration editors were cut from the demo scope; no M16+ work was started.
+
+### Added or changed
+- `frontend/src/app/super-admin/inventory/page.tsx` — added inventory list, location filter, create/edit flows, and lookup/location/admin reads through existing endpoints.
+- `frontend/src/components/inventory/inventory-list.tsx` and `inventory-form.tsx` — added reusable inventory list/form components. Form supports selectable location for super admin and assigned-location mode for future admin reuse.
+- `frontend/src/components/inventory/types.ts` — added shared inventory item, lookup, location, and creator response shapes.
+- `frontend/src/components/role-shell.tsx` and `frontend/src/app/globals.css` — enabled Inventory and added basic inventory form/table styling. Configuration remains disabled.
+
+### Verification and decisions
+- Real browser created inventory ID 8 in location 4, edited it, and filtered by location 4; no browser console/page errors.
+- Neon confirmed the edited TEST-M15 item, category 5, 11 units, price 23.45, location 4, super-admin creator ID 1, and active state.
+- Frontend lint and production build passed. No backend or schema changes.
+- API gap: only `/admin/master-data` guarantees active rows, but it is admin-role guarded. Super-admin UI reads `/super-admin/master-data` and client-filters `is_active`. No active inventory types are presently configured. Delete is not exposed by the API and is omitted.
+- TEST inventory ID 8 is listed for demo purge in the completed checklist.
+
+---
+
 ## 2026-10-09 — Milestone 14: Super-Admin UI (Demo Minimum)
 
 Added the initial super-admin UI using only the existing backend endpoints.
