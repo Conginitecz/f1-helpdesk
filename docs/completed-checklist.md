@@ -6,6 +6,33 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 8 — Super Admin Backend: Partners & Status Requests — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Vendor and engineer filters return the correct partner rows | PASS | Real GETs returned only the corresponding opaque `partner_type_id`; psql confirmed the code mapping for TEST-M8 vendor ID 5 and engineer ID 6. |
+| 2 | Approving a request updates partner state and request status | PASS | HTTP approve returned `approved`; psql confirmed engineer ID 6 `is_active=false`, resolver ID 1, and resolved timestamp. |
+| 3 | Rejecting a request leaves partner state untouched | PASS | HTTP reject returned `rejected`; vendor ID 5 remained active in response and psql. |
+
+### Additional verification
+- Direct vendor deactivate then activate returned 200 and immediately changed `is_active` false then true.
+- Unknown partner/request IDs returned 404; non-numeric IDs returned 400; already-resolved approval/rejection returned 409.
+- All six M8 operations returned 401 without a token and 403 with the real admin token.
+- `npm run build` passed; `npm test` passed (1 file, 1 test); lint reported only the pre-existing `src/auth/auth.service.ts:86` unused catch-variable warning.
+
+### Summary of changes
+- Added guarded partner filter/toggle and status-request list/resolve controllers/services and registered repositories in the existing modules.
+- Status resolution uses a transaction and row lock; approval updates partner state and request status atomically; resolver ID is taken from JWT.
+- No schema/migration, frontend, or non-test data changes.
+
+### Pending errors or issues
+- None. Existing lint warning: `src/auth/auth.service.ts:86:14` unused catch parameter `error`; unrelated to M8.
+
+### Deviations from the docs
+- Neon had no M4 partner fixture rows (`partners=0`, `status_change_requests=0`), so the live M8 checks used explicitly prefixed TEST-M8 fixtures inserted via psql. No existing or non-test rows were edited.
+
 ## Milestone 7 — Super Admin Backend: Master Data & Configuration — Completed with Deviations 2026-10-09
 
 Added guarded master-data and configuration APIs. No schema changes or
@@ -73,6 +100,8 @@ No rows were deleted. Retained test records:
 - `admins`: ID 8 (`test-admin-m7@example.com`, standing account for M8–M11; dummy password remains in ignored `backend/.env`).
 - `configurations`: ID 2 (`min_service_charge`, dummy value `500`; replace with the agreed production value before demo).
 - `configurations`: ID 4 (`test_m7_1791504779535`, value `TEST-M7-value`).
+- `partners`: ID 5 (`TEST-M8-Vendor`) and ID 6 (`TEST-M8-Engineer`, inactive after approved deactivation request).
+- `status_change_requests`: ID 1 (approved deactivation of partner 6) and ID 2 (rejected deactivation of partner 5).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

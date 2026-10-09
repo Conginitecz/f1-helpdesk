@@ -4,6 +4,40 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 8: Super Admin Partners & Status Requests
+
+Added guarded super-admin partner listing/toggles and status-request
+resolution. No schema changes or migrations were made.
+
+### Added or changed
+- `backend/src/partners/partners.controller.ts` and `partners.service.ts` —
+  GET vendor/engineer filters resolved through seeded opaque master-data codes;
+  direct activate/deactivate routes return explicit partner columns.
+- `backend/src/partners/partners.module.ts` — registered controller/service and
+  the partner/master-data repositories.
+- `backend/src/status-requests/status-requests.controller.ts` and
+  `status-requests.service.ts` — list, approve, and reject operations. Approval
+  changes the partner and request in one transaction; repeat resolutions return
+  409; resolver ID comes from JWT.
+- `backend/src/status-requests/status-requests.module.ts` — registered the
+  controller/service and repositories.
+- `docs/completed-checklist.md` — recorded M8 HTTP, DB, unit-test, and lint results.
+
+### Tables touched
+- Neon `partners`: TEST-M8 vendor ID 5 and engineer ID 6.
+- Neon `status_change_requests`: approve fixture ID 1 and reject fixture ID 2.
+- No schema changes or migrations.
+
+### Verification and decisions
+- Vendor/engineer filters, direct toggles, approve/deactivate, reject/no-toggle,
+  unknown IDs, non-numeric IDs, repeat-resolution conflict, and role guards were
+  tested over real HTTP; psql confirmed final state and resolver audit ID 1.
+- Backend build and unit suite passed (1 test file, 1 test); lint has the
+  pre-existing unused catch-variable warning in `auth.service.ts`.
+- The database had no M4 partner-shaped fixtures, so clearly named TEST-M8 rows
+  and pending requests were inserted as test fixtures using opaque master-data
+  code lookups. These remain listed for purge.
+
 ## 2026-10-09 — Milestone 7 Closeout: Real Admin Login & Config Creation
 
 Completed the real-admin authorization check and the approved config creation
