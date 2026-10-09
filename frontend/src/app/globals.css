@@ -742,6 +742,125 @@ body {
   min-width: 1040px;
 }
 
+.admin-home-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.admin-home-links a {
+  display: grid;
+  min-height: 138px;
+  align-content: space-between;
+  border-top: 2px solid #327355;
+  border-bottom: 1px solid #d6dfd7;
+  padding: 14px;
+  background: #fff;
+  color: #183b30;
+  text-decoration: none;
+}
+
+.admin-home-links a:hover {
+  background: #f8fbf8;
+}
+
+.admin-home-links a > span {
+  color: #718076;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-home-links strong {
+  font-size: 16px;
+}
+
+.admin-home-links small {
+  color: #68766e;
+  font-size: 12px;
+}
+
+.admin-directory {
+  margin-top: 34px;
+}
+
+.admin-table-wrap {
+  margin-top: 14px;
+}
+
+.admin-table-wrap table {
+  min-width: 860px;
+}
+
+.admin-partner-form textarea {
+  width: 100%;
+  min-height: 76px;
+  resize: vertical;
+  border: 1px solid #cbd5cc;
+  border-radius: 3px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #263b30;
+  font: inherit;
+  font-size: 12px;
+}
+
+.admin-partner-form input:focus,
+.admin-partner-form select:focus,
+.admin-partner-form textarea:focus {
+  border-color: #34745a;
+  outline: 2px solid #34745a22;
+}
+
+.admin-vendor-select {
+  display: grid;
+  width: min(100%, 320px);
+  gap: 5px;
+  margin-top: 24px;
+  color: #526358;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.admin-vendor-select select {
+  min-height: 38px;
+  border: 1px solid #cbd5cc;
+  border-radius: 3px;
+  padding: 0 10px;
+  background: #fff;
+  color: #263b30;
+  font: inherit;
+  font-size: 12px;
+}
+
+.inline-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  border-left: 3px solid #b84235;
+  padding: 8px 12px;
+  background: #fff0ed;
+  color: #8f2f25;
+  font-size: 13px;
+}
+
+.status-pending {
+  background: #fff2dc;
+  color: #805012;
+}
+
+.status-approved {
+  background: #e0efe5;
+  color: #246044;
+}
+
+.status-rejected {
+  background: #f8e4e0;
+  color: #8f2f25;
+}
+
 .inventory-table td:nth-child(4),
 .inventory-table td:nth-child(5) {
   font-variant-numeric: tabular-nums;
@@ -798,6 +917,10 @@ body {
 }
 
 @media (max-width: 760px) {
+  .admin-home-links {
+    grid-template-columns: 1fr;
+  }
+
   .login-page {
     display: block;
     min-height: 100vh;

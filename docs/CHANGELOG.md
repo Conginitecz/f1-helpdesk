@@ -4,9 +4,31 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 16: Admin UI
+
+Added the admin vendor, engineer, and assigned-location inventory screens using the existing backend endpoints. No M17 work was started.
+
+### Added or changed
+- `frontend/src/app/admin/page.tsx` — replaced the placeholder with links to the admin work areas; no admin summary/count endpoint exists.
+- `frontend/src/app/admin/vendors/page.tsx` — added this admin's vendor list with contact fields, status and created date, plus a manual vendor form and link to add engineers under a vendor.
+- `frontend/src/app/admin/engineers/page.tsx` and `frontend/src/components/admin/partner-form.tsx` — added direct/vendor-owned engineer creation, owner/type/status labels, active-only skill/category dropdowns, and confirm-before-request activation/deactivation actions.
+- `frontend/src/app/admin/inventory/page.tsx` — reused the M15 inventory form/list in assigned-location mode and reads lookup options from the active-only admin master-data endpoint.
+- `frontend/src/components/inventory/inventory-list.tsx` and `inventory-form.tsx` — added assigned mode for a location-free, read-only admin inventory list (showing the server-returned location ID) and mapped master-data validation errors to their form fields.
+- `frontend/src/components/role-shell.tsx` and `frontend/src/app/globals.css` — enabled admin navigation and added matching responsive directory/form styling.
+- `backend/src/scripts/seed-master-data.ts` — extended the existing repeatable seed with active `inventory_type` rows: `Spare part`, `Consumable`, and `Accessory`; the readback now includes these rows.
+
+### Verification and decisions
+- Real browser as admin 13 created vendor 18, direct engineer 19, vendor-owned engineer 20, pending deactivation requests 8/9, and inventory item 9. Both confirmation dialogs appeared; engineers 19/20 remained active while requests were pending. Request 9 displayed Pending approval and disabled its action button.
+- The inventory screen offered the three active types and had no location input/select. The create response and Neon both confirmed location 14, creator admin 13, type 7, and active state; the read-only list displays `Location #14`.
+- A second admin (ID 14) saw no vendor or engineer rows from admin 13. Both admins have location 14, so admin 14 can see item 9 through the existing location-scoped inventory endpoint; inventory is shared at location scope, not isolated by creator.
+- Neon confirmed partner ownership/reference data: vendor 18 belongs to admin 13; engineer 19 references admin 13; engineer 20 references vendor 18; requests 8/9 are pending deactivations. Seed IDs 7-9 are active inventory types. All M16 records are listed for demo purge in `docs/completed-checklist.md`.
+- Browser console/page-error capture was empty for admin login and the vendor, engineer, request, inventory, and isolation workflows. Frontend lint/build passed; backend build and all 5 backend tests passed. Backend lint reports only the existing unused catch variable warning in `src/auth/auth.service.ts:86`.
+- API gaps: there is no admin vendor edit or inventory edit endpoint; there is no admin read endpoint for request outcomes, so the UI displays and disables repeat requests for the returned `pending` request only and cannot refresh it to `approved`/`rejected`; `/admin/inventory` returns `location_id` but no location name, and no admin location lookup exists; no active engineer skill/category rows were configured. No new endpoints or schema changes were made.
+- The admin home uses links because no admin overview endpoint exists. Configuration editing remains out of scope.
+
 ## 2026-10-09 — Milestone 15: Super-Admin Inventory UI
 
-Added the inventory portion of the super-admin UI. Configuration editors were cut from the demo scope; no M16+ work was started.
+Added the inventory portion of the super-admin UI. Configuration editors were cut from the demo scope; M16 had not started at this milestone's completion.
 
 ### Added or changed
 - `frontend/src/app/super-admin/inventory/page.tsx` — added inventory list, location filter, create/edit flows, and lookup/location/admin reads through existing endpoints.

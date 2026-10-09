@@ -2,10 +2,11 @@ import 'dotenv/config';
 import { AppDataSource } from '../data-source.js';
 
 /**
- * Repeatable seed for the core master_data rows the application logic
- * depends on (docs/development-docs.md §1.4):
+ * Repeatable seed for core master_data codes and demo inventory types
+ * (docs/development-docs.md §1.4):
  *   - partner_type:    vendor + engineer
  *   - reference_type:  admin + vendor
+ *   - inventory_type:  spare part + consumable + accessory
  *
  * The docs require opaque, non-human-readable codes (the `text` values);
  * meaning lives in this script and in docs/completed-checklist.md (IDs),
@@ -17,6 +18,9 @@ const CORE_ROWS: ReadonlyArray<{ key: string; type: string; text: string }> = [
   { key: 'partner_engineer', type: 'partner_type', text: 'h3Np8Ld1Qs5Vc2Jw' },
   { key: 'reference_admin', type: 'reference_type', text: 'z9Wm4Yt7Bn2kF8xR' },
   { key: 'reference_vendor', type: 'reference_type', text: 'd6Rq1Ae3Uv9sH5pM' },
+  { key: 'inventory_type_spare_part', type: 'inventory_type', text: 'Spare part' },
+  { key: 'inventory_type_consumable', type: 'inventory_type', text: 'Consumable' },
+  { key: 'inventory_type_accessory', type: 'inventory_type', text: 'Accessory' },
 ];
 
 async function main(): Promise<void> {
@@ -42,10 +46,10 @@ async function main(): Promise<void> {
     }
     const rows = await dataSource.query(
       `SELECT id, type, text, is_active FROM master_data
-       WHERE type IN ('partner_type', 'reference_type')
+       WHERE type IN ('partner_type', 'reference_type', 'inventory_type')
        ORDER BY type, id`,
     );
-    console.log('core master_data rows now in the database:');
+     console.log('seeded master_data rows now in the database:');
     console.log(JSON.stringify(rows, null, 2));
   } finally {
     await dataSource.destroy();

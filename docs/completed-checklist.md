@@ -6,9 +6,29 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 16 — Admin UI — Completed with API Limits Recorded 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Create and list this admin's vendors | PASS | Real browser as admin 13 created TEST vendor ID 18 with phone, email, and address; it appeared in the scoped vendor list. No vendor update endpoint exists, so edit was omitted. |
+| 2 | Create direct and vendor-owned engineers with readable type, owner, and active state | PASS | Browser created direct engineer ID 19 and vendor-owned engineer ID 20. Rows showed “Service engineer,” “Direct admin” or vendor name, and Active. Neon confirmed direct reference type/id 3/13 and vendor reference type/id 4/18. |
+| 3 | Confirm deactivation request and show its status | PARTIAL | Browser displayed confirmations for direct engineer 19 and vendor-owned engineer 20; requests 8/9 returned `pending`, both engineers stayed active, and request 9 displayed Pending approval with its action disabled. There is no admin request-read endpoint, so the UI cannot refresh status to approved/rejected after resolution or page reload. |
+| 4 | Add and list inventory without a location selector | PARTIAL | Browser created item ID 9 with no location control present. API response and Neon confirmed server-assigned location 14, type 7, creator admin 13, and active state; the row shows `Location #14`. The API has no admin inventory PATCH route or admin location-name lookup, so edit and a human-readable location name cannot be provided without backend work. |
+| 5 | Use active inventory lookup rows | PASS | Admin-role active-only endpoint populated type options `Spare part`, `Consumable`, and `Accessory`; Neon confirmed active master-data IDs 7-9. |
+| 6 | Verify second-admin isolation | PARTIAL | Admin 14 saw no vendor or engineer from admin 13. Both admins use location 14, so the location-scoped inventory endpoint intentionally returned shared item 9 to admin 14; it is not scoped by creator. This does not meet a per-admin inventory isolation requirement. |
+| 7 | Admin home, navigation, and screen states | PASS | Admin home links to all three screens; loading, empty, retryable error, and field-validation states are implemented. Browser exercised the empty and populated states; no API failure was injected. |
+
+### Verification
+- Real browser workflows ran against the existing backend as admin 13 and admin 14. Browser console/page-error capture was empty.
+- Neon readback confirmed admins 13/14 at location 14; vendor 18; engineers 19/20; pending requests 8/9; and inventory item 9. The seed rerun skipped duplicates and confirmed active inventory types 7-9.
+- Frontend lint and production build passed. Backend build and `npm test` passed (4 files, 5 tests). Backend lint has one pre-existing unused catch-variable warning in `src/auth/auth.service.ts:86`.
+- No API endpoints, schema, migrations, config editor, or M17 work were added. API limitations include missing vendor/inventory PATCH routes, no admin request-status read endpoint, and no admin location-name lookup. Inventory visibility is by assigned location, not admin creator.
+
 ## Milestone 15 — Super-Admin Inventory UI — Completed with Configuration Cut 2026-10-09
 
-Configuration editors were intentionally omitted per the demo scope request; no M16 or later work was started.
+Configuration editors were intentionally omitted per the demo scope request; M16 had not started at the time this milestone was completed.
 
 ### Check before moving on
 
@@ -281,6 +301,8 @@ No rows were deleted. Retained test records:
 - Final M12 journey: `locations` ID 13; `admins` ID 11; `partners` IDs 13–15 (vendor and two engineers); `status_change_requests` ID 5 (approved); `inventory_items` IDs 6–7.
 - M14 browser flow: `locations` ID 14 (`TEST-M14-Location-1791564887345`); `admins` ID 12 (`test-m14-admin-1791564917141@example.com`); `partners` IDs 16/17 (TEST direct engineers); `status_change_requests` IDs 6/7 (approved/rejected respectively).
 - M15 browser flow: `inventory_items` ID 8 (`TEST-M15-1791566009132-edited`, location 4, category 5, edited to 11 units at 23.45, created by super admin 1).
+- M16 browser flow: `admins` IDs 13/14 (`test-m16-admin-20261009@example.com`, `test-m16-second-20261009@example.com`); `partners` IDs 18-20 (TEST vendor, direct engineer, vendor-owned engineer); `status_change_requests` IDs 8/9 (pending deactivation requests for partners 19/20); `inventory_items` ID 9 (`TEST-M16-Inventory-20261009`, location 14, type 7, created by admin 13).
+- M16 demo seed: `master_data` IDs 7-9 (`Spare part`, `Consumable`, `Accessory`, active `inventory_type` rows; retain for inventory dropdowns or remove before demo if not wanted).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

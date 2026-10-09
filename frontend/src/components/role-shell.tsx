@@ -19,7 +19,12 @@ const navigation: Record<UserRole, Array<{ label: string; href?: string }>> = {
     { label: "Configuration" },
     { label: "Inventory", href: "/super-admin/inventory" },
   ],
-  admin: [{ label: "Service engineers" }, { label: "Vendors" }, { label: "Inventory" }],
+  admin: [
+    { label: "Dashboard", href: "/admin" },
+    { label: "Service engineers", href: "/admin/engineers" },
+    { label: "Vendors", href: "/admin/vendors" },
+    { label: "Inventory", href: "/admin/inventory" },
+  ],
 };
 
 const destinations: Record<UserRole, string> = {

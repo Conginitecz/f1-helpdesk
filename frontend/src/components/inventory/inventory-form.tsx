@@ -169,9 +169,18 @@ function Field({
 function splitFieldErrors(message: string): { fields: Record<string, string>; general: string } {
   const lower = message.toLowerCase();
   const fields: Record<string, string> = {};
-  const names = ["name", "type_id", "category_id", "units", "price_per_unit", "tax_applicable", "tax_percentage", "location_id"];
-  for (const name of names) {
-    if (lower.includes(name)) fields[name] = message;
+  const aliases: Record<string, string[]> = {
+    name: ["name"],
+    type_id: ["type_id", "inventory_type"],
+    category_id: ["category_id", "inventory_category"],
+    units: ["units"],
+    price_per_unit: ["price_per_unit"],
+    tax_applicable: ["tax_applicable"],
+    tax_percentage: ["tax_percentage"],
+    location_id: ["location_id"],
+  };
+  for (const [field, tokens] of Object.entries(aliases)) {
+    if (tokens.some((token) => lower.includes(token))) fields[field] = message;
   }
   return Object.keys(fields).length ? { fields, general: "" } : { fields, general: message };
 }
