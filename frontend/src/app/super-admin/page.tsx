@@ -1,12 +1,20 @@
+import { RoleShell } from "@/components/role-shell";
+
 export default function SuperAdminArea() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-50 p-8 font-sans dark:bg-black">
-      <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-        Super Admin
-      </h1>
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Super admin area — screens will be built in later milestones.
-      </p>
-    </main>
+    <RoleShell role="super_admin">
+      <div className="page-heading">
+        <p className="eyebrow">SUPER ADMIN</p>
+        <h1>Workspace</h1>
+        <p>Administration and operations tools will appear here.</p>
+      </div>
+      <div className="empty-workspace">
+        <span className="empty-mark" aria-hidden="true">S</span>
+        <div>
+          <h2>Workspace ready</h2>
+          <p>Your account is signed in. Super-admin tools are coming soon.</p>
+        </div>
+      </div>
+    </RoleShell>
   );
 }

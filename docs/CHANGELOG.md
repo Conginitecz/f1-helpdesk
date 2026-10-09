@@ -4,6 +4,26 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 13: Login UI, Route Protection & Role Shells
+
+Added the initial browser authentication flow and role workspaces.
+
+### Added or changed
+- `frontend/src/lib/api.ts` — added the `NEXT_PUBLIC_API_URL` fetch wrapper, auth response/session types, Bearer header, login/logout helpers, and 401 session clearing/navigation.
+- `frontend/src/app/login/page.tsx` — added email/password login with loading and generic API error states, then role-based redirects.
+- `frontend/src/components/role-shell.tsx` and `auth-navigation.tsx` — added client-side role validation, shared role shell, disabled future-screen navigation, logout, and 401 navigation handling.
+- `frontend/src/app/page.tsx`, `admin/page.tsx`, and `super-admin/page.tsx` — replaced static links/placeholders with session redirect and role shell entry pages.
+- `frontend/src/app/globals.css` and `frontend/env.local.example` — added basic responsive auth/shell styling and the public API URL setting example.
+
+### Verification and decisions
+- Real browser at `http://localhost:3000` against the running Nest API: super-admin/admin logins reached their role homes; wrong password showed a clear generic error; both logout flows cleared session; logged-out direct routes redirected to login; cross-role navigation returned to the matching home; logged-out `/` redirected to login.
+- Browser console had no JavaScript/page exceptions. The deliberately wrong password generated the expected failed-resource console entry for the backend's HTTP 401.
+- Frontend `npm run lint` and `npm run build` passed.
+- The API login contract returns `access_token` and `user: { id, role }`, with roles `admin` and `super_admin`; logout is stateless, so the client discards localStorage. Client-side guards are used because localStorage is not available to Next middleware.
+- A local development-only credential fixture used for browser automation was removed before commit; no credential endpoint or credentials are included in this change.
+
+---
+
 ## 2026-10-09 — Milestone 12: Backend Full Pass & CORS
 
 Completed the backend user-journey pass and enabled the browser preflight needed by the Next.js origin.

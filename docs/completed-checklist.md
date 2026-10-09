@@ -6,6 +6,29 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 13 — Frontend: Auth & Shell — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Super-admin and admin login land in the correct role shell | PASS | Real browser at `http://localhost:3000`: super-admin login landed at `/super-admin`; admin login landed at `/admin`. Both shells showed the correct role and account identity. |
+| 2 | Logged-out direct routes and cross-role access are protected | PASS | Browser direct visits to `/admin` and `/super-admin` while logged out redirected to `/login`. A super admin opening `/admin` returned to `/super-admin`; an admin opening `/super-admin` returned to `/admin`. |
+| 3 | Wrong password, logout, and home redirect behave correctly | PASS | Wrong password stayed on `/login` and showed the API's generic invalid-credentials message. Logout for both roles returned to `/login` and cleared localStorage. `/` redirected to `/login` when logged out, `/admin` for an admin session, and `/super-admin` for a super-admin session. |
+
+### Summary of changes
+- Added a small `NEXT_PUBLIC_API_URL` fetch client that stores `access_token` and `user.id/role`, attaches Bearer authorization, and clears/redirects after API 401 responses.
+- Added `/login`, root session redirect, client-side role protection, shared role shells, logout, and disabled M14–M16 navigation placeholders.
+- No later milestone screens were built.
+
+### Verification
+- Real browser flow passed against the live Nest API: login as both roles, wrong password, logout as both roles, logged-out direct route access, cross-role access, and home redirect.
+- Browser console showed no page exceptions or errors during successful flows. The deliberate wrong-password check produced the expected failed-resource console entry for the API's HTTP 401 response.
+- `npm run lint` and `npm run build` passed in `frontend/`.
+- A temporary development-only credential fixture route was used to drive the browser with local test credentials; it was removed before commit and is not present in the final tree.
+
+---
+
 ## Milestone 12 — Backend Complete: Full Pass Test — Completed 2026-10-09
 
 ### Check before moving on
