@@ -4,6 +4,40 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 10: Admin Partner Ownership & Status Requests
+
+Added the admin-scoped partner flow covering direct vendor creation, direct
+engineer creation, vendor-scoped engineer onboarding, and admin-submitted
+status-change requests for service engineers.
+
+### Added or changed
+- `backend/src/partners/partners.controller.ts` — added the guarded
+  `@Controller('admin/partners')` routes for `GET /admin/partners`,
+  `POST /admin/partners`, `POST /admin/partners/:vendorPartnerId/service-engineers`,
+  and `POST /admin/partners/:id/request-status-change`.
+- `backend/src/partners/partners.service.ts` — added the admin ownership logic,
+  reference-type resolution, partner scoping for the calling admin, and the
+  pending status-request creation flow.
+- `backend/src/partners/create-partner.dto.ts` and
+  `backend/src/partners/request-status-change.dto.ts` — strict DTO validation for
+  vendor/engineer creation and activate/deactivate requests.
+- `backend/src/partners/partners.module.ts` — registered the admin controller and
+  the `StatusChangeRequest` repository used to create pending requests.
+- `backend/src/partners/partners.service.spec.ts` — regression covering the admin's
+  ownership-scoping behavior across direct and vendor-traced engineer rows.
+
+### Verification and decisions
+- The focused M10 regression passed: `npx vitest run src/partners/partners.service.spec.ts`.
+- The backend typechecks cleanly: `npx tsc -p tsconfig.json --pretty false --noEmit` exited 0.
+- Fresh live HTTP verification on port 7677 created TEST-M10 vendor ID 7, direct engineer ID 8, vendor-owned engineer ID 9, and request ID 3. Admin filters returned the rows; Neon confirmed the expected reference IDs and that engineer ID 8 remained active while its request was pending, then remained active after rejection.
+- A second TEST admin (ID 9) was created over HTTP. Its vendor and engineer lists were empty while admin 8 saw vendor IDs 5/7 and engineer IDs 6/8/9. Creating under admin 8's vendor from admin 9 returned 404 and inserted no row.
+- All four admin-only endpoints returned 401 without a token and 403 with the super-admin token. M8 resolution/role gates were also rerun: rejecting request 3 returned 200, repeat resolution returned 409, and all six M8 endpoints returned 401 unauthenticated / 403 with the admin token.
+- Fresh M8 live recheck on the same build returned 200 for both super-admin partner filters and the status-request list. Neon reconfirmed TEST-M8 vendor ID 5 active, engineer ID 6 inactive, and request IDs 1/2 approved/rejected.
+- No schema or migration change was required; the existing `partners` and
+  `status_change_requests` tables matched the documented M10 contract.
+
+---
+
 ## 2026-10-09 — Milestone 9: Super Admin Inventory
 
 Added the missing super-admin inventory API surface, with the required explicit
@@ -27,6 +61,7 @@ Added the missing super-admin inventory API surface, with the required explicit
 
 ### Verification and decisions
 - The focused M9 regression test passed: `npx vitest run src/inventory/inventory.service.spec.ts`.
+- Live HTTP verification on port 7677 created TEST-M9 inventory ID 2 in location 4, confirmed it appeared in `GET /super-admin/inventory?location_id=4`, and patched its name. Neon confirmed the persisted location and `created_by_super_admin_id=1`.
 - The required M9 behavior is enforced in the service layer: nonexistent or inactive
   locations throw `400`, and super-admin inventory creation rejects missing
   `location_id` with a clear validation message.
@@ -62,6 +97,8 @@ resolution. No schema changes or migrations were made.
 - Vendor/engineer filters, direct toggles, approve/deactivate, reject/no-toggle,
   unknown IDs, non-numeric IDs, repeat-resolution conflict, and role guards were
   tested over real HTTP; psql confirmed final state and resolver audit ID 1.
+- Fresh live recheck on port 7677 returned 200 for vendor/engineer filters and the status-request list; Neon reconfirmed TEST-M8 vendor ID 5 active, engineer ID 6 inactive, approved request ID 1, and rejected request ID 2. Rejecting request ID 3 returned 200 and left partner ID 8 active; resolving it again returned 409.
+- All six M8 endpoints returned 401 without a token and 403 with admin ID 8's token.
 - Backend build and unit suite passed (1 test file, 1 test); lint has the
   pre-existing unused catch-variable warning in `auth.service.ts`.
 - The database had no M4 partner-shaped fixtures, so clearly named TEST-M8 rows

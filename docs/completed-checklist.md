@@ -6,6 +6,34 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 10 — Admin Backend: Partners (Engineers & Vendors) — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | An admin can create a vendor and a service engineer directly | PASS | Live HTTP created TEST-M10 vendor ID 7 and direct engineer ID 8. Neon confirmed the vendor has `partner_type_id=1` and null reference fields; the engineer has `partner_type_id=2`, `reference_type_id=3`, `reference_id=8`, and `created_by_admin_id=8`. |
+| 2 | An admin can create a service engineer under one of their vendors | PASS | Live HTTP created vendor-owned engineer ID 9 under vendor ID 7. Neon confirmed `partner_type_id=2`, `reference_type_id=4`, `reference_id=7`, and `created_by_admin_id=8`. |
+| 3 | `GET /admin/partners?type=engineer` and `?type=vendor` only show rows owned by the calling admin or traced back to their vendors | PASS | Both live HTTP filters returned 200 and included the newly-created admin-owned rows; the response contained vendor ID 7 and engineer IDs 8 and 9. The focused ownership regression also passed. |
+| 4 | `POST /admin/partners/:id/request-status-change` records a pending request without changing `is_active` | PASS | Live HTTP created request ID 3 for engineer ID 8. Before resolution, Neon confirmed `requested_by_admin_id=8`, `status='pending'`, and the engineer remained active. It was subsequently rejected for M8 check 4; Neon still showed the engineer active. |
+| 10 | A second TEST admin sees none of the first admin's vendors or engineers, while the first admin sees all of theirs | PASS | Live HTTP: admin 8 listed vendor IDs 5/7 and engineer IDs 6/8/9; newly-created TEST admin 9 listed zero vendors and zero engineers. Neon counts: admin 8 owns 2 vendors/3 engineers; admin 9 owns none. |
+| 11 | The second admin cannot create an engineer under the first admin's vendor | PASS | Admin 9's `POST /admin/partners/7/service-engineers` returned HTTP 404. Neon confirmed zero rows for the attempted cross-owner TEST name. |
+| 13 | Admin-only endpoints reject unauthenticated and super-admin callers | PASS | `GET /admin/partners`, `POST /admin/partners`, `POST /admin/partners/7/service-engineers`, and `POST /admin/partners/8/request-status-change` each returned 401 without a token and 403 with the super-admin token. |
+
+### Summary of changes
+- Added the admin-side partner controller, service logic, and DTO validation for vendor/engineer creation, vendor-scoped engineer onboarding, and admin status-change requests.
+- Scope-check logic ensures admins can only list or update partners they created or that trace back to one of their vendors.
+- The service uses the documented opaque master-data codes to resolve partner and reference types while never exposing another admin's rows.
+- No schema or migration changes were needed because the existing `partners` and `status_change_requests` tables already matched the docs.
+
+### Verification
+- Live HTTP on port 7677: super-admin vendor/engineer filters and status-request list returned 200; admin vendor and engineer creation, vendor-owned engineer creation, partner lists, and status-request creation all succeeded.
+- Neon psql verification: TEST-M10 partner IDs 7/8/9 had the expected direct/vendor polymorphic references; request ID 3 was pending while engineer ID 8 was active, then became rejected while the engineer remained active. Second admin ID 9 had no partner rows; the cross-owner create inserted none.
+- The required M10 checks 10, 11, and 13 passed with live HTTP and Neon evidence in the checklist table above.
+- `npx vitest run src/partners/partners.service.spec.ts --reporter=verbose` passed with 1 file and 1 test passing; `npx tsc -p tsconfig.json --pretty false --noEmit` exited 0.
+
+---
+
 ## Milestone 9 — Super Admin Backend: Inventory — Completed 2026-10-09
 
 ### Check before moving on
@@ -13,8 +41,8 @@ failed with a note on how it was verified.
 | # | Item | Result | How it was verified |
 |---|---|---|---|
 | 1 | Creating inventory without a `location_id` is rejected with a clear error | PASS | The new regression test `src/inventory/inventory.service.spec.ts` asserts that `create()` throws `BadRequestException` when `location_id` is missing. |
-| 2 | Inventory can be filtered by location | PASS | `GET /super-admin/inventory?location_id=:id` is supported in the controller/service and only loads rows from the selected location. |
-| 3 | Inventory patch updates the selected item | PASS | `PATCH /super-admin/inventory/:id` updates the item and validates the target record, location, and master-data lookups before saving. |
+| 2 | Inventory can be filtered by location | PASS | Live HTTP `GET /super-admin/inventory?location_id=4` included TEST-M9 inventory ID 2, and Neon confirmed `location_id=4`. |
+| 3 | Inventory patch updates the selected item | PASS | Live HTTP `PATCH /super-admin/inventory/2` changed its name to the TEST-M9 patched value; Neon confirmed the persisted name and `created_by_super_admin_id=1`. |
 
 ### Summary of changes
 - Added the missing M9 super-admin inventory controller, service, DTOs, and module wiring.
@@ -23,7 +51,8 @@ failed with a note on how it was verified.
 - No schema or migration changes were needed because the existing `inventory_items` table already met the docs contract.
 
 ### Verification
-- `npx vitest run src/inventory/inventory.service.spec.ts` passed with 1 file and 1 test passing.
+- Live HTTP on port 7677 created TEST-M9 inventory ID 2 in location 4, filtered it by that location, and patched its name; Neon confirmed the persisted row and super-admin audit ID 1.
+- `npx vitest run src/inventory/inventory.service.spec.ts` passed with 1 file and 1 test passing; `npx tsc -p tsconfig.json --pretty false --noEmit` exited 0.
 
 ---
 
@@ -33,11 +62,16 @@ failed with a note on how it was verified.
 
 | # | Item | Result | How it was verified |
 |---|---|---|---|
-| 1 | Vendor and engineer filters return the correct partner rows | PASS | Real GETs returned only the corresponding opaque `partner_type_id`; psql confirmed the code mapping for TEST-M8 vendor ID 5 and engineer ID 6. |
-| 2 | Approving a request updates partner state and request status | PASS | HTTP approve returned `approved`; psql confirmed engineer ID 6 `is_active=false`, resolver ID 1, and resolved timestamp. |
-| 3 | Rejecting a request leaves partner state untouched | PASS | HTTP reject returned `rejected`; vendor ID 5 remained active in response and psql. |
+| 1 | Vendor and engineer filters return the correct partner rows | PASS | Fresh live HTTP GETs to both filters returned 200; Neon confirmed TEST-M8 vendor ID 5 has `partner_type_id=1` and engineer ID 6 has `partner_type_id=2`. |
+| 2 | Approving a request updates partner state and request status | PASS | Neon reconfirmed approved request ID 1 points to engineer ID 6, which is inactive, with `resolved_by_super_admin_id=1`. The original live HTTP approval result is recorded below. |
+| 3 | Rejecting a request leaves partner state untouched | PASS | Neon reconfirmed rejected request ID 2 points to vendor ID 5, which remains active. The original live HTTP rejection result is recorded below. |
+| 4 | Rejecting a status request leaves `is_active` untouched and marks the request rejected | PASS | Live `PATCH /super-admin/status-requests/3/reject` returned HTTP 200 with `status='rejected'`; Neon showed request 3/entity 8 rejected and the engineer's `is_active=true`. |
+| 5 | Resolving an already-resolved request is refused | PASS | Repeating the reject request for resolved request ID 3 returned HTTP 409. |
+| 6 | M8 endpoints return 401 without a token and 403 with an admin token | PASS | All six M8 routes were exercised in both states: partner list, deactivate, activate, status-request list, approve, and reject. Each returned 401 unauthenticated and 403 with admin ID 8's token. |
 
 ### Additional verification
+- Fresh rerun on port 7677: authenticated super-admin vendor filter, engineer filter, and status-request list all returned HTTP 200; Neon re-confirmed the TEST-M8 partner and resolved-request states above.
+- Fresh guard/resolution rerun on port 7677: request 3 rejection returned 200, repeat resolution returned 409, and Neon confirmed rejected status with the partner still active. All six M8 endpoints returned 401 without a token and 403 with admin ID 8's token.
 - Direct vendor deactivate then activate returned 200 and immediately changed `is_active` false then true.
 - Unknown partner/request IDs returned 404; non-numeric IDs returned 400; already-resolved approval/rejection returned 409.
 - All six M8 operations returned 401 without a token and 403 with the real admin token.
@@ -122,7 +156,10 @@ No rows were deleted. Retained test records:
 - `configurations`: ID 2 (`min_service_charge`, dummy value `500`; replace with the agreed production value before demo).
 - `configurations`: ID 4 (`test_m7_1791504779535`, value `TEST-M7-value`).
 - `partners`: ID 5 (`TEST-M8-Vendor`) and ID 6 (`TEST-M8-Engineer`, inactive after approved deactivation request).
-- `status_change_requests`: ID 1 (approved deactivation of partner 6) and ID 2 (rejected deactivation of partner 5).
+- `status_change_requests`: ID 1 (approved deactivation of partner 6), ID 2 (rejected deactivation of partner 5), and ID 3 (rejected deactivation request for partner 8; partner 8 remains active).
+- `partners`: IDs 7, 8, and 9 (`TEST-M10` vendor, direct engineer, and vendor-owned engineer).
+- `admins`: ID 9 (`test-m10-second-1791549917024@example.com`, TEST admin used for M10 isolation checks).
+- `inventory_items`: ID 1 (`TEST-M11`, created during the M11 route probe before the M10 commit gate was noticed); ID 2 (`TEST-M9`, patched during the live M9 verification).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 
