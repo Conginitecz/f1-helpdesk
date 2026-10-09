@@ -6,6 +6,24 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 12 — Backend Complete: Full Pass Test — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Full super-admin/admin journey completes without manual DB edits | PASS | Fresh journey used HTTP only to log in, create location/admin/vendor/engineers/request/inventory, and approve the request. All API calls carried `Origin: http://localhost:3000` and returned expected 200/201 statuses. Neon confirmed location/admin IDs 13/11, vendor/engineer IDs 13/14/15, request ID 5, and inventory IDs 6/7. |
+| 2 | Final `is_active` states and inventory ownership/location are correct | PASS | Neon confirmed direct engineer 15 inactive after approved request 5; vendor-owned engineer 14 remains active; both inventory IDs 6/7 use location 13, with creator audit IDs 1 (super admin) and 11 (admin) respectively. |
+| 3 | Frontend-origin CORS preflight supports API authorization headers | PASS | `OPTIONS /admin/inventory` with origin `http://localhost:3000`, method `POST`, and requested headers `authorization,content-type` returned 204; response allowed the exact origin, CRUD/OPTIONS methods, `Content-Type,Authorization`, and credentials. |
+
+### Verification
+- The M12 route journey and CORS preflight passed on port 7679 against the current backend build.
+- Neon readback confirmed the final rows and audit relationships above. No manual DB edits were used to construct the journey records.
+- `npm run build` passed; full backend tests passed (4 files, 5 tests).
+- CORS root cause: Nest bootstrap did not call `app.enableCors()`, so Express had no preflight middleware and returned 404 for `OPTIONS`. Bootstrap now permits only `http://localhost:3000`, enumerates HTTP methods including `OPTIONS`, and allows `Authorization` and `Content-Type`.
+
+---
+
 ## Milestone 11 — Admin Backend: Inventory & Master Data Read — Completed 2026-10-09
 
 ### Check before moving on
@@ -183,6 +201,8 @@ No rows were deleted. Retained test records:
 - `inventory_items`: ID 1 (`TEST-M11`, created during the M11 route probe before the M10 commit gate was noticed); ID 2 (`TEST-M9`, patched during the live M9 verification).
 - `inventory_items`: ID 3 (`TEST-M11-1791550307949`, admin-location override fixture).
 - `master_data`: ID 6 (`TEST-M11-INACTIVE-1791550289605`, inactive `inventory_category` fixture used to verify filtering).
+- Previous M12 journey: `locations` ID 12; `admins` ID 10; `partners` IDs 10–12 (vendor and two engineers); `status_change_requests` ID 4; `inventory_items` IDs 4–5.
+- Final M12 journey: `locations` ID 13; `admins` ID 11; `partners` IDs 13–15 (vendor and two engineers); `status_change_requests` ID 5 (approved); `inventory_items` IDs 6–7.
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

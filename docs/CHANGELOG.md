@@ -4,6 +4,22 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 12: Backend Full Pass & CORS
+
+Completed the backend user-journey pass and enabled the browser preflight needed by the Next.js origin.
+
+### Added or changed
+- `backend/src/main.ts` — configured Nest CORS for `http://localhost:3000`, explicit API methods including `OPTIONS`, and `Authorization`/`Content-Type` headers.
+- `docs/completed-checklist.md` — recorded the full HTTP journey, Neon final-state verification, CORS evidence, and all M12 test fixture IDs for purge.
+
+### Verification and decisions
+- Full HTTP journey passed without manual database fixture edits: super-admin login; create location/admin; admin login; create vendor and vendor/direct engineers; request and approve deactivation; create super-admin and admin inventory.
+- Neon confirmed location 13/admin 11; vendor 13; vendor-owned engineer 14 active; direct engineer 15 inactive; approved request 5; inventory 6/7 both at location 13 with correct creator audit IDs.
+- CORS preflight from `http://localhost:3000` to `/admin/inventory` returned 204 and allowed `POST`, `OPTIONS`, `Authorization`, and `Content-Type`. Prior 404 root-caused to missing `app.enableCors()` in bootstrap.
+- Full backend tests passed (4 files, 5 tests); `npm run build` passed. No schema or migration changes.
+
+---
+
 ## 2026-10-09 — Milestone 11: Admin Inventory & Master Data Read
 
 Added admin-scoped inventory access and active-only master-data reads.
