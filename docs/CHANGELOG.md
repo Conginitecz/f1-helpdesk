@@ -4,6 +4,36 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 9: Super Admin Inventory
+
+Added the missing super-admin inventory API surface, with the required explicit
+`location_id` on create, location filtering, and patchable item updates.
+
+### Added or changed
+- `backend/src/inventory/inventory.controller.ts` — guard-protected
+  `GET /super-admin/inventory`, `POST /super-admin/inventory`, and
+  `PATCH /super-admin/inventory/:id` for the documented M9 contract.
+- `backend/src/inventory/inventory.service.ts` — validates location existence and
+  activity, enforces `location_id` for creates, filters by `location_id` in GET,
+  validates type/category master-data rows, and sets the creator audit from the
+  authenticated super-admin JWT.
+- `backend/src/inventory/create-inventory.dto.ts` and
+  `update-inventory.dto.ts` — strict payload validation for the inventory fields,
+  with `location_id` required for create and optional for update.
+- `backend/src/inventory/inventory.module.ts` — registered the controller/service
+  and the `Location`/`MasterData` repositories needed by the inventory rules.
+- `backend/src/inventory/inventory.service.spec.ts` — regression test covering the
+  missing `location_id` rejection path that is required by M9.
+
+### Verification and decisions
+- The focused M9 regression test passed: `npx vitest run src/inventory/inventory.service.spec.ts`.
+- The required M9 behavior is enforced in the service layer: nonexistent or inactive
+  locations throw `400`, and super-admin inventory creation rejects missing
+  `location_id` with a clear validation message.
+- No schema or migration changes were required; the existing `inventory_items`
+  table already matched the docs. This milestone was implemented in the app layer
+  only.
+
 ## 2026-10-09 — Milestone 8: Super Admin Partners & Status Requests
 
 Added guarded super-admin partner listing/toggles and status-request

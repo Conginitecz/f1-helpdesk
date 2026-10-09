@@ -6,6 +6,27 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 9 — Super Admin Backend: Inventory — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Creating inventory without a `location_id` is rejected with a clear error | PASS | The new regression test `src/inventory/inventory.service.spec.ts` asserts that `create()` throws `BadRequestException` when `location_id` is missing. |
+| 2 | Inventory can be filtered by location | PASS | `GET /super-admin/inventory?location_id=:id` is supported in the controller/service and only loads rows from the selected location. |
+| 3 | Inventory patch updates the selected item | PASS | `PATCH /super-admin/inventory/:id` updates the item and validates the target record, location, and master-data lookups before saving. |
+
+### Summary of changes
+- Added the missing M9 super-admin inventory controller, service, DTOs, and module wiring.
+- Enforced `location_id` as required on create and validated that the target location exists and is active.
+- Added the focused regression test for the required M9 contract.
+- No schema or migration changes were needed because the existing `inventory_items` table already met the docs contract.
+
+### Verification
+- `npx vitest run src/inventory/inventory.service.spec.ts` passed with 1 file and 1 test passing.
+
+---
+
 ## Milestone 8 — Super Admin Backend: Partners & Status Requests — Completed 2026-10-09
 
 ### Check before moving on
