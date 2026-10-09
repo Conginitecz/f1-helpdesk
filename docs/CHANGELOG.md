@@ -4,6 +4,44 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 7 Closeout: Real Admin Login & Config Creation
+
+Completed the real-admin authorization check and the approved config creation
+contract. No schema changes or migrations were made.
+
+### Added or changed
+- `backend/src/configurations/create-configuration.dto.ts` — POST body accepts
+  `{ key, value }`; trims input, validates a lowercase/digit/underscore key,
+  and rejects empty values.
+- `backend/src/configurations/configurations.service.ts` — maps the new payload
+  and sources `updated_by_super_admin_id` from the JWT.
+- `backend/src/scripts/seed-configurations.ts` and `backend/package.json` —
+  idempotent `seed:configurations` creates `min_service_charge=500` only when
+  absent, preserving later edits.
+- `docs/development-docs.md` — documents the approved POST route.
+- `docs/completed-checklist.md` — records real-admin, config API, seed, and
+  psql verification results.
+- `backend/.env` — generated local dummy admin credentials only; ignored by Git,
+  not committed, and password not printed.
+
+### Tables touched
+- Neon `admins`: active standing test admin ID 8 at existing active location 4.
+- Neon `configurations`: `min_service_charge` ID 2 with dummy value `500`; test
+  key `test_m7_1791504779535` ID 4 with value `TEST-M7-value`.
+
+### Verification and decisions
+- Real admin login returned 201; wrong-password and unknown-account responses
+  shared the same generic 401 message. Its real token got 403 from all six M7
+  operations; no-token requests got 401.
+- Config POST returned 201 and updater ID 1; duplicate and padded duplicate
+  returned 409; invalid key returned 400; psql confirmed the row.
+- Seed ran twice without duplicates. A later value of 501 survived reruns, then
+  was restored to dummy value 500.
+- POST is an approved deviation from the original docs, which specified only
+  config GET/PATCH. The test key uses `test_m7_` because validation allows only
+  lowercase letters, digits, and underscores.
+- Deleted the confirmed junk cookie-jar file `300` as requested.
+
 ## 2026-10-09 — Milestone 7: Super Admin Master Data & Configuration
 
 Added guarded super-admin endpoints for listing, creating, and relabeling
@@ -48,17 +86,15 @@ master data, plus listing, creating, and updating configuration values.
   but no actor-ID audit columns. The prompt assumed actor columns; the doc
   defines timestamps only. No schema change was needed or made.
 - Configuration keys were absent in the before snapshot. A separate
-  `POST /super-admin/config` was approved with `config_key`, `config_value`,
-  optional `description`, JWT-derived updater, and duplicate-key rejection.
-- The docs list no expected configuration keys or default values; they mention
-  `min_service_charge` only as an example. No configuration seed script or
-  invented key was added.
+  `POST /super-admin/config` was approved; its finalized `{ key, value }`
+  contract is recorded in the closeout entry above.
+- `min_service_charge` was seeded with explicitly approved dummy value `500`
+  using `ON CONFLICT DO NOTHING`; reruns preserve later edits.
 - Config values are non-empty strings as stored by the documented VARCHAR
   column. DTO limits are 255 characters for keys/values and labels, and 500 for
   descriptions because the schema itself declares unbounded VARCHAR columns.
-- `backend/.env` does not define `TEST_ADMIN_EMAIL` or `TEST_ADMIN_PASSWORD`.
-  Placeholders were added to `.env.example`, but no standing admin was created
-  and the real-login check remains pending those local values.
+- Local dummy `TEST_ADMIN_*` values are in ignored `backend/.env`; the password
+  is not printed or committed. Standing admin ID 8 is retained for M8–M11.
 
 ### Verification
 - Backend build passed; oxlint reported no errors and one pre-existing

@@ -37,7 +37,7 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 | 11 | ✅ Passed | PATCH changed value `100` to `101`, updated timestamp and updater ID 1; value was restored to `100`; psql confirmed it. |
 | 12 | ✅ Passed | Blank and numeric values returned 400; unknown key returned 404. |
 | 13 | ✅ Passed | All six new operations (master-data GET/POST/PATCH and config GET/POST/PATCH) returned 401 without a token. |
-| 14 | ❌ Failed | `backend/.env` has neither `TEST_ADMIN_EMAIL` nor `TEST_ADMIN_PASSWORD`; no standing account was created and the requested real login/retest could not run. The earlier locally signed-token check is not counted for this closeout. |
+| 14 | ✅ Passed | Created admin ID 8 through POST using the seeded super admin, logged in through `/auth/login`, and the real token returned 403 from all six M7 operations; wrong password matched the generic 401 message. |
 | 15 | ✅ Passed | All six operations returned 401 with a garbage token. |
 | 16 | ✅ Passed | psql comparison found only the named M7 rows added; core rows retained IDs, types, labels, and original timestamps. Config value restored; updater ID is 1. |
 | 17 | ✅ Passed | Final restart compiled with zero errors, listened on 7676, and logged `Database connection established: true`; no application errors or secrets appeared. Existing pg SSL-mode warning remains informational. |
@@ -45,21 +45,23 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 ### Summary of changes
 - Added master-data DTOs, controller, and service; wired them in the existing module.
 - Added configuration DTOs, controller, and service; wired them in the existing module and exposed the existing updater relation ID.
-- Added placeholder `TEST_ADMIN_EMAIL` and `TEST_ADMIN_PASSWORD` names to `backend/.env.example`; actual local values are not present in `backend/.env`.
-- No changes to frontend, migrations, or database schema. Neon rows added: `master_data` ID 5 and `configurations` ID 1.
+- Generated local dummy credentials for `test-admin-m7@example.com` in ignored `backend/.env`; password not printed or committed. This account is retained for M8–M11.
+- Added idempotent `seed:configurations`; repeated runs preserve later edits. `min_service_charge` ID 2 was restored to dummy `500`.
+- Added approved `POST /super-admin/config` with `{ key, value }` and documented the deviation from GET/PATCH-only source docs.
+- No changes to frontend, migrations, or database schema. Neon rows added in M7: `master_data` ID 5 and `configurations` IDs 1, 2, and 4.
 - `npm run build` passed. `npm run lint` reported one pre-existing warning in `backend/src/auth/auth.service.ts` (`error` catch parameter unused), with no lint errors.
 
 ### Pending errors or issues
 - No new compile or runtime errors. The existing lint warning is unrelated to Milestone 7.
-- Check 14 remains failed until the local test-admin variables are provided and the account is created/logged in through the API.
+- None.
 
 ### Deviations from the docs / approved contract resolutions
 - The six example types were treated as the closed allowlist; duplicate type/text pairs are rejected case-insensitively; unknown filters return `200 []`.
-- Added the user-approved `POST /super-admin/config` because the before snapshot had no keys and the requested PATCH test needed a row. Config values are non-empty strings; no key-specific numeric rules were supplied.
+- Added user-approved `POST /super-admin/config` with `{ key, value }`; key is trimmed and limited to `^[a-z0-9_]+$`, value is non-empty, duplicates return 409, and updater audit comes from JWT. This is an approved deviation from GET/PATCH-only source docs.
+- Added `seed:configurations` for dummy `min_service_charge=500`; `ON CONFLICT DO NOTHING` keeps later edits intact.
 - Chose 255-character limits for labels, keys, and values, and 500 for descriptions; the existing columns are unbounded VARCHAR.
 - Audit check 3 deviation: prompt assumed actor columns; the doc defines timestamps only. §1.4 and the M3 migration agree, so no schema change was needed or made.
-- The docs do not define a configuration-key list or defaults; `min_service_charge` is an example only. No seed script or key was invented.
-- The M7 standing admin has not been created because `TEST_ADMIN_EMAIL` and `TEST_ADMIN_PASSWORD` are absent from the local `.env`.
+- The required uppercase/hyphenated `TEST-M7-` key form conflicts with config key validation; the test key uses compliant lowercase prefix `test_m7_`.
 
 ### Test data to purge before demo
 
@@ -68,7 +70,9 @@ No rows were deleted. Retained test records:
 - `locations`: IDs 4 (`test-location-$(date +%s)`), 5 (`Test Location`), 6 (`Location before patch`), 7 (`Location A`), 8 (`Patch Me`), 9 (`Loc-1791491006`), 10 and 11 (`TEST-M6-m6test1791492882268-R`).
 - `master_data`: ID 5 (`TEST-M7-1791502495989`).
 - `configurations`: ID 1 (`TEST-M7-smoke-config`, value restored to `100`).
-- `admins`: M7 standing test account not yet created; add its resulting ID here after the local credentials are set and the real-login check is completed.
+- `admins`: ID 8 (`test-admin-m7@example.com`, standing account for M8–M11; dummy password remains in ignored `backend/.env`).
+- `configurations`: ID 2 (`min_service_charge`, dummy value `500`; replace with the agreed production value before demo).
+- `configurations`: ID 4 (`test_m7_1791504779535`, value `TEST-M7-value`).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

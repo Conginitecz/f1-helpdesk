@@ -1,18 +1,21 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class CreateConfigurationDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[a-z0-9_]+$/, {
+    message: 'key must contain only lowercase letters, digits, and underscores',
+  })
   @MaxLength(255)
-  config_key: string;
+  key: string;
 
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  config_value: string;
+  value: string;
 
   @IsOptional()
   @IsString()

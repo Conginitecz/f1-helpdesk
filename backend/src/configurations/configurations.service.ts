@@ -29,15 +29,15 @@ export class ConfigurationsService {
 
   async create(dto: CreateConfigurationDto, superAdminId: number): Promise<ConfigurationResponse> {
     const existing = await this.configurationsRepo.findOne({
-      where: { configKey: dto.config_key },
+      where: { configKey: dto.key },
     });
     if (existing) {
-      throw new ConflictException(`Configuration key ${dto.config_key} already exists`);
+      throw new ConflictException(`Configuration key ${dto.key} already exists`);
     }
 
     const row = this.configurationsRepo.create({
-      configKey: dto.config_key,
-      configValue: dto.config_value,
+      configKey: dto.key,
+      configValue: dto.value,
       description: dto.description ?? null,
       updatedBySuperAdmin: { id: superAdminId } as SuperAdmin,
     });

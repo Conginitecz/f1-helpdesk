@@ -237,6 +237,7 @@ Super Admin — User Management
 
 Super Admin — Configuration
 - GET /super-admin/config — list all config key/value pairs
+- POST /super-admin/config — create a config key/value pair (body: { key, value }); key is trimmed and must contain only lowercase letters, digits, and underscores; value must be a non-empty string; duplicate keys return 409; updated_by_super_admin_id comes from the authenticated super admin
 - PATCH /super-admin/config/:key — update a config value
 - GET /super-admin/locations — list locations
 - POST /super-admin/locations — create location
