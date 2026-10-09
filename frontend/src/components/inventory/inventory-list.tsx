@@ -61,7 +61,7 @@ export function InventoryList({
                   <td>{item.units}</td>
                   <td>{formatMoney(item.price_per_unit)}</td>
                   <td>{item.tax_applicable ? `${item.tax_percentage ?? "0"}%` : "No tax"}</td>
-                  <td>{assignedMode ? `Location #${item.location_id}` : locations.find((location) => location.id === item.location_id)?.name ?? `Location #${item.location_id}`}</td>
+                  <td>{item.location_name || locations.find((location) => location.id === item.location_id)?.name || `Location #${item.location_id}`}</td>
                   {!assignedMode && <td>{creator ? `${creator.first_name} ${creator.last_name}` : `Super admin #${item.created_by_super_admin_id ?? "?"}`}</td>}
                   <td><span className={item.is_active ? "status-pill status-active" : "status-pill status-inactive"}>{item.is_active ? "Active" : "Inactive"}</span></td>
                   {!assignedMode && <td><button className="secondary-button compact-button" onClick={() => onEdit(item)} type="button">Edit</button></td>}

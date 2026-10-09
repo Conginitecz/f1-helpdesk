@@ -15,8 +15,8 @@ import { SuperAdmin } from '../super-admins/super-admins.entity.js';
  * polymorphic (points at a partner/admin/etc row) so it has NO DB foreign
  * key — validity is enforced at the application layer.
  *
- * V0 scope note: written by admins, resolved (approved/rejected) by super
- * admin only. No admin-facing read endpoint in this slice.
+ * Written by admins and resolved by super admins. The M17 smoke-pass UI
+ * adds an owner-scoped, read-only admin status endpoint.
  */
 @Entity('status_change_requests')
 export class StatusChangeRequest {

@@ -42,3 +42,15 @@ export class StatusRequestsController {
     return this.statusRequestsService.reject(id, user.userId);
   }
 }
+
+@Controller('admin/status-requests')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+export class AdminStatusRequestsController {
+  constructor(private readonly statusRequestsService: StatusRequestsService) {}
+
+  @Get()
+  findForAdmin(@CurrentUser() user: AuthenticatedUser): Promise<StatusRequestResponse[]> {
+    return this.statusRequestsService.findForAdmin(user.userId);
+  }
+}

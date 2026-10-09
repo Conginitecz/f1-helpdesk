@@ -8,6 +8,7 @@ export interface InventoryItem {
   tax_applicable: boolean;
   tax_percentage: string | null;
   location_id: number;
+  location_name: string;
   created_by_admin_id: number | null;
   created_by_super_admin_id: number | null;
   is_active: boolean;

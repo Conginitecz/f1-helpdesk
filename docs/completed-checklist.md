@@ -6,6 +6,57 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 17 — Smoke Pass and Demo Readiness — Completed with Seed Isolation Caveat 2026-10-10
+
+### Part A — Contract Check
+
+| Item | Developer reference says | Required for V0? |
+|---|---|---|
+| Inventory scope | “Inventory: add-only, auto-tagged to their own location; can view their location's inventory” (`docs/development-docs.md`, §2). It is location-scoped, not per creator. | Yes, per-location behavior; unchanged. |
+| Admin inventory edit | Admin inventory is “add-only” and “view” in `docs/development-docs.md`, §2; the Admin — Inventory endpoint list has GET and POST only. | No. |
+| Vendor edit | Admin vendor section specifies create and list; no admin PATCH/PUT route is specified. | No. |
+| Admin request-status view | The opening exclusions and §1.9 say the V0 contract was fire-and-forget with no admin status view. M17 explicitly adds an owner-scoped read-only view. | No in the original V0 contract; added for M17 smoke readiness. |
+| Location name in inventory response | The inventory schema/API previously specifies `location_id`; no response `location_name` was required. M17 adds it. | No; additive convenience field. |
+| Eligible engineer requests | Admins can request activation/deactivation for their service engineers; vendor-owned engineers trace back to the onboarding admin in §1.5 and are in the admin's engineer list. No direct-only restriction is stated. | Both direct and vendor-owned engineers. Live browser verified vendor-owned request flow. |
+
+### Parts B-C — Changes and Real Browser Journey
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Inventory responses preserve `location_id` and include `location_name`; both UIs show the name | PASS | Backend relation was already loaded. Super-admin and admin browser lists showed `TEST-M17-Location-20261010`, not `Location #15`. Item 10 returned location ID 15/name; item 11 returned location ID 16/name. `inventory.service.spec.ts` covers response serialization. |
+| 2 | Admin reads only their own request outcomes; super admin and logged-out callers are rejected | PASS | `GET /admin/status-requests` returned requests 10/11 for admin 15; admin 16 got HTTP 200 with 0 rows. Super-admin token received 403; missing token returned 401. Backend tests assert another admin's fixture is filtered out and the controller has JWT + admin-role guards. |
+| 3 | Super admin creates location and admin; admin creates vendor, direct/vendor engineer and inventory | PASS | Browser-created location/admin IDs 15/15. Admin 15 created vendor 21, direct engineer 22, vendor-owned engineer 23 and item 10 (type 7, location 15, creator 15). Required controls and readable ownership/type labels were visible. |
+| 4 | Request deactivation, resolve both ways, refresh status and active state | PASS | Requests 10/11 were pending in the admin UI. Super admin approved 10 and rejected 11. Admin reload showed Approved/Inactive for engineer 22 and Rejected/Active for engineer 23. Neon confirmed both request states and partner active values. |
+| 5 | Super admin partner and inventory views show readable labels, owners and location names | PASS | Partner overview showed vendor/engineer labels, owner admin 15 and location 15's name. Inventory item 10 showed type Spare part, location name and creator admin 15. Browser console was clean on both pages. |
+| 6 | Second admin at a different location cannot see first admin's partners, requests or inventory | PASS | Created location/admin 16/16. Before creating its own double-click fixtures, admin 16's vendor, engineer and inventory lists were empty and its request endpoint returned 0 rows. Rechecked afterward: it showed only its own vendor 24, engineer 25 and item 11; admin 15's vendor 21, engineers 22/23, requests 10/11 and item 10 were absent. |
+| 7 | Negative authentication, form validation, and double-submit checks | PASS | Wrong password returned generic 401. Logged-out direct visits to `/admin/vendors` and `/super-admin/status-requests` redirected to login. Cross-role URLs redirected to the proper role; protected API calls returned 403. Tampered token was cleared after 401 and redirected. Empty forms were blocked; invalid admin/vendor email and negative inventory units were rejected by native constraints. Engineer API fields have required checks but no additional format contract. Double-clicking each create form produced one row: location 16, admin 16, vendor 24, engineer 25, inventory 11. |
+| 8 | New-admin empty states | PASS | Admin 16 initially had no vendors, engineers, requests or location-16 inventory; each screen showed a sensible empty state before double-click smoke fixtures were created. |
+| 9 | Console/network on normal pages | PASS | Final authenticated sweep covered all nine admin/super-admin routes. Zero console errors/warnings, page exceptions, or failed API responses. Deliberate 401/403 checks produced expected error console entries; navigation canceled Next RSC prefetches (`ERR_ABORTED`) only. |
+| 10 | Small bug fixes and larger issues recorded | PASS | Replaced stale API server on port 7681 after an initial 404/CORS mismatch; reran the affected flow successfully against current source. No other code bug required a change. Open issues below. |
+
+Backend regressions: focused inventory/status tests passed (2 files, 4 tests); complete backend suite passed after implementation (5 files, 7 tests). Frontend lint/build and backend build passed. No schema or migration changes.
+
+### Part D — Demo Readiness
+
+- Demo click-through and password placeholders: `docs/demo-script.md`.
+- Purge proposal (72 listed TEST rows, dry-run default, dependency order, backup suggestion): `docs/purge-plan.md`. **Not run; owner approval is required.**
+- Read-only Neon count verification matched the purge plan exactly: configurations 3, test master-data 2, locations 13, admins 11, partners 21, status requests 11, inventory items 11. No rows were changed by this check.
+- Seed safety: clean-database reproduction was not tested because no isolated Neon database/branch is configured. During environment discovery, `seed:super-admin` was invoked once against the configured main Neon branch; it returned “already exists (id=1) — skipped” and made no write. No other seed was rerun in M17. Master-data IDs 7-9 from M16 remain active. Do not claim clean-database seeding is verified.
+- Secret hygiene: `backend/.env`, `backend/.env.local`, `frontend/.env`, and `frontend/.env.local` are git-ignored; no `.env` file is tracked. `git log`/working-tree scanning found no committed Neon connection string, JWT, or provider token. `.env.example` files contain placeholders only. No passwords or temporary credentials were committed.
+- Purge state: no rows deleted. M17 TEST records are listed below.
+
+### Open Issues (Severity)
+
+- **Visible:** Admin inventory is scoped by location, so admins sharing one location see the same inventory. This matches the developer reference; it is not per-admin creator isolation.
+- **Visible:** Admin vendor edit and admin inventory edit are not exposed by the API and are not required by the V0 contract. No inventory delete exists.
+- **Minor:** There are no active service-engineer skill/category lookup rows in the current database; those optional dropdowns are empty.
+- **Minor:** A clean Neon branch was unavailable for seed baseline verification. The super-admin seed check on main was a no-op; do not represent it as a clean database test.
+- **Minor:** Backend lint continues to report the pre-existing unused catch variable in `backend/src/auth/auth.service.ts:86`.
+
+## Milestone 16 — Admin UI — Completed with API Limits Recorded 2026-10-09
+
+---
+
 ## Milestone 16 — Admin UI — Completed with API Limits Recorded 2026-10-09
 
 ### Check before moving on
@@ -302,7 +353,9 @@ No rows were deleted. Retained test records:
 - M14 browser flow: `locations` ID 14 (`TEST-M14-Location-1791564887345`); `admins` ID 12 (`test-m14-admin-1791564917141@example.com`); `partners` IDs 16/17 (TEST direct engineers); `status_change_requests` IDs 6/7 (approved/rejected respectively).
 - M15 browser flow: `inventory_items` ID 8 (`TEST-M15-1791566009132-edited`, location 4, category 5, edited to 11 units at 23.45, created by super admin 1).
 - M16 browser flow: `admins` IDs 13/14 (`test-m16-admin-20261009@example.com`, `test-m16-second-20261009@example.com`); `partners` IDs 18-20 (TEST vendor, direct engineer, vendor-owned engineer); `status_change_requests` IDs 8/9 (pending deactivation requests for partners 19/20); `inventory_items` ID 9 (`TEST-M16-Inventory-20261009`, location 14, type 7, created by admin 13).
-- M16 demo seed: `master_data` IDs 7-9 (`Spare part`, `Consumable`, `Accessory`, active `inventory_type` rows; retain for inventory dropdowns or remove before demo if not wanted).
+- M16 demo seed: `master_data` IDs 7-9 (`Spare part`, `Consumable`, `Accessory`, active `inventory_type` rows; retain for the demo baseline).
+- M17 browser flow: `locations` IDs 15/16 (`TEST-M17-Location-20261010`, `TEST-M17-Location-B-20261010`); `admins` IDs 15/16 (`test-m17-primary-20261010@example.com`, `test-m17-second-20261010@example.com`); `partners` IDs 21-25 (primary vendor/direct engineer/vendor-owned engineer, second-admin double-click vendor/direct engineer); `status_change_requests` IDs 10/11 (approved deactivation of partner 22; rejected deactivation of partner 23); `inventory_items` IDs 10/11 (`TEST-M17-Inventory-20261010` at location 15 and `TEST-M17-Double-Inventory-20261010` at location 16).
+- M17 seeded-data retention: keep `master_data` IDs 7-9 active for the inventory demo dropdowns; they are intentionally excluded from `docs/purge-plan.md`.
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

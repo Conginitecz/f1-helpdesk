@@ -11,7 +11,8 @@ Primary keys: integer identity columns (SERIAL / IDENTITY), not UUIDs.
 
 Confirmed exclusions for this slice: no admin-facing view of their own
 submitted status-change request outcomes (fire-and-forget for V0); no
-password reset / forgot-password flow for V0.
+password reset / forgot-password flow for V0. Milestone 17 adds a
+read-only owner-scoped admin status view for demo verification.
 
 ---
 
@@ -190,9 +191,8 @@ later).
 
 Note: Super admin can also activate/deactivate directly, bypassing this
 table entirely (writes straight to is_active on the target entity).
-Confirmed: the requesting admin does NOT get a status view of their own
-requests in V0 — this table is written to and resolved by super admin
-only; no admin-facing read endpoint for it in this slice.
+The original V0 contract excluded an admin status view; Milestone 17 adds
+a read-only endpoint scoped to the authenticated admin's own requests.
 
 ---
 
@@ -209,7 +209,7 @@ Admin:
 - Create partner rows of type "service engineer" (cannot delete or deactivate directly)
 - Create partner rows of type "vendor"
 - View list of their own partners (vendors and service engineers), filtered to rows they created or that trace back to them
-- Submit status-change requests (activate/deactivate) for their service engineers, routed to super admin — fire-and-forget, no status visibility
+- Submit status-change requests (activate/deactivate) for their service engineers, routed to super admin — M17 adds read-only status visibility for their own deactivation requests
 - Inventory: add-only, auto-tagged to their own location; can view their location's inventory
 
 No login/password-reset self-service in V0 — out of scope.
@@ -250,6 +250,7 @@ Super Admin — Inventory
 - GET /super-admin/inventory — view all inventory (optionally filter by location_id)
 - POST /super-admin/inventory — create item (location_id required in payload)
 - PATCH /super-admin/inventory/:id — edit item
+- Inventory responses include `location_id` and the related `location_name`.
 
 Admin — Partners (Service Engineers)
 - GET /admin/partners?type=engineer — list own service engineers (partners created directly by this admin, partner_type_id = engineer code)
@@ -266,6 +267,10 @@ Admin — Vendor's Service Engineers
 Admin — Inventory
 - GET /admin/inventory — view own location's inventory
 - POST /admin/inventory — create item (location_id auto-set from admin's own location_id)
+- Inventory responses include `location_id` and the related `location_name`.
+
+Admin — Status Requests (added in Milestone 17)
+- GET /admin/status-requests — list the authenticated admin's own deactivation requests, newest first; never returns another admin's requests.
 
 Admin — Master Data (read-only access, for populating dropdowns)
 - GET /admin/master-data?type=... — list active master data rows by type (e.g. to populate skill/category dropdowns on creation forms)

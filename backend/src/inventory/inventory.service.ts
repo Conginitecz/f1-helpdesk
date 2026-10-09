@@ -23,6 +23,7 @@ export interface InventoryResponse {
   tax_applicable: boolean;
   tax_percentage: string | null;
   location_id: number;
+  location_name: string;
   created_by_admin_id: number | null;
   created_by_super_admin_id: number | null;
   is_active: boolean;
@@ -251,6 +252,7 @@ export class InventoryService {
       tax_applicable: row.taxApplicable,
       tax_percentage: row.taxPercentage !== null && row.taxPercentage !== undefined ? String(row.taxPercentage) : null,
       location_id: row.location.id,
+      location_name: row.location.name,
       created_by_admin_id: row.createdByAdmin?.id ?? null,
       created_by_super_admin_id: row.createdBySuperAdmin?.id ?? null,
       is_active: row.isActive,

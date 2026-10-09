@@ -28,18 +28,26 @@ export default function AdminEngineersPage() {
     setLoading(true);
     setError("");
     try {
-      const [engineerRows, vendorRows, skillRows, categoryRows, referenceRows] = await Promise.all([
+      const [engineerRows, vendorRows, skillRows, categoryRows, referenceRows, requestRows] = await Promise.all([
         apiRequest<AdminPartner[]>("/admin/partners?type=engineer"),
         apiRequest<AdminPartner[]>("/admin/partners?type=vendor"),
         apiRequest<AdminLookup[]>("/admin/master-data?type=service_engineer_skill"),
         apiRequest<AdminLookup[]>("/admin/master-data?type=service_engineer_category"),
         apiRequest<AdminLookup[]>("/admin/master-data?type=reference_type"),
+        apiRequest<StatusRequest[]>("/admin/status-requests"),
       ]);
       setEngineers(engineerRows);
       setVendors(vendorRows);
       setSkills(skillRows);
       setCategories(categoryRows);
       setVendorReferenceTypeId(referenceRows.find((row) => row.text === VENDOR_REFERENCE_CODE)?.id ?? null);
+      const statuses: Record<number, StatusRequest> = {};
+      for (const request of requestRows) {
+        if (request.requested_action === "deactivate" && statuses[request.entity_id] === undefined) {
+          statuses[request.entity_id] = request;
+        }
+      }
+      setRequestStatuses(statuses);
       if (!queryVendorResolved.current) {
         const requestedVendor = new URLSearchParams(window.location.search).get("vendorId");
         setSelectedVendorId(requestedVendor && vendorRows.some((vendor) => vendor.id === Number(requestedVendor)) ? requestedVendor : "");
@@ -84,8 +92,8 @@ export default function AdminEngineersPage() {
         method: "POST",
         body: JSON.stringify({ action }),
       });
-      setRequestStatuses((current) => ({ ...current, [engineer.id]: request }));
       setNotice(`Request ${request.id} submitted: ${request.status}.`);
+      await loadPage();
     } catch (reason) {
       setNotice("");
       setError(messageFor(reason, "Could not submit the status request."));

@@ -58,7 +58,7 @@ describe('InventoryService', () => {
         pricePerUnit: '3.50',
         taxApplicable: false,
         taxPercentage: null,
-        location: { id: 4 },
+        location: { id: 4, name: 'Test location' },
         createdByAdmin: { id: 8 },
         createdBySuperAdmin: null,
         isActive: true,
@@ -101,6 +101,7 @@ describe('InventoryService', () => {
     );
 
     expect(result.location_id).toBe(4);
+    expect(result.location_name).toBe('Test location');
     expect(inventoryRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
         location: { id: 4 },

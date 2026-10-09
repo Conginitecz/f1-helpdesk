@@ -53,6 +53,18 @@ export class StatusRequestsService {
     return rows.map((row) => this.toResponse(row));
   }
 
+  async findForAdmin(adminId: number): Promise<StatusRequestResponse[]> {
+    const rows = await this.statusRequestsRepo.find({
+      ...REQUEST_READ_OPTIONS,
+      where: {
+        requestedByAdmin: { id: adminId },
+        requestedAction: 'deactivate',
+      },
+      order: { createdAt: 'DESC', id: 'DESC' },
+    });
+    return rows.map((row) => this.toResponse(row));
+  }
+
   approve(id: number, superAdminId: number): Promise<StatusRequestResponse> {
     return this.resolve(id, superAdminId, true);
   }

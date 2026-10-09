@@ -4,6 +4,35 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-10 — Milestone 17: Smoke Pass and Demo Readiness
+
+Completed the V0 smoke pass and two small API/UI updates. No new feature area or inventory delete route was added.
+
+### Added or changed
+- `backend/src/inventory/inventory.service.ts` — inventory responses now include the related `location_name` while preserving `location_id`.
+- `backend/src/status-requests/status-requests.controller.ts`, `status-requests.service.ts`, and `status-requests.module.ts` — added role-guarded `GET /admin/status-requests`, newest first and filtered by the authenticated admin's own ID.
+- `frontend/src/components/inventory/types.ts` and `inventory-list.tsx` — admin and super-admin lists show the response location name.
+- `frontend/src/app/admin/engineers/page.tsx` — reads the current admin's requests after load/submission and shows pending/approved/rejected beside the engineer.
+- `backend/src/inventory/inventory.service.spec.ts` and `backend/src/status-requests/status-requests.service.spec.ts` — cover location-name serialization, admin request owner filtering, and JWT/role guard metadata.
+- `docs/development-docs.md` — documented the additive response field and admin status endpoint.
+- `docs/demo-script.md` and `docs/purge-plan.md` — added a password-placeholder demo walkthrough and an approval-gated, dry-run-first purge proposal. The purge was not run.
+
+### Verification
+- Real browser flow: super admin account 1 created location 15 and admin 15; admin 15 created vendor 21, direct engineer 22, vendor-owned engineer 23 and inventory item 10. Requests 10/11 were submitted, approved/rejected through the super-admin queue, and refreshed on the admin engineer page.
+- Neon confirmed requests 10/11 are approved/rejected; engineer 22 is inactive and engineer 23 remains active. Inventory 10 has type 7, location 15 (`TEST-M17-Location-20261010`), and creator admin 15.
+- Super-admin inventory and partner pages show the location name, readable types and owner admin. Admin 16 at distinct location 16 saw none of admin 15's vendors, engineers, requests or inventory. Its own initial lists and status endpoint were empty.
+- Double-click checks produced one row each: location 16, admin 16, vendor 24, engineer 25, inventory item 11. Required/invalid browser constraints rejected empty forms, invalid email and negative inventory quantity without creating rows.
+- Negative auth checks: wrong password returned the generic 401; logged-out direct admin/super-admin URLs redirected to login; cross-role URLs redirected to the matching role while protected API calls returned 403; a tampered token was cleared after 401 and redirected to login. An unauthenticated status endpoint request returned 401; a super-admin token received 403 from the admin-only endpoint.
+- Final authenticated page sweep covered all nine admin/super-admin pages: zero console warnings/errors, page exceptions, or API failures. Deliberate wrong-password/invalid-token checks produced expected 401 console entries; cross-role attempts produced expected 403 entries. Route transitions generated canceled Next RSC requests (`ERR_ABORTED`), with no failed application API calls in the final sweep.
+- Frontend lint/build and backend build/tests pass. No schema/migration change.
+
+### Contract decisions and open issues
+- The developer reference scopes admin inventory to the assigned location, not creator; unchanged. Admin inventory edit and vendor edit are not required by the V0 contract. Request-status viewing was originally excluded/fire-and-forget, but the explicit M17 request added a read-only owner-scoped view. Location names were not required by the prior response contract and are now an additive field.
+- The configured frontend targeted an older backend process on port 7681, which initially returned 404 for the new route. The stale F1 process was replaced with the current backend; the endpoint then returned 401 unauthenticated and worked in the browser. No source fix was needed for this runtime mismatch.
+- Clean-database seed reproduction was not tested because no isolated Neon database/branch was configured. During environment discovery, `seed:super-admin` was invoked against the configured main Neon branch; it reported account ID 1 already present and skipped, with no database write. No other seed was rerun in M17.
+- `.env`/`.env.local` files are ignored and no such file is tracked. History/working-tree scan found no committed Neon connection string, JWT, or provider token. The M17 demo script uses password placeholders only.
+- Open issues are recorded by severity in `docs/completed-checklist.md`. No purge was run; exact IDs/counts and the proposed SQL are in `docs/purge-plan.md` pending owner approval.
+
 ## 2026-10-09 — Milestone 16: Admin UI
 
 Added the admin vendor, engineer, and assigned-location inventory screens using the existing backend endpoints. No M17 work was started.
