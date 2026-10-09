@@ -48,3 +48,23 @@ export class InventoryController {
     return this.inventoryService.update(id, dto);
   }
 }
+
+@Controller('admin/inventory')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+export class AdminInventoryController {
+  constructor(private readonly inventoryService: InventoryService) {}
+
+  @Get()
+  findForAdmin(@CurrentUser() user: AuthenticatedUser): Promise<InventoryResponse[]> {
+    return this.inventoryService.findForAdmin(user.userId);
+  }
+
+  @Post()
+  create(
+    @Body() dto: CreateInventoryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<InventoryResponse> {
+    return this.inventoryService.createForAdmin(dto, user);
+  }
+}

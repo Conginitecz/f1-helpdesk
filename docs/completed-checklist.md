@@ -6,6 +6,27 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 11 — Admin Backend: Inventory & Master Data Read — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | `GET /admin/inventory` is scoped to the admin's assigned location | PASS | Live HTTP as admin ID 8 returned 200 and only inventory rows with `location_id=4`; Neon confirmed admin 8 is assigned to location 4. |
+| 2 | Admin inventory creation uses the admin location rather than a supplied `location_id` | PASS | Live HTTP POST returned 201 when sent `location_id=1`; response and Neon row ID 3 showed `location_id=4`, `created_by_admin_id=8`, and null super-admin creator. |
+| 3 | `GET /admin/master-data?type=...` returns active rows only | PASS | Live HTTP returned 200 with one active `inventory_category` and excluded inactive fixture ID 6. Neon confirmed fixture ID 6 has `is_active=false`. |
+
+### Summary of changes
+- Added admin-role inventory GET/POST routes. The service obtains the caller's location from the authenticated admin record and overrides any client-supplied `location_id`.
+- Added an admin-only master-data GET that combines the optional type filter with `is_active=true`; the super-admin CRUD endpoint is unchanged.
+- No schema or migration changes were needed.
+
+### Verification
+- Live HTTP and Neon checks above passed on port 7677.
+- The focused inventory/master-data tests passed (2 files, 3 tests); `npm run build` passed.
+
+---
+
 ## Milestone 10 — Admin Backend: Partners (Engineers & Vendors) — Completed 2026-10-09
 
 ### Check before moving on
@@ -160,6 +181,8 @@ No rows were deleted. Retained test records:
 - `partners`: IDs 7, 8, and 9 (`TEST-M10` vendor, direct engineer, and vendor-owned engineer).
 - `admins`: ID 9 (`test-m10-second-1791549917024@example.com`, TEST admin used for M10 isolation checks).
 - `inventory_items`: ID 1 (`TEST-M11`, created during the M11 route probe before the M10 commit gate was noticed); ID 2 (`TEST-M9`, patched during the live M9 verification).
+- `inventory_items`: ID 3 (`TEST-M11-1791550307949`, admin-location override fixture).
+- `master_data`: ID 6 (`TEST-M11-INACTIVE-1791550289605`, inactive `inventory_category` fixture used to verify filtering).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 

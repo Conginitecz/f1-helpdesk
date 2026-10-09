@@ -42,3 +42,15 @@ export class MasterDataController {
     return this.masterDataService.update(id, dto);
   }
 }
+
+@Controller('admin/master-data')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
+export class AdminMasterDataController {
+  constructor(private readonly masterDataService: MasterDataService) {}
+
+  @Get()
+  findActive(@Query('type') type?: string): Promise<MasterDataResponse[]> {
+    return this.masterDataService.findActive(type);
+  }
+}

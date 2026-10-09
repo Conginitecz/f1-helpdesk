@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Admin } from '../admins/admins.entity.js';
 import type { AuthenticatedUser } from '../auth/authenticated-user.js';
 import { Location } from '../locations/locations.entity.js';
 import { MasterData } from '../master-data/master-data.entity.js';
@@ -38,6 +39,8 @@ export class InventoryService {
     private readonly locationsRepo: Repository<Location>,
     @InjectRepository(MasterData)
     private readonly masterDataRepo: Repository<MasterData>,
+    @InjectRepository(Admin)
+    private readonly adminsRepo: Repository<Admin>,
   ) {}
 
   async findAll(locationId?: number): Promise<InventoryResponse[]> {
@@ -78,6 +81,50 @@ export class InventoryService {
       taxPercentage: dto.tax_applicable ? dto.tax_percentage ?? null : null,
       location: { id: location.id } as Location,
       createdBySuperAdmin: { id: user.userId } as any,
+      isActive: true,
+    });
+
+    const saved = await this.inventoryRepo.save(row);
+    const reloaded = await this.findOneOrFail(saved.id);
+    return this.toResponse(reloaded);
+  }
+
+  async findForAdmin(adminId: number): Promise<InventoryResponse[]> {
+    const admin = await this.getAdminWithLocation(adminId);
+    const rows = await this.inventoryRepo.find({
+      where: { location: { id: admin.location.id } },
+      relations: {
+        type: true,
+        category: true,
+        location: true,
+        createdByAdmin: true,
+        createdBySuperAdmin: true,
+      },
+      order: { id: 'ASC' },
+    });
+    return rows.map((row) => this.toResponse(row));
+  }
+
+  async createForAdmin(
+    dto: CreateInventoryDto,
+    user: AuthenticatedUser,
+  ): Promise<InventoryResponse> {
+    const admin = await this.getAdminWithLocation(user.userId);
+    const location = await this.validateLocation(admin.location.id);
+    const type = await this.validateMasterData(dto.type_id, 'inventory_type');
+    const category = await this.validateMasterData(dto.category_id, 'inventory_category');
+
+    const row = this.inventoryRepo.create({
+      name: dto.name.trim(),
+      type: type ?? null,
+      category: category ?? null,
+      units: dto.units ?? 0,
+      pricePerUnit: dto.price_per_unit,
+      taxApplicable: dto.tax_applicable,
+      taxPercentage: dto.tax_applicable ? dto.tax_percentage ?? null : null,
+      location: { id: location.id } as Location,
+      createdByAdmin: { id: admin.id } as Admin,
+      createdBySuperAdmin: null,
       isActive: true,
     });
 
@@ -157,6 +204,19 @@ export class InventoryService {
       throw new BadRequestException(`Location with id ${locationId} is not found or inactive`);
     }
     return location;
+  }
+
+  private async getAdminWithLocation(adminId: number): Promise<Admin> {
+    const admin = await this.adminsRepo.findOne({
+      where: { id: adminId },
+      relations: { location: true },
+    });
+
+    if (!admin || !admin.isActive || admin.isDeleted || !admin.location) {
+      throw new NotFoundException(`Admin with id ${adminId} not found or unavailable`);
+    }
+
+    return admin;
   }
 
   private async validateMasterData(

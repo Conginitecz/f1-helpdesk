@@ -27,10 +27,11 @@ export class CreateInventoryDto {
   @IsInt()
   category_id?: number;
 
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  location_id: number;
+  location_id?: number;
 
   @IsOptional()
   @Type(() => Number)

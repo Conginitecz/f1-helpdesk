@@ -29,6 +29,14 @@ export class MasterDataService {
     return rows.map((row) => this.toResponse(row));
   }
 
+  async findActive(type?: string): Promise<MasterDataResponse[]> {
+    const rows = await this.masterDataRepo.find({
+      where: type === undefined ? { isActive: true } : { type, isActive: true },
+      order: { type: 'ASC', id: 'ASC' },
+    });
+    return rows.map((row) => this.toResponse(row));
+  }
+
   async create(dto: CreateMasterDataDto): Promise<MasterDataResponse> {
     const duplicate = await this.findDuplicate(dto.type, dto.text);
     if (duplicate) {

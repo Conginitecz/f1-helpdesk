@@ -4,6 +4,24 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 11: Admin Inventory & Master Data Read
+
+Added admin-scoped inventory access and active-only master-data reads.
+
+### Added or changed
+- `backend/src/inventory/inventory.controller.ts` — added guarded `GET /admin/inventory` and `POST /admin/inventory` routes.
+- `backend/src/inventory/inventory.service.ts` — scopes inventory reads to the authenticated admin's assigned location and forces that location/audit identity on create, regardless of client `location_id`.
+- `backend/src/inventory/create-inventory.dto.ts` and `inventory.module.ts` — allow the shared create DTO to carry an optional location field (still required by super-admin service validation) and register the admin repository/controller.
+- `backend/src/master-data/master-data.controller.ts`, `master-data.service.ts`, and `master-data.module.ts` — added an admin-only GET with active-only filtering and optional type filtering.
+
+### Verification and decisions
+- Live HTTP as admin ID 8: inventory GET returned 200 with only location 4 rows; POST with client `location_id=1` returned 201 and the created response used location 4.
+- Admin master-data GET returned one active `inventory_category` row and excluded inactive fixture ID 6. Neon confirmed inventory ID 3 has location 4/admin creator 8, and master-data ID 6 is inactive.
+- Focused regression suite passed (2 files, 3 tests); backend build passed. No schema or migration changes were needed.
+- The inactive lookup row is a named test fixture listed for purge before demo.
+
+---
+
 ## 2026-10-09 — Milestone 10: Admin Partner Ownership & Status Requests
 
 Added the admin-scoped partner flow covering direct vendor creation, direct
