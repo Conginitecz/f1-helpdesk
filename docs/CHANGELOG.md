@@ -4,6 +4,26 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-09 — Milestone 14: Super-Admin UI (Demo Minimum)
+
+Added the initial super-admin UI using only the existing backend endpoints.
+
+### Added or changed
+- `frontend/src/app/super-admin/page.tsx` — replaced the placeholder with counts from existing locations, admins, partner, and status-request GET endpoints.
+- `frontend/src/app/super-admin/locations-admins/page.tsx` — added locations/admin lists, location creation, and the API-required admin creation form with assigned location.
+- `frontend/src/app/super-admin/partners/page.tsx` — added a read-only all-admin partner overview, resolving opaque master-data partner type codes to readable labels and joining owner/location data.
+- `frontend/src/app/super-admin/status-requests/page.tsx` — added deactivation request listing, confirm-before-action approve/reject controls, refreshed results, and graceful HTTP 409 handling.
+- `frontend/src/components/role-shell.tsx` and `frontend/src/app/globals.css` — enabled M14 links and added basic directory/form/table/count styling. Configuration and inventory links remain disabled.
+
+### Verification and decisions
+- Browser created TEST location 14 and admin 12 assigned to it, and both appeared in their lists. Admin 12 logged in separately and submitted two deactivation requests for engineers 16/17; the super-admin UI approved request 6 and rejected request 7.
+- Neon confirmed engineer 16 inactive after approval and engineer 17 still active after rejection; the request statuses persisted as approved/rejected.
+- The partners overview displayed 13 rows and readable Vendor/Service engineer labels, with owner admin and location.
+- Frontend lint/build passed. No backend changes or new API endpoints were needed. M14 fixtures are recorded for purge in the completed checklist.
+- Temporary local development credentials used for browser automation were removed from the final tree; no credentials are included in the change.
+
+---
+
 ## 2026-10-09 — Milestone 13: Login UI, Route Protection & Role Shells
 
 Added the initial browser authentication flow and role workspaces.

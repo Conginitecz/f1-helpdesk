@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { getSession, logout, type AuthSession, type UserRole } from "@/lib/api";
 
@@ -10,9 +10,16 @@ interface RoleShellProps {
   children: ReactNode;
 }
 
-const navigation: Record<UserRole, string[]> = {
-  super_admin: ["Dashboard", "User management", "Configuration", "Inventory"],
-  admin: ["Service engineers", "Vendors", "Inventory"],
+const navigation: Record<UserRole, Array<{ label: string; href?: string }>> = {
+  super_admin: [
+    { label: "Dashboard", href: "/super-admin" },
+    { label: "Locations & admins", href: "/super-admin/locations-admins" },
+    { label: "Partners", href: "/super-admin/partners" },
+    { label: "Status requests", href: "/super-admin/status-requests" },
+    { label: "Configuration" },
+    { label: "Inventory" },
+  ],
+  admin: [{ label: "Service engineers" }, { label: "Vendors" }, { label: "Inventory" }],
 };
 
 const destinations: Record<UserRole, string> = {
@@ -22,6 +29,7 @@ const destinations: Record<UserRole, string> = {
 
 export function RoleShell({ role, children }: RoleShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -77,21 +85,25 @@ export function RoleShell({ role, children }: RoleShellProps) {
         </div>
 
         <nav className="role-nav" aria-label="Main navigation">
-          {navigation[role].map((item, index) =>
-            index === 0 ? (
-              <Link className="nav-current" href={destinations[role]} key={item}>
-                {item}
+          {navigation[role].map((item) =>
+            item.href ? (
+              <Link
+                className={pathname === item.href ? "nav-current" : "nav-link"}
+                href={item.href}
+                key={item.label}
+              >
+                {item.label}
               </Link>
             ) : (
               <button
                 aria-disabled="true"
                 className="nav-upcoming"
                 disabled
-                key={item}
+                key={item.label}
                 title="Coming in a later milestone"
                 type="button"
               >
-                <span>{item}</span>
+                <span>{item.label}</span>
                 <span className="nav-soon">Soon</span>
               </button>
             ),

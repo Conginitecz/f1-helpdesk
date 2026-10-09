@@ -6,6 +6,32 @@ failed with a note on how it was verified.
 
 ---
 
+## Milestone 14 — Super-Admin UI: Demo Minimum — Completed 2026-10-09
+
+### Check before moving on
+
+| # | Item | Result | How it was verified |
+|---|---|---|---|
+| 1 | Create and list locations and admins | PASS | Real browser created TEST location ID 14 and admin ID 12 assigned to it. The location appeared in the location list and admin ID 12 appeared in the admin list without a manual reload; Neon confirmed the location relationship. |
+| 2 | Partners overview shows all partner types, owners, locations and status | PASS | Browser loaded 13 partner rows and displayed readable Vendor/Service engineer type labels. Rows join the partner's `created_by_admin_id` to the admins list and admin `location_id` to locations. M14 engineer rows IDs 16/17 appeared under TEST admin 12 and TEST location 14. |
+| 3 | Deactivation requests can be approved/rejected with confirmation and refreshed status | PASS | A second browser login as newly created admin 12 created request IDs 6/7 for engineers 16/17. In the super-admin session, the browser confirmed and approved request 6 and confirmed and rejected request 7; refreshed UI showed approved/rejected. Neon confirmed engineer 16 inactive and engineer 17 still active. |
+| 4 | Dashboard counts use existing API endpoints | PASS | Dashboard fetches locations, admins, both partner filters, and status requests using existing GET endpoints; no backend change was needed. |
+
+### Summary of changes
+- Added dashboard counts, locations/admin list and creation forms, read-only partner overview, and deactivation request review/actions.
+- Enabled only the M14 super-admin shell links. Configuration and inventory remain disabled; no M15 screens were started.
+- API error messages are shown beside the related form/action; list screens provide loading, empty, retryable error states. Repeated resolution HTTP 409 is handled with a friendly message and list refresh.
+- No backend changes or new endpoints.
+
+### Verification
+- Browser workflow against the running backend created the location/admin, signed into that admin in a separate login session, submitted two requests through the existing admin APIs, then approved/rejected them in the super-admin UI.
+- Neon readback confirmed location/admin/partner/request IDs 14/12/16–17/6–7 and the final active states.
+- Partners overview browser check showed 13 rows, including readable Vendor and Service engineer labels.
+- Frontend lint and production build passed. No M14 backend or database schema changes.
+- A temporary development-only super-admin credential fixture was used for browser automation; it was removed before commit and is not part of the final tree.
+
+---
+
 ## Milestone 13 — Frontend: Auth & Shell — Completed 2026-10-09
 
 ### Check before moving on
@@ -226,6 +252,7 @@ No rows were deleted. Retained test records:
 - `master_data`: ID 6 (`TEST-M11-INACTIVE-1791550289605`, inactive `inventory_category` fixture used to verify filtering).
 - Previous M12 journey: `locations` ID 12; `admins` ID 10; `partners` IDs 10–12 (vendor and two engineers); `status_change_requests` ID 4; `inventory_items` IDs 4–5.
 - Final M12 journey: `locations` ID 13; `admins` ID 11; `partners` IDs 13–15 (vendor and two engineers); `status_change_requests` ID 5 (approved); `inventory_items` IDs 6–7.
+- M14 browser flow: `locations` ID 14 (`TEST-M14-Location-1791564887345`); `admins` ID 12 (`test-m14-admin-1791564917141@example.com`); `partners` IDs 16/17 (TEST direct engineers); `status_change_requests` IDs 6/7 (approved/rejected respectively).
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 
