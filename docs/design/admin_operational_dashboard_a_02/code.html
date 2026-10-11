@@ -1,0 +1,693 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-container":"#5069bb","border-subtle":"#D9E3EA","on-primary-fixed":"#00174b","success":"#16A085","surface-base":"#F5F9FA","secondary-fixed":"#83f5ec","text-primary":"#172B4D","secondary-container":"#80f2e9","inverse-on-surface":"#edf0ff","surface-tint":"#0053db","surface-dim":"#cadaff","dark-navy":"#102A43","primary-fixed-dim":"#b4c5ff","inverse-surface":"#1d3052","on-secondary-container":"#006f69","on-tertiary":"#ffffff","on-secondary-fixed":"#00201e","on-tertiary-fixed-variant":"#264191","tertiary":"#3750a0","primary-container":"#2563eb","on-secondary":"#ffffff","po-checkpoint-text":"#92400E","error-container":"#ffdad6","tertiary-fixed":"#dce1ff","accent-teal":"#0F9D95","on-error":"#ffffff","on-secondary-fixed-variant":"#00504b","surface-variant":"#d7e2ff","on-surface-variant":"#434655","surface-container-highest":"#d7e2ff","error-alert":"#EF4444","accent-green":"#16A085","tertiary-fixed-dim":"#b6c4ff","on-primary-container":"#eeefff","on-tertiary-fixed":"#00164e","outline-variant":"#c3c6d7","surface-container":"#e8edff","primary-fixed":"#dbe1ff","po-checkpoint-bg":"#FEF3C7","secondary-fixed-dim":"#65d9cf","inverse-primary":"#b4c5ff","surface":"#f9f9ff","background":"#f9f9ff","po-checkpoint-border":"#D97706","on-background":"#041b3c","on-error-container":"#93000a","on-tertiary-container":"#eff0ff","warning-pending":"#F59E0B","on-primary-fixed-variant":"#003ea8","primary":"#004ac6","surface-container-high":"#e0e8ff","outline":"#737686","surface-bright":"#f9f9ff","text-muted":"#64748B","error":"#ba1a1a","secondary":"#006a64","deep-blue":"#1E3A8A","surface-container-low":"#f1f3ff","on-surface":"#041b3c","on-primary":"#ffffff","info-blue":"#2563EB","surface-card":"#FFFFFF","surface-container-lowest":"#ffffff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"margin-desktop":"2rem","margin":"1rem","gutter-desktop":"1.5rem","space-md":"1rem","space-xs":"0.25rem","space-lg":"1.5rem","gutter":"1rem","space-xl":"2rem","space-sm":"0.5rem"},"fontFamily":{"headline-lg":["Hanken Grotesk"],"body-lg":["Inter"],"data-mono-md":["JetBrains Mono"],"label-lg":["Inter"],"body-md":["Inter"],"label-sm":["Inter"],"headline-xl-mobile":["Hanken Grotesk"],"label-md":["Inter"],"headline-xl":["Hanken Grotesk"],"headline-md":["Hanken Grotesk"],"data-mono-sm":["JetBrains Mono"],"body-sm":["Inter"],"headline-sm":["Hanken Grotesk"]},"fontSize":{"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"data-mono-md":["13px",{"lineHeight":"18px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"headline-xl-mobile":["26px",{"lineHeight":"34px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-xl":["32px",{"lineHeight":"40px","fontWeight":"700"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"data-mono-sm":["11px",{"lineHeight":"14px","fontWeight":"500"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface-base font-body-md text-text-primary antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-64 bg-dark-navy z-50 flex flex-col justify-between select-none shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-primary tracking-tight font-bold">F1 HELP DESK</span><span class="font-label-sm text-label-sm text-surface-variant font-data-mono-sm uppercase tracking-wider">Enterprise Service Core</span></div></div></div><div class="px-space-md py-space-sm"><div class="bg-dark-navy p-space-xs rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-xs px-space-xs py-space-xs"><span class="material-symbols-outlined text-secondary-fixed text-[16px]">shield_person</span><span class="font-label-sm text-label-sm text-inverse-on-surface">Context</span></div><span class="font-data-mono-sm text-data-mono-sm bg-tertiary text-on-tertiary px-space-xs py-0.5 rounded">Super Admin</span></div></div><nav class="flex flex-col gap-1 px-space-sm mt-space-xs" data-active-classes="bg-primary-container text-on-primary font-label-lg rounded-lg"><a aria-current="page" class="flex items-center gap-space-sm px-space-md py-2 transition-colors bg-primary-container text-on-primary font-label-lg rounded-lg" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[18px]">dashboard</span><span>Dashboard</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="management" href="#"><span class="material-symbols-outlined text-[18px]">corporate_fare</span><span>Management</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="requests" href="#"><span class="material-symbols-outlined text-[18px]">inbox_customize</span><span>Requests</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="services" href="#"><span class="material-symbols-outlined text-[18px]">handyman</span><span>Services</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="inventory" href="#"><span class="material-symbols-outlined text-[18px]">inventory_2</span><span>Inventory</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="support" href="#"><span class="material-symbols-outlined text-[18px]">support_agent</span><span>Support</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="reports" href="#"><span class="material-symbols-outlined text-[18px]">analytics</span><span>Reports</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="configuration" href="#"><span class="material-symbols-outlined text-[18px]">tune</span><span>Configuration</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="audit" href="#"><span class="material-symbols-outlined text-[18px]">verified_user</span><span>Audit</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="profile" href="#"><span class="material-symbols-outlined text-[18px]">account_box</span><span>Profile</span></a></nav></div><div class="p-space-md m-space-sm rounded-lg bg-inverse-surface flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-2 h-2 rounded-full bg-success animate-pulse"></div><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-primary">F1 Dispatch Engine</span><span class="font-data-mono-sm text-data-mono-sm text-surface-variant">v4.18.2-prod</span></div></div><span class="material-symbols-outlined text-surface-variant text-[16px]">terminal</span></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-card z-40 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-lg flex-1"><div class="flex items-center gap-space-sm font-label-md text-label-md text-text-muted"><span class="material-symbols-outlined text-[18px] text-text-muted">home_repair_service</span><span>Operations</span><span class="material-symbols-outlined text-[14px]">chevron_right</span><span class="text-text-primary font-label-lg text-label-lg">Active Console</span></div><div class="relative w-80"><span class="material-symbols-outlined absolute left-space-sm top-1/2 -translate-y-1/2 text-[18px] text-text-muted pointer-events-none">search</span><input class="w-full h-9 pl-8 pr-space-md bg-surface-base rounded text-text-primary font-body-sm text-body-sm outline-none placeholder:text-text-muted focus:bg-surface-card" placeholder="Search tickets, engineers, assets, POs..." type="search"></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-base px-space-sm py-1 rounded-lg"><span class="material-symbols-outlined text-text-muted text-[16px]">swap_horiz</span><span class="font-label-sm text-label-sm text-text-muted uppercase">Switch Role:</span><button class="font-label-sm text-label-sm text-primary font-semibold hover:underline" type="button">Operations Admin</button></div><button aria-label="Notifications" class="relative p-space-xs text-text-muted hover:text-text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error-alert"></span></button><div class="w-px h-6 bg-border-subtle"></div><div class="flex items-center gap-space-sm"><div class="flex flex-col text-right"><span class="font-label-md text-label-md text-text-primary font-semibold leading-tight">Marcella Vance</span><span class="font-data-mono-sm text-data-mono-sm text-text-muted">SA-94021</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface-base min-h-screen px-space-lg py-space-lg"><div class="flex flex-col w-full">
+<!-- Operational Checkpoint & Triage Strip -->
+<div class="flex flex-col gap-space-sm mb-space-lg">
+<!-- PO Policy Checkpoint Notice -->
+<div class="w-full bg-po-checkpoint-bg text-po-checkpoint-text px-space-md py-space-sm rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-po-checkpoint-border">rule_folder</span>
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-data-mono-sm text-data-mono-sm font-bold bg-po-checkpoint-border/20 px-space-xs py-0.5 rounded text-po-checkpoint-text">[PO-09: Triage SLA Breach Protocol]</span>
+<span class="font-body-sm text-body-sm font-medium">Auto-escalation triggers engage if engineer matching exceeds 15 minutes. Dispatch logic awaiting PO sign-off.</span>
+</div>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm uppercase tracking-wider px-space-xs py-0.5 bg-po-checkpoint-border/10 text-po-checkpoint-text rounded">Provisional Policy</span>
+</div>
+<!-- Top Alert Banner -->
+<div class="w-full bg-error-alert text-on-error px-space-md py-space-sm rounded-xl flex items-center justify-between shadow-md">
+<div class="flex items-center gap-space-md">
+<div class="w-7 h-7 rounded-full bg-on-error/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-error text-[18px]">warning</span>
+</div>
+<div class="flex items-center gap-space-xs font-label-md text-label-md flex-wrap">
+<span class="font-bold tracking-wide uppercase">Critical Operations Alert:</span>
+<span>3 Urgent Service Delays in Chennai Central • 2 Low Stock Spare Parts (Dell Inspiron FHD Display, Thermal Paste Arctic MX-4)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="bg-on-error text-error font-label-sm text-label-sm px-space-sm py-1 rounded shadow hover:bg-surface-variant transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+          Override Triage
+        </button>
+</div>
+</div>
+</div>
+<!-- Command Center Header Area -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md mb-space-xl">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs font-data-mono-sm text-data-mono-sm text-accent-teal uppercase tracking-widest font-semibold mb-1">
+<span class="w-2 h-2 rounded-full bg-accent-teal animate-ping"></span>
+        Telemetry Stream :: Zone A-02 / Chennai Cluster
+      </div>
+<h1 class="font-headline-xl text-headline-xl text-text-primary tracking-tight font-bold">
+        Operations Command Center
+      </h1>
+<p class="font-body-md text-body-md text-text-muted mt-1">
+        Real-time dispatch synchronization, incident resolution worklists, and tier-1 vendor supply chain monitoring.
+      </p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-auto">
+<div class="flex items-center bg-surface-card px-space-md py-2 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px] mr-2">sync</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Auto-Refresh:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-primary font-bold ml-1" id="refresh-timer">09s</span>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-space-md py-2 rounded shadow hover:bg-deep-blue transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">add_task</span>
+        Create Manual Dispatch
+      </button>
+</div>
+</div>
+<!-- Key Metrics Bar (6 Metrics Grid) -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-space-md mb-space-xl">
+<!-- Active Requests -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Active Requests</span>
+<span class="material-symbols-outlined text-[18px] text-primary">navigation</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-text-primary">86</span>
+<span class="font-label-sm text-label-sm text-accent-green font-medium">+4/hr</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">In Progress / En Route</span>
+</div>
+<!-- Pending Dispatch -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Pending Dispatch</span>
+<span class="material-symbols-outlined text-[18px] text-warning-pending">pending_actions</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-text-primary">14</span>
+<span class="font-label-sm text-label-sm text-warning-pending font-medium">Critical queue</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">Awaiting Engineer</span>
+</div>
+<!-- Verified Engineers -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Verified Field Staff</span>
+<span class="material-symbols-outlined text-[18px] text-accent-teal">engineering</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-text-primary">112</span>
+<span class="font-label-sm text-label-sm text-accent-teal font-medium">Active</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">Chennai Hub Verified</span>
+</div>
+<!-- Active Vendors -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Active Vendors</span>
+<span class="material-symbols-outlined text-[18px] text-deep-blue">handshake</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-text-primary">19</span>
+<span class="font-label-sm text-label-sm text-text-muted font-medium">Partners</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">100% SLA Tier-1</span>
+</div>
+<!-- Low Stock Items -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Low Stock SKUs</span>
+<span class="material-symbols-outlined text-[18px] text-error">inventory_2</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-error">4</span>
+<span class="font-label-sm text-label-sm text-error font-medium">&lt; Safety Min</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">Reorder required</span>
+</div>
+<!-- Open Support Tickets -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-text-muted mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Open Escalations</span>
+<span class="material-symbols-outlined text-[18px] text-po-checkpoint-border">contact_support</span>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-xl text-headline-xl font-bold text-text-primary">6</span>
+<span class="font-label-sm text-label-sm text-po-checkpoint-border font-medium">High Impact</span>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted mt-space-xs truncate">Disputed • Action Req.</span>
+</div>
+</div>
+<!-- Main Multi-Column Operations Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg mb-space-xl">
+<!-- Left Column: Urgent Pending Actions Worklist (4 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-md">
+<div class="bg-surface-card rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-error text-[22px]">notification_important</span>
+<h2 class="font-headline-md text-headline-md text-text-primary font-bold">Urgent Pending Actions</h2>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm bg-error/10 text-error px-2 py-0.5 rounded-full font-bold">3 Blockers</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted mb-space-md">
+          Field incidents currently halting workflow SLA timers requiring administrative escalation.
+        </p>
+<!-- Worklist Items Stack -->
+<div class="flex flex-col gap-space-md">
+<!-- Item 1: REQ-1049 -->
+<div class="bg-surface-base p-space-md rounded-lg flex flex-col gap-space-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-data-mono-md text-data-mono-md font-bold text-primary">REQ-1049</span>
+<span class="bg-warning-pending/10 text-warning-pending font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">hourglass_top</span>
+                PO-882 Pending
+              </span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary font-semibold">Dell XPS 15 Motherboard Diagnostic</h3>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Assigned to: <span class="font-medium text-text-primary">Karthik R. (FE-091)</span></p>
+</div>
+<div class="bg-surface-card p-space-xs rounded text-text-primary font-body-sm text-body-sm">
+<div class="flex items-center justify-between font-data-mono-sm text-data-mono-sm text-text-muted">
+<span>Vendor: MicroTech Ltd.</span>
+<span>Wait: 2h 45m</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-data-mono-sm text-data-mono-sm text-error font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer</span> SLA Breached
+              </span>
+<div class="flex gap-space-xs">
+<button class="bg-surface-card text-text-primary hover:bg-surface-variant font-label-sm text-label-sm px- space-sm py-1 rounded shadow-sm" type="button">View PO</button>
+<button class="bg-primary text-on-primary hover:bg-deep-blue font-label-sm text-label-sm px-space-sm py-1 rounded shadow-sm" type="button">Authorize Spare</button>
+</div>
+</div>
+</div>
+<!-- Item 2: REQ-1052 -->
+<div class="bg-surface-base p-space-md rounded-lg flex flex-col gap-space-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-data-mono-md text-data-mono-md font-bold text-primary">REQ-1052</span>
+<span class="bg-error/10 text-error font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">person_off</span>
+                Non-Response (11m)
+              </span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary font-semibold">ThinkPad T14 Liquid Damage</h3>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Assigned to: <span class="font-medium text-text-primary">Devanathan M. (FE-044)</span></p>
+</div>
+<div class="bg-surface-card p-space-xs rounded text-text-primary font-body-sm text-body-sm">
+<p class="font-body-sm text-body-sm text-text-muted">Engineer reached premises at Mylapore. Customer gate-pass security verification delayed.</p>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-data-mono-sm text-data-mono-sm text-warning-pending font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">phone_in_talk</span> Calling Primary #
+              </span>
+<div class="flex gap-space-xs">
+<button class="bg-surface-card text-text-primary hover:bg-surface-variant font-label-sm text-label-sm px-space-sm py-1 rounded shadow-sm" type="button">SMS Prompt</button>
+<button class="bg-deep-blue text-on-primary hover:bg-dark-navy font-label-sm text-label-sm px-space-sm py-1 rounded shadow-sm" type="button">Auto-Reschedule</button>
+</div>
+</div>
+</div>
+<!-- Item 3: REQ-1058 -->
+<div class="bg-surface-base p-space-md rounded-lg flex flex-col gap-space-sm hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-data-mono-md text-data-mono-md font-bold text-primary">REQ-1058</span>
+<span class="bg-tertiary/10 text-tertiary font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">group_add</span>
+                Dual Crew Req
+              </span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary font-semibold">MacBook Pro Battery Swell (AMC Server)</h3>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Assigned to: <span class="font-medium text-text-primary">Pradeep Kumar (FE-103)</span></p>
+</div>
+<div class="bg-surface-card p-space-xs rounded text-text-primary font-body-sm text-body-sm">
+<p class="font-body-sm text-body-sm text-text-muted">Hazardous expansion inside climate cabinet. Safety protocol requires L2 electrical oversight.</p>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-data-mono-sm text-data-mono-sm text-accent-teal font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">near_me</span> Nearby Staff: 2
+              </span>
+<div class="flex gap-space-xs">
+<button class="bg-primary text-on-primary hover:bg-deep-blue font-label-sm text-label-sm px-space-sm py-1 rounded shadow-sm" type="button">Assign Backup L2</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Operations Dossier Quick-Inspect Visual -->
+<div class="mt-space-lg bg-surface-base p-space-md rounded-xl flex items-center gap-space-md">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 shadow-sm" data-alt="Close up high-resolution view of a modern electronics motherboard repair bench with diagnostic multimeter probes and precision screwdrivers under bright studio lighting in deep navy and blue technical environment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDBs5P0PU4Ua5vrVuyirit0V-Jas9ce5B7bs4RTSrT30CyU0YkU5ntu_3lK-Bq9mOJWiV4xZG9MFs7M8AYzxkjgfUT9xxmr5ivhlqfLgPpgc641s14emU_0fBNqbhMTe0N7-0WsUcI1E7CY-NGQfvkXCiBVgjiWCjGG60rHGFwQg7SmV2olktRng8P53wHW7kNPYJM3I_Qp17MwcEqRpTYjOOEAG7OfFt_j95-Mvd-bheL7DMFaFpcw')"></div>
+<div class="flex flex-col min-w-0">
+<span class="font-data-mono-sm text-data-mono-sm text-accent-teal font-bold uppercase">Field Diagnostic Feed</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-text-primary truncate">Bench Cam: Lab Chennai-3</span>
+<span class="font-body-sm text-body-sm text-text-muted">Real-time micro-soldering review active</span>
+</div>
+</div>
+</div>
+<!-- Quick Dispatch Health Summary Card -->
+<div class="bg-surface-card rounded-xl p-space-lg shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-text-primary font-bold mb-space-sm flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">speed</span>
+          Dispatch Latency Distribution
+        </h3>
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between font-label-sm text-label-sm text-text-muted">
+<span>&lt; 5 mins (Instant Dispatch)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-primary font-bold">68%</span>
+</div>
+<div class="w-full h-2 bg-surface-base rounded-full overflow-hidden">
+<div class="h-full bg-accent-teal" style="width: 68%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-text-muted">
+<span>5 - 15 mins (Standard Match)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-primary font-bold">24%</span>
+</div>
+<div class="w-full h-2 bg-surface-base rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 24%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-text-muted">
+<span>&gt; 15 mins (Triage Queue)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-error font-bold">8%</span>
+</div>
+<div class="w-full h-2 bg-surface-base rounded-full overflow-hidden">
+<div class="h-full bg-error-alert" style="width: 8%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Request Queue & Inventory Alerts (8 cols) -->
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<!-- Section 2: Live Request Queue & Dispatch Monitor -->
+<div class="bg-surface-card rounded-xl shadow-sm flex flex-col">
+<div class="p-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">route</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-text-primary font-bold">Live Request Queue &amp; Dispatch Monitor</h2>
+<p class="font-body-sm text-body-sm text-text-muted">Continuous field telemetry across Chennai Hub territory</p>
+</div>
+</div>
+<!-- Filters & Views -->
+<div class="flex items-center gap-space-xs flex-wrap">
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1.5 rounded flex items-center gap-1 font-semibold" type="button">
+<span class="material-symbols-outlined text-[14px]">filter_list</span> All Statuses
+            </button>
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1.5 rounded flex items-center gap-1 font-semibold" type="button">
+<span class="material-symbols-outlined text-[14px]">location_on</span> Chennai Central
+            </button>
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1.5 rounded flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px]">download</span> Export
+            </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-base text-text-primary uppercase font-bold text-label-sm tracking-wider">
+<tr>
+<th class="px-space-md py-space-sm">Request ID</th>
+<th class="px-space-md py-space-sm">Customer &amp; Zone</th>
+<th class="px-space-md py-space-sm">Device / Service</th>
+<th class="px-space-md py-space-sm">Engineer</th>
+<th class="px-space-md py-space-sm">Real-time Status</th>
+<th class="px-space-md py-space-sm">SLA Timer</th>
+<th class="px-space-md py-space-sm text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-none text-text-primary">
+<!-- Row 1: Matching -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1064
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Ashwin Sundaram</span>
+<span class="text-text-muted font-body-sm text-body-sm">Nungambakkam, Zone 2</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">laptop_mac</span>
+<span>HP Spectre x360 SSD Failure</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="text-text-muted italic flex items-center gap-1 font-body-sm">
+<span class="w-2 h-2 rounded-full bg-warning-pending animate-pulse"></span>
+                    Scanning (Radius 4km)
+                  </span>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-warning-pending/10 text-warning-pending border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">radar</span> Matching
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-warning-pending font-bold">
+                  04m 12s
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-surface-base text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1 rounded font-semibold" type="button">
+                    Force Match
+                  </button>
+</td>
+</tr>
+<!-- Row 2: En Route -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1061
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Zoho Tech Corp (B2B)</span>
+<span class="text-text-muted font-body-sm text-body-sm">Estancia SEZ, Guduvanchery</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">dns</span>
+<span>Dell PowerEdge R740 Fan Fail</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Surya Prakash (FE-019)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-accent-green">GPS: 1.4km away</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-primary/10 text-primary border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">two_wheeler</span> En Route
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-text-primary font-bold">
+                  18m 40s
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1 rounded" type="button">
+                    Track Live
+                  </button>
+</td>
+</tr>
+<!-- Row 3: Arrived -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1057
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Dr. Meenakshi S.</span>
+<span class="text-text-muted font-body-sm text-body-sm">Adyar East, Zone 4</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">desktop_windows</span>
+<span>iMac 27" Power Supply Replacement</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Gokul Raj (FE-082)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">OTP Verified</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-accent-teal/10 text-accent-teal border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">location_on</span> Arrived
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-text-primary font-bold">
+                  01h 05m
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1 rounded" type="button">
+                    Details
+                  </button>
+</td>
+</tr>
+<!-- Row 4: In Progress -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1050
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Cognizant Tech (B2B)</span>
+<span class="text-text-muted font-body-sm text-body-sm">MEPZ, Tambaram</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">build_circle</span>
+<span>Lenovo L14 Keyboard &amp; Trackpad</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Manikandan K. (FE-007)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-accent-teal">Diagnostic complete</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-accent-green/10 text-accent-green border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">construction</span> In Progress
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-text-primary font-bold">
+                  02h 15m
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1 rounded" type="button">
+                    Audit Log
+                  </button>
+</td>
+</tr>
+<!-- Row 5: Waiting for Spare -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1049
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Pooja Venkatesh</span>
+<span class="text-text-muted font-body-sm text-body-sm">Velachery Main Rd</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">memory</span>
+<span>Dell XPS Motherboard (IC Blown)</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Karthik R. (FE-091)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-error">PO Awaited</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-po-checkpoint-bg text-po-checkpoint-text border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">inventory</span> Waiting Spare
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-error font-bold">
+                  05h 48m
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-primary text-on-primary hover:bg-deep-blue font-label-sm text-label-sm px-space-sm py-1 rounded font-semibold" type="button">
+                    Expedite
+                  </button>
+</td>
+</tr>
+<!-- Row 6: Revisit Required -->
+<tr class="hover:bg-surface-base/80 transition-colors">
+<td class="px-space-md py-space-md font-data-mono-md text-data-mono-md font-bold text-primary">
+                  REQ-1033
+                </td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Kunal Bagchi</span>
+<span class="text-text-muted font-body-sm text-body-sm">Anna Nagar West</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">battery_alert</span>
+<span>HP Envy Touchscreen Calibration</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-text-primary">Anandhi S. (FE-022)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Customer rescheduled</span>
+</div>
+</td>
+<td class="px-space-md py-space-md">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant border-none font-label-sm text-label-sm px-2.5 py-1 rounded-full font-semibold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[13px]">event_repeat</span> Revisit Req
+                  </span>
+</td>
+<td class="px-space-md py-space-md font-data-mono-sm text-data-mono-sm text-text-muted font-bold">
+                  Tomorrow 10:00
+                </td>
+<td class="px-space-md py-space-md text-right">
+<button class="bg-surface-base text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-sm py-1 rounded" type="button">
+                    Reschedule
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Footer Strip -->
+<div class="p-space-md bg-surface-base flex flex-col sm:flex-row items-center justify-between gap-space-sm rounded-b-xl">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Showing 6 of 86 Active Dispatches • Region: Chennai Hub Core</span>
+<div class="flex items-center gap-space-xs">
+<button class="px-2 py-1 bg-surface-card rounded text-text-muted hover:text-text-primary text-label-sm" disabled="" type="button">Prev</button>
+<span class="px-2 py-1 bg-primary text-on-primary rounded font-data-mono-sm text-data-mono-sm font-bold">1</span>
+<button class="px-2 py-1 bg-surface-card rounded text-text-primary hover:bg-surface-container text-label-sm" type="button">2</button>
+<button class="px-2 py-1 bg-surface-card rounded text-text-primary hover:bg-surface-container text-label-sm" type="button">3</button>
+<button class="px-2 py-1 bg-surface-card rounded text-text-primary hover:bg-surface-container text-label-sm" type="button">Next</button>
+</div>
+</div>
+</div>
+<!-- Section 3: Inventory & Vendor Alerts Widget -->
+<div class="bg-surface-card rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-warning-pending text-[22px]">inventory_2</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-text-primary font-bold">Inventory &amp; Vendor Alerts Widget</h2>
+<p class="font-body-sm text-body-sm text-text-muted">Critical spare parts stock thresholds &amp; purchase order acknowledgments</p>
+</div>
+</div>
+<button class="bg-surface-base text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-md py-1.5 rounded flex items-center gap-1 font-semibold self-start md:self-auto" type="button">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+            Bulk Spare Dispatch Portal
+          </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Critical Item 1: Dell Display -->
+<div class="bg-surface-base p-space-md rounded-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm uppercase font-bold text-error bg-error/10 px-2 py-0.5 rounded">Critical Low Stock</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">SKU: DSP-DELL-15FHD</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-text-primary font-bold">Dell Inspiron FHD 15.6" Display Panel</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-1">In-Stock: <strong class="text-error font-data-mono-sm">1 unit</strong> (Threshold: 8 units)</p>
+</div>
+<div class="mt-space-md pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Vendor Acknowledgment:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-warning-pending font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">schedule</span> PO-882 Pending
+                </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Supplier:</span>
+<span class="font-medium text-text-primary">Apex Display Technologies</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<button class="flex-1 bg-primary text-on-primary font-label-sm text-label-sm py-1.5 rounded hover:bg-deep-blue transition-colors font-medium" type="button">
+                  Trigger Vendor PO Nudge
+                </button>
+<button class="bg-surface-card text-text-primary font-label-sm text-label-sm px-space-sm py-1.5 rounded hover:bg-surface-container" type="button">
+                  Re-route Hub
+                </button>
+</div>
+</div>
+</div>
+<!-- Critical Item 2: Arctic Thermal Paste -->
+<div class="bg-surface-base p-space-md rounded-lg flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm uppercase font-bold text-warning-pending bg-warning-pending/10 px-2 py-0.5 rounded">Approaching Min</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">SKU: CMP-ARCTIC-MX4</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-text-primary font-bold">Thermal Paste Arctic MX-4 (4g Syringe)</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-1">In-Stock: <strong class="text-warning-pending font-data-mono-sm">3 units</strong> (Threshold: 15 units)</p>
+</div>
+<div class="mt-space-md pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Vendor Acknowledgment:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-accent-green font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> In Transit (ETA: 45m)
+                </span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-text-muted">Supplier:</span>
+<span class="font-medium text-text-primary">Chronos Logistics Hub South</span>
+</div>
+<div class="flex items-center gap-space-xs mt-space-xs">
+<button class="flex-1 bg-surface-card text-text-primary font-label-sm text-label-sm py-1.5 rounded hover:bg-surface-container font-medium" type="button">
+                  Confirm Inbound Receipt
+                </button>
+<button class="bg-surface-card text-text-primary font-label-sm text-label-sm px-space-sm py-1.5 rounded hover:bg-surface-container" type="button">
+                  Waybill #
+                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Vendor Dispatch Pipeline Overview -->
+<div class="mt-space-md bg-surface-base p-space-md rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-surface-card flex items-center justify-center text-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-text-primary font-bold block">12 Automated Part Replenishment Shipments Dispatched Today</span>
+<span class="font-body-sm text-body-sm text-text-muted">Zero delays recorded with DHL Express Same-Day corridor across Chennai Central.</span>
+</div>
+</div>
+<button class="bg-surface-card text-text-primary hover:bg-surface-container font-label-sm text-label-sm px-space-md py-2 rounded shrink-0 shadow-sm font-semibold" type="button">
+            Track Vendor Carriers
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Operational Diagnostics & Engineer Verification Dossier Drawer Mockup (Visual Layer) -->
+<div class="bg-surface-card rounded-xl p-space-lg shadow-sm flex flex-col lg:flex-row items-center justify-between gap-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-full bg-cover bg-center shrink-0 shadow" data-alt="Portrait of an Indian field operations engineer wearing an F1 technical service uniform with identification badge pinned, looking confident in an electronics maintenance center." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB9sEf1rUgANTDFWU2iyyDStJRQJgcbN0OFQaz9D2jwvaMbI8YI2ExopVIgp1zzwPeOVzVOs5L_kxsAQyEwHWSsdRmKdyb6yU-j6Lyz2npMDbpvgpgSTHIT7dTq-HFb6kaxVeOXOe_1NDh6wkg_HO1JF3ybgg4Ff4QmNP3IKK5NmaaBZsrfR7YaqFU5JUzozkP0m9u6VHgheG40he4mbAuXGFxChI9yHUNO92Xe7PFaP_0DleEiyo_W')"></div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-text-primary font-bold">Field Engineer On-Call Verification</span>
+<span class="bg-accent-green/10 text-accent-green font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded-full font-bold">License Active</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">
+          Review live certification audits, KYC proof-of-work records, and tool-calibration certificates for field technicians.
+        </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-wrap w-full lg:w-auto justify-end">
+<div class="flex items-center gap-space-xs bg-surface-base px-space-md py-2 rounded font-data-mono-sm text-data-mono-sm text-text-muted">
+<span class="material-symbols-outlined text-[16px] text-accent-green">verified</span>
+<span>112 Certified Active</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-base px-space-md py-2 rounded font-data-mono-sm text-data-mono-sm text-warning-pending">
+<span class="material-symbols-outlined text-[16px]">pending</span>
+<span>4 Compliance Reviews</span>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-space-md py-2 rounded hover:bg-deep-blue transition-colors font-semibold" type="button">
+        Open Engineer Dossier
+      </button>
+</div>
+</div>
+</div>
+<script>
+  // Simple operational dashboard countdown simulator
+  (function initDashboard() {
+    let timeLeft = 8;
+    const timerEl = document.getElementById('refresh-timer');
+    if (timerEl) {
+      setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          timeLeft = 10;
+        }
+        timerEl.textContent = '0' + timeLeft + 's';
+      }, 1000);
+    }
+  })();
+</script></main></div></body></html>

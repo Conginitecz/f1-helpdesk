@@ -4,6 +4,112 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-11 — UI Restructure Phase 1: Audit + Design Reference Staged
+
+No application code changed. `frontend/` and `backend/` are byte-identical to
+90949d0. Two things happened: the Phase 1 audit was delivered, and the Stitch
+design source of truth was brought into the repo.
+
+### Blocker found and resolved — `docs/design/` did not exist
+
+The UI task treats `docs/design/` as the design source of truth, but the
+directory was absent: not on disk, not tracked in git, and not present in any
+of the 19 commits. The export was located outside the repo, in `~/Downloads`,
+as four archives (`stitch_f1_help_desk_prototype.zip` and `(1)`–`(3)`).
+
+The full export is 74 screen folders and ~50 MB, mostly out-of-scope mobile
+Customer (`c_*`) and Service Engineer (`se_*`) screens. Only the slice-relevant
+subset is committed, so the repo stays small. `docs/design/README.md` records
+the provenance and where to re-export from.
+
+### Added
+- `docs/design/design-system/DESIGN.md` — the authoritative design-system spec:
+  full color token set, typography scale (Hanken Grotesk / Inter / JetBrains
+  Mono), spacing scale, 5 elevation tiers, radius distribution, and
+  per-component specs for buttons, badges, banners, tables, timeline nodes and
+  form inputs. Every token for the restructure comes from this file.
+- `docs/design/` — 9 screens relevant to the Admin / Super Admin slice, each
+  with its `code.html`.
+- `docs/design/README.md` — provenance, screen-to-route mapping, and the
+  screenshot caveat below.
+
+### Screenshot caveat (verified, not assumed)
+
+Stitch failed to render four `screen.png` files. They are 28-byte placeholders
+whose entire contents are the literal text `<FIFE Image failed to fetch>` —
+not renders of the design. The placeholders were **not** committed. Each
+affected folder has a `SCREENSHOT-MISSING.md` instead.
+
+Affected: `super_admin_dashboard_sa_02` (the key screen), `c_03_customer_login`,
+`se_02_service_engineer_login`. A valid copy was recovered from archive `(2)`
+for `app_startup_role_gateway` and used.
+
+All four archives were checked for the super-admin screen; every one carries the
+same placeholder, so no valid render exists to recover. For each affected screen
+`code.html` is complete and valid (byte counts verified, each ends with
+`</div></body></html>`) and is the authoritative source. Real renders require a
+re-export from Stitch.
+
+### Phase 1 audit result
+
+11 routes inventoried and mapped against the design: **0 matched, 2 partial, 9
+missing.** Only 3 of the 72 exported screens are web/admin surfaces at all.
+
+- Matched designs exist for neither admin login nor any directory screen.
+- The two dashboards (`super_admin_dashboard_sa_02`,
+  `admin_operational_dashboard_a_02`) are high-fidelity but design a larger
+  product than V0: SLA watch banners, dispatch latency, Kafka buffer queue, API
+  response budget, zone telemetry, audit ledger, live dispatch queue with
+  per-request SLA timers, and role-elevation approval. Their value for V0 is
+  layout, navigation, page furniture, metric-tile treatment and table
+  structure — not a content checklist.
+
+Current styling baseline: `globals.css` is 1008 lines of hand-written CSS with
+~35 distinct hex values in a **green** palette (`#1c5a43`, `#183b30`), while the
+design system is **blue enterprise** (`#2563EB` primary, `#102A43` dark navy,
+`#172B4D` text on `#F5F9FA`). Also absent today: all 3 design fonts (currently
+Geist), every icon (design uses Material Symbols throughout), the 4px spacing
+scale, the 5 elevation tiers, spec radius (4/8/9999px), the 3-tier responsive
+grid (design mandates a 260px sidebar, a 64px tablet icon dock and mobile
+bottom sheets; the app has one `max-width: 760px` breakpoint), and any shared
+component library — 8 duplicated `messageFor()` helpers, 2 different `Field`
+implementations, one `ScreenState`. Approve/reject uses native
+`window.confirm()`; the design mandates an L4 modal with backdrop.
+
+Two gaps found that are independent of styling:
+
+- **Functional gap vs. dev doc.** Dev doc §4 Super Admin item 3 specifies a
+  Configuration screen (Pricing, Locations, Master Data). It was never built —
+  the sidebar renders a disabled "Soon" pill. The backend is ready and guarded
+  (`GET`/`POST /super-admin/config`, `PATCH /super-admin/config/:key`,
+  `GET`/`POST /super-admin/master-data`, `PATCH /super-admin/master-data/:id`),
+  so this is frontend-only work. Also missing vs. §4.2: super-admin partner
+  activate/deactivate buttons — `PATCH /super-admin/partners/:id/activate|
+  deactivate` exist but render no UI.
+- **Data the design needs that the API does not provide** (listed, not built,
+  per the no-backend-work rule): telemetry/SLA metrics, role-elevation
+  approvals, an audit/activity ledger, per-location engineer counts, the live
+  dispatch queue and `requests` entity, certification/SLA fields on partners,
+  stock-threshold fields on inventory, global search, notifications, and
+  human-readable codes (`REQ-1064`, `SA-94021`). Notably `/auth/login` returns
+  only `user: { id, role }` — no name, email or username — so the designed
+  topbar user chip cannot show a real display name without a backend field.
+
+### Verification
+- `git diff --stat HEAD -- frontend backend` → empty; no application code changed.
+- Every committed `screen.png` verified as a real PNG via `file`; no placeholder
+  shipped under an image extension.
+- Baseline confirmed before staging: `npx eslint src` exit 0 with no warnings;
+  `npx next build` succeeded, 14 routes.
+
+### Deferred pending owner approval
+Phase 2 (restructure) has not started. The ~19-step plan — Stage A tokens +
+primitives + shell, Stage B one screen per commit, Stage C cleanup and browser
+walkthrough — is proposed in the audit and awaiting sign-off. An open question
+on how to treat the two dashboards' unavailable data is outstanding.
+
+---
+
 ## 2026-10-11 — Approved TEST Data Purge
 
 Executed the owner-approved 67-row purge after fresh counts matched the approved scope and the owner confirmed both backups. Locations 5-8 remained excluded.

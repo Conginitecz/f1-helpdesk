@@ -1,0 +1,835 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary-container":"#5069bb","border-subtle":"#D9E3EA","on-primary-fixed":"#00174b","success":"#16A085","surface-base":"#F5F9FA","secondary-fixed":"#83f5ec","text-primary":"#172B4D","secondary-container":"#80f2e9","inverse-on-surface":"#edf0ff","surface-tint":"#0053db","surface-dim":"#cadaff","dark-navy":"#102A43","primary-fixed-dim":"#b4c5ff","inverse-surface":"#1d3052","on-secondary-container":"#006f69","on-tertiary":"#ffffff","on-secondary-fixed":"#00201e","on-tertiary-fixed-variant":"#264191","tertiary":"#3750a0","primary-container":"#2563eb","on-secondary":"#ffffff","po-checkpoint-text":"#92400E","error-container":"#ffdad6","tertiary-fixed":"#dce1ff","accent-teal":"#0F9D95","on-error":"#ffffff","on-secondary-fixed-variant":"#00504b","surface-variant":"#d7e2ff","on-surface-variant":"#434655","surface-container-highest":"#d7e2ff","error-alert":"#EF4444","accent-green":"#16A085","tertiary-fixed-dim":"#b6c4ff","on-primary-container":"#eeefff","on-tertiary-fixed":"#00164e","outline-variant":"#c3c6d7","surface-container":"#e8edff","primary-fixed":"#dbe1ff","po-checkpoint-bg":"#FEF3C7","secondary-fixed-dim":"#65d9cf","inverse-primary":"#b4c5ff","surface":"#f9f9ff","background":"#f9f9ff","po-checkpoint-border":"#D97706","on-background":"#041b3c","on-error-container":"#93000a","on-tertiary-container":"#eff0ff","warning-pending":"#F59E0B","on-primary-fixed-variant":"#003ea8","primary":"#004ac6","surface-container-high":"#e0e8ff","outline":"#737686","surface-bright":"#f9f9ff","text-muted":"#64748B","error":"#ba1a1a","secondary":"#006a64","deep-blue":"#1E3A8A","surface-container-low":"#f1f3ff","on-surface":"#041b3c","on-primary":"#ffffff","info-blue":"#2563EB","surface-card":"#FFFFFF","surface-container-lowest":"#ffffff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"margin-desktop":"2rem","margin":"1rem","gutter-desktop":"1.5rem","space-md":"1rem","space-xs":"0.25rem","space-lg":"1.5rem","gutter":"1rem","space-xl":"2rem","space-sm":"0.5rem"},"fontFamily":{"headline-lg":["Hanken Grotesk"],"body-lg":["Inter"],"data-mono-md":["JetBrains Mono"],"label-lg":["Inter"],"body-md":["Inter"],"label-sm":["Inter"],"headline-xl-mobile":["Hanken Grotesk"],"label-md":["Inter"],"headline-xl":["Hanken Grotesk"],"headline-md":["Hanken Grotesk"],"data-mono-sm":["JetBrains Mono"],"body-sm":["Inter"],"headline-sm":["Hanken Grotesk"]},"fontSize":{"headline-lg":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"data-mono-md":["13px",{"lineHeight":"18px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","fontWeight":"600"}],"headline-xl-mobile":["26px",{"lineHeight":"34px","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-xl":["32px",{"lineHeight":"40px","fontWeight":"700"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"600"}],"data-mono-sm":["11px",{"lineHeight":"14px","fontWeight":"500"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-sm":["16px",{"lineHeight":"24px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface-base font-body-md text-text-primary antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-64 bg-dark-navy z-50 flex flex-col justify-between select-none shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">bolt</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-primary tracking-tight font-bold">F1 HELP DESK</span><span class="font-label-sm text-label-sm text-surface-variant font-data-mono-sm uppercase tracking-wider">Enterprise Service Core</span></div></div></div><div class="px-space-md py-space-sm"><div class="bg-dark-navy p-space-xs rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-xs px-space-xs py-space-xs"><span class="material-symbols-outlined text-secondary-fixed text-[16px]">shield_person</span><span class="font-label-sm text-label-sm text-inverse-on-surface">Context</span></div><span class="font-data-mono-sm text-data-mono-sm bg-tertiary text-on-tertiary px-space-xs py-0.5 rounded">Super Admin</span></div></div><nav class="flex flex-col gap-1 px-space-sm mt-space-xs" data-active-classes="bg-primary-container text-on-primary font-label-lg rounded-lg"><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[18px]">dashboard</span><span>Dashboard</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="management" href="#"><span class="material-symbols-outlined text-[18px]">corporate_fare</span><span>Management</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="requests" href="#"><span class="material-symbols-outlined text-[18px]">inbox_customize</span><span>Requests</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="services" href="#"><span class="material-symbols-outlined text-[18px]">handyman</span><span>Services</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="inventory" href="#"><span class="material-symbols-outlined text-[18px]">inventory_2</span><span>Inventory</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="support" href="#"><span class="material-symbols-outlined text-[18px]">support_agent</span><span>Support</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="reports" href="#"><span class="material-symbols-outlined text-[18px]">analytics</span><span>Reports</span></a><a aria-current="page" class="flex items-center gap-space-sm px-space-md py-2 transition-colors bg-primary-container text-on-primary font-label-lg rounded-lg" data-path="configuration" href="#"><span class="material-symbols-outlined text-[18px]">tune</span><span>Configuration</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="audit" href="#"><span class="material-symbols-outlined text-[18px]">verified_user</span><span>Audit</span></a><a class="flex items-center gap-space-sm px-space-md py-2 rounded-lg text-surface-variant hover:bg-inverse-surface hover:text-on-primary transition-colors font-label-md text-label-md" data-path="profile" href="#"><span class="material-symbols-outlined text-[18px]">account_box</span><span>Profile</span></a></nav></div><div class="p-space-md m-space-sm rounded-lg bg-inverse-surface flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-2 h-2 rounded-full bg-success animate-pulse"></div><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-primary">F1 Dispatch Engine</span><span class="font-data-mono-sm text-data-mono-sm text-surface-variant">v4.18.2-prod</span></div></div><span class="material-symbols-outlined text-surface-variant text-[16px]">terminal</span></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-card z-40 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-lg flex-1"><div class="flex items-center gap-space-sm font-label-md text-label-md text-text-muted"><span class="material-symbols-outlined text-[18px] text-text-muted">home_repair_service</span><span>Operations</span><span class="material-symbols-outlined text-[14px]">chevron_right</span><span class="text-text-primary font-label-lg text-label-lg">Active Console</span></div><div class="relative w-80"><span class="material-symbols-outlined absolute left-space-sm top-1/2 -translate-y-1/2 text-[18px] text-text-muted pointer-events-none">search</span><input class="w-full h-9 pl-8 pr-space-md bg-surface-base rounded text-text-primary font-body-sm text-body-sm outline-none placeholder:text-text-muted focus:bg-surface-card" placeholder="Search tickets, engineers, assets, POs..." type="search"></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs bg-surface-base px-space-sm py-1 rounded-lg"><span class="material-symbols-outlined text-text-muted text-[16px]">swap_horiz</span><span class="font-label-sm text-label-sm text-text-muted uppercase">Switch Role:</span><button class="font-label-sm text-label-sm text-primary font-semibold hover:underline" type="button">Operations Admin</button></div><button aria-label="Notifications" class="relative p-space-xs text-text-muted hover:text-text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error-alert"></span></button><div class="w-px h-6 bg-border-subtle"></div><div class="flex items-center gap-space-sm"><div class="flex flex-col text-right"><span class="font-label-md text-label-md text-text-primary font-semibold leading-tight">Marcella Vance</span><span class="font-data-mono-sm text-data-mono-sm text-text-muted">SA-94021</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface-base min-h-screen px-space-lg py-space-lg"><div class="flex flex-col w-full">
+<!-- Page Context & Top Summary Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md mb-space-xl">
+<div>
+<div class="flex items-center gap-space-xs mb-1">
+<span class="font-data-mono-sm text-data-mono-sm uppercase tracking-wider text-primary font-semibold">Architectural Dossier · Ref: CHN-2025-V4</span>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-accent-teal"></span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Rev 14.2 Active</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-dark-navy font-bold tracking-tight">Product Architecture, Cross-Role State Flow &amp; Pending PO Decisions</h1>
+<p class="font-body-md text-body-md text-text-muted mt-1 max-w-4xl">Chennai Technical Service Marketplace Working Checkpoint System. Standardized orchestration layer across Super Admin dispatch engines, certified field service engineers, tier-1 hardware vendors, and direct B2C/B2B customer endpoints.</p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="px-space-md py-space-xs rounded-xl bg-surface-card shadow-sm flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-warning-pending text-[22px]">pending_actions</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-text-muted uppercase">Unresolved Gaps</span>
+<span class="font-headline-sm text-headline-sm font-bold text-dark-navy">7 Core / 18 PO Reg</span>
+</div>
+</div>
+<button class="h-9 px-space-md bg-primary hover:bg-deep-blue text-on-primary font-label-md text-label-md rounded-lg flex items-center gap-space-xs shadow-sm transition-all" onclick="exportAuditManifest()" type="button">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+<span>Export Spec Manifest</span>
+</button>
+</div>
+</div>
+<!-- Operational Alert Banner: PO Master Sign-off Gate -->
+<div class="w-full bg-po-checkpoint-bg rounded-xl p-space-md mb-space-xl shadow-sm relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-po-checkpoint-border"></div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md pl-space-xs">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-warning-pending/20 text-po-checkpoint-text flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+</div>
+<div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-data-mono-sm text-data-mono-sm font-bold bg-po-checkpoint-border/20 text-po-checkpoint-text px-2 py-0.5 rounded">PO-CRITICAL-PATH</span>
+<span class="font-label-lg text-label-lg font-bold text-po-checkpoint-text">Policy Lock Notice · Chennai Operations Dispatch Engine</span>
+</div>
+<p class="font-body-sm text-body-sm text-po-checkpoint-text mt-1 max-w-5xl">Engineers operating in Chennai districts (T. Nagar, Velachery, OMR corridor, Ambattur) run on automated batch-matching fallback logic. Items marked with amber warning pills below remain provisional business hypotheses until formally signed off by the Operations Product Steering Committee.</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 self-end md:self-center">
+<span class="font-data-mono-sm text-data-mono-sm text-po-checkpoint-text font-semibold">Sprint Cycle: Q2-MS3</span>
+</div>
+</div>
+</div>
+<!-- SECTION 1: Interactive Cross-Role Workflow Stepper & State Machine Matrix -->
+<div class="flex flex-col mb-space-xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">account_tree</span>
+<h2 class="font-headline-lg text-headline-lg font-bold text-dark-navy">Cross-Role Workflow Stepper &amp; State Machine Matrix</h2>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted">Synchronized real-time choreography across four marketplace entities from request inception to settlement.</p>
+</div>
+<!-- Flow filter toggles -->
+<div class="flex items-center p-1 bg-surface-container rounded-lg gap-1 shadow-sm">
+<button class="px-space-sm py-1 rounded text-primary font-label-sm text-label-sm font-semibold bg-surface-card shadow-sm" onclick="filterLane('all')" type="button">All Lanes</button>
+<button class="px-space-sm py-1 rounded text-text-muted hover:text-text-primary font-label-sm text-label-sm transition-colors" onclick="filterLane('dispatch')" type="button">Dispatch Stage</button>
+<button class="px-space-sm py-1 rounded text-text-muted hover:text-text-primary font-label-sm text-label-sm transition-colors" onclick="filterLane('field')" type="button">Field Execution</button>
+<button class="px-space-sm py-1 rounded text-text-muted hover:text-text-primary font-label-sm text-label-sm transition-colors" onclick="filterLane('spares')" type="button">Spare Routing</button>
+</div>
+</div>
+<!-- Swimlane Matrix Container -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-lg overflow-x-auto">
+<div class="min-w-[1080px] flex flex-col gap-space-md">
+<!-- Lane 1: Customer -->
+<div class="grid grid-cols-12 gap-space-sm items-center p-space-sm rounded-lg bg-surface-base/80" data-lane="customer">
+<div class="col-span-2 flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">person</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-dark-navy">Customer</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Consumer / B2B</span>
+</div>
+</div>
+<div class="col-span-10 grid grid-cols-6 gap-space-sm">
+<!-- Node 1 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">CUST-01</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Create Request</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Geo pin + device category</span>
+</div>
+<!-- Node 2 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">CUST-02</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Issue Details</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Symptom tags, initial media</span>
+</div>
+<!-- Node 3 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">CUST-03</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Track Match</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Real-time radar broadcast</span>
+</div>
+<!-- Node 4 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-accent-teal font-semibold">CUST-04</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Confirm Arrival</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">OTP handshake at door</span>
+</div>
+<!-- Node 5 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">CUST-05</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Auth Extra Part</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Real-time quote signoff</span>
+</div>
+<!-- Node 6 -->
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm bg-surface-container">
+<span class="font-data-mono-sm text-data-mono-sm text-success font-semibold">CUST-06</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Settle &amp; Review</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">UPI / NetBanking rating</span>
+</div>
+</div>
+</div>
+<!-- Lane 2: Admin / System Core -->
+<div class="grid grid-cols-12 gap-space-sm items-center p-space-sm rounded-lg bg-surface-container-low" data-lane="admin">
+<div class="col-span-2 flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-full bg-dark-navy text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">dns</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-dark-navy">Admin / System</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Chennai Core Rules</span>
+</div>
+</div>
+<div class="col-span-10 grid grid-cols-6 gap-space-sm">
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">SYS-01</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Ingestion &amp; Geo-hash</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Grid radius validation</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">SYS-02</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Skill Tier Match</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Check certs &amp; penalties</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">SYS-03</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Batch Dispatch (10)</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Concurrent broadcast push</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-warning-pending font-semibold">SYS-04</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">SLA Watchdog</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Auto-escalate if unassigned</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">SYS-05</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Vendor Routing</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Hub dispatch trigger</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-success font-semibold">SYS-06</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Commission Split</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Escrow to wallet deposit</span>
+</div>
+</div>
+</div>
+<!-- Lane 3: Field Service Engineer -->
+<div class="grid grid-cols-12 gap-space-sm items-center p-space-sm rounded-lg bg-surface-base/80" data-lane="engineer">
+<div class="col-span-2 flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-full bg-accent-teal text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">engineering</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-dark-navy">Field Engineer</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Mobile App Fleet</span>
+</div>
+</div>
+<div class="col-span-10 grid grid-cols-6 gap-space-sm">
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-error-alert font-semibold">ENG-01 (45s Timer)</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Accept Window</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Audio alert countdown</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">ENG-02</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">En Route → Arrive</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">GPS telemetry broadcast</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">ENG-03</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Pre-Service Evid.</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Serial &amp; physical defects</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-warning-pending font-semibold">ENG-04</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Diagnostic Stage</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Spare flag: YES or NO</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">ENG-05</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Repair Execution</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Component replacement</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-success font-semibold">ENG-06</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Post-Evid. &amp; Done</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Functional proof recorded</span>
+</div>
+</div>
+</div>
+<!-- Lane 4: Vendor / Hardware Spares Partner -->
+<div class="grid grid-cols-12 gap-space-sm items-center p-space-sm rounded-lg bg-surface-container-low" data-lane="vendor">
+<div class="col-span-2 flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-full bg-tertiary text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-dark-navy">Vendor / Spare</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Parry's / Ritchie St Hub</span>
+</div>
+</div>
+<div class="col-span-10 grid grid-cols-6 gap-space-sm">
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm opacity-40">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">VND-01</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-muted mt-0.5">Standby</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">No ticket requirement</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm opacity-40">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">VND-02</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-muted mt-0.5">Standby</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Awaiting field diagnosis</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted font-semibold">VND-03</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">In-Stock Query</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">SKU barcode reservation</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-semibold">VND-04</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Spare Dispatch</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Hyperlocal runner handoff</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-accent-teal font-semibold">VND-05</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Delivery Ack</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">Engineer scans QR receipt</span>
+</div>
+<div class="flex flex-col p-space-xs bg-surface-card rounded-lg shadow-sm">
+<span class="font-data-mono-sm text-data-mono-sm text-success font-semibold">VND-06</span>
+<span class="font-label-sm text-label-sm font-semibold text-text-primary mt-0.5">Warranty Log</span>
+<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight mt-1">90-day OEM ledger entry</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Pending Product Owner Confirmation Decision Registry -->
+<div class="flex flex-col mb-space-xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-po-checkpoint-border text-[22px]">assignment_late</span>
+<h2 class="font-headline-lg text-headline-lg font-bold text-dark-navy">'Pending Product Owner Confirmation' Decision Registry</h2>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted">Strictly documented items (PO-01 through PO-18). Engineering assumptions requiring immediate business stakeholder arbitration.</p>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Showing 7 Critical Checkpoints</span>
+</div>
+</div>
+<!-- PO Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
+<!-- Card 1: PO-09 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-09</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Incorrect Diagnosis &amp; Contradiction Liability Model</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">If Engineer A quotes a Motherboard replacement (₹4,500) and the customer contests, secondary Engineer B inspects. If Engineer B resolves with an SMPS fuse swap (₹300), Engineer A absorbs a 50% diagnostic reversal penalty deducted from their weekly wallet payout.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">Does the platform penalize Engineer A if component misdiagnosis is unintentional vs fraudulent? Who covers Engineer B's travel fee if customer was incorrect?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: High (Payout Engine)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-09')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2: PO-10 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-10</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Payment Failure &amp; Negative Balance Policy</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">Upon job completion, payment gateway triggers razorpay webhooks. If UPI/Card fails at doorstep, engineer cannot leave until customer pays; after 15 min, job converts to "Debt Outstanding" with engineer receiving base pay credited by platform reserve.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">Should the customer account be instantly suspended across phone number and GSTIN if overdue &gt; 48 hours, and does F1 absorb 100% of vendor spare costs upfront?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: Critical (Financial Escrow)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-10')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3: PO-11 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-11</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Multi-Engineer &amp; AMC Job Assignment &amp; Billing</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">B2B annual maintenance contracts (AMCs) needing multiple workstations serviced concurrently dispatch a "Lead Engineer" who distributes child tickets to 2-3 associate technicians. Lead takes 15% override commission.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">How are rating deductions prorated if 1 technician damages hardware while the other 2 complete flawlessly under one single AMC master invoice?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: Medium (B2B Contracts)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-11')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 4: PO-13 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-13</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Customer No-Show Timeout &amp; Travel Visit Charges</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">Engineer arrives, clicks 'Arrived' (geofence verified &lt; 80m). Automated IVR &amp; push ping triggers. If customer is unresponsive after 12 minutes, engineer may mark 'Customer No-Show' with mandatory facade photo.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">Is the ₹199 travel convenience fee auto-charged to customer card/wallet, or billed as a block on next booking? What if GPS accuracy is degraded in high-rises?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: High (Field SLA)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-13')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 5: PO-04 & PO-05 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-04 &amp; PO-05</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Engineer Certification Validity &amp; Assessment Rules</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">Apple/Cisco/Microsoft Tier-2 skill badges granted for a flat 365 days. 30 days prior to expiry, app alerts re-certification exam. If failed once, a grace window of 14 days is granted without queue removal.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">Should high-risk repairs (e.g. server racks, cleanroom PCB soldering) expire at 6 months instead of 12? Does failed exam immediately degrade tier matching priority?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: Medium (Compliance)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-04')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 6: PO-06 & PO-07 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-06 &amp; PO-07</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Disciplinary Suspension vs Certification Expiry</h3>
+<div class="mt-space-sm p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption:</span>
+<p class="font-body-sm text-body-sm text-text-primary">System differentiates `SUSPENDED_DISCIPLINARY` (fraud, code of conduct, rating &lt; 3.8) from `SUSPENDED_ADMIN_EXPIRED` (badge expired). Disciplinary freezes wallet payouts; Admin Expiry permits wallet withdrawal of earned balance.</p>
+</div>
+<div class="mt-space-sm p-space-xs bg-error-container/40 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">Can an Operations Supervisor manually override a disciplinary freeze without Head of Operations 2-person signoff?</p>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: High (Legal/Ops)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-06')" type="button">
+            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 7: PO-14 & PO-15 -->
+<div class="bg-surface-card rounded-xl shadow-sm p-space-md flex flex-col justify-between hover:shadow-md transition-shadow lg:col-span-3">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">PO-14 &amp; PO-15</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded font-semibold tracking-tight">PENDING PO CONFIRMATION</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Configurable Rate Cards &amp; Diagnosis Fee Structure</h3>
+<p class="font-body-sm text-body-sm text-text-muted mt-2">Dynamic tariff matrix governing base inspection rates across Chennai micro-markets (North Chennai, Central, OMR Tech Belt) and whether inspection is waived upon quotation acceptance.</p>
+</div>
+<div class="p-space-xs bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-0.5">Current Assumption Matrix:</span>
+<ul class="font-body-sm text-body-sm text-text-primary space-y-1 list-disc list-inside">
+<li>Diagnosis fee is flat ₹249 across laptops, ₹349 for laser printers.</li>
+<li>If repair estimate &gt; ₹1,200 is accepted, diagnosis fee is 100% credited against total labor.</li>
+<li>If customer declines quote after diagnosis, customer pays flat inspection rate directly to engineer.</li>
+</ul>
+</div>
+<div class="p-space-xs bg-error-container/40 rounded-lg flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-0.5">Critical PO Question:</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-medium">What is the exact commission split on standalone unaccepted diagnostic fees? Does F1 keep 20% or pass 100% to the engineer as fuel compensation?</p>
+</div>
+<div class="flex items-center justify-between mt-3 pt-2">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Impact: High (Core Unit Economics)</span>
+<button class="text-primary hover:text-deep-blue font-label-sm text-label-sm font-semibold flex items-center gap-0.5" onclick="openPoDrawer('PO-14')" type="button">
+                Review Rate Matrix <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: State Machine Specifications -->
+<div class="flex flex-col mb-space-lg">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">reorder</span>
+<h2 class="font-headline-lg text-headline-lg font-bold text-dark-navy">State Machine Specifications &amp; Transition Graphs</h2>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted">Rigid enum definitions, validation gates, and permitted transitions powering the backend persistence layer.</p>
+</div>
+<!-- State Tab Selectors -->
+<div class="flex items-center p-1 bg-surface-container rounded-lg gap-1 shadow-sm">
+<button class="px-space-md py-1 rounded text-primary font-label-sm text-label-sm font-semibold bg-surface-card shadow-sm" id="tab-btn-req" onclick="switchStateTab('req')" type="button">Request Lifecycle (11 States)</button>
+<button class="px-space-md py-1 rounded text-text-muted hover:text-text-primary font-label-sm text-label-sm transition-colors" id="tab-btn-eng" onclick="switchStateTab('eng')" type="button">Engineer Lifecycle (4 States)</button>
+<button class="px-space-md py-1 rounded text-text-muted hover:text-text-primary font-label-sm text-label-sm transition-colors" id="tab-btn-cust" onclick="switchStateTab('cust')" type="button">Customer Security Gates</button>
+</div>
+</div>
+<!-- Tab Content 1: Request Lifecycle (11 states) -->
+<div class="flex flex-col bg-surface-card rounded-xl shadow-sm p-space-lg" id="tab-content-req">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-lg text-label-lg font-bold text-dark-navy">Order / Job State Transition Table</span>
+<span class="font-data-mono-sm text-data-mono-sm bg-surface-container px-2 py-0.5 rounded text-text-muted">F1-FSM-REQ-V4</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-muted">Immutable Audit Log Requirement • ISO-27001 Log Trace</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-base">
+<th class="py-2.5 px-space-md font-label-sm text-label-sm font-bold text-dark-navy uppercase">Index &amp; State Token</th>
+<th class="py-2.5 px-space-md font-label-sm text-label-sm font-bold text-dark-navy uppercase">Visual Badge</th>
+<th class="py-2.5 px-space-md font-label-sm text-label-sm font-bold text-dark-navy uppercase">Trigger Condition</th>
+<th class="py-2.5 px-space-md font-label-sm text-label-sm font-bold text-dark-navy uppercase">Permitted Next States</th>
+<th class="py-2.5 px-space-md font-label-sm text-label-sm font-bold text-dark-navy uppercase">PO Checkpoint Reference</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm divide-y-0">
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">01. REQ_CREATED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-surface-container text-text-primary">Created</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Customer submits ticket via web or app</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">ENGINEERS_NOTIFIED, CANCELLED</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-01 (Geo Radius)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">02. ENGINEERS_NOTIFIED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-primary-fixed text-primary">Broadcast</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Radial push sent to top 10 verified candidates</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">ACCEPTED, TIMEOUT_EXPIRED</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-02 (Batch Radius 8km)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">03. ACCEPTED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-tertiary-fixed text-tertiary">Accepted</span></td>
+<td class="py-2.5 px-space-md text-text-primary">First certified engineer claims ticket within 45s</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">TIME_CONFIRMED, REJECTED_BY_ENG</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-03 (Rejection Penalty)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">04. TIME_CONFIRMED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-secondary-fixed text-on-secondary-container">Slot Fixed</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Customer &amp; engineer sync ETA window</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">ADDRESS_REVEALED, RESCHEDULED</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-08 (Reschedule Max 2x)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">05. ADDRESS_REVEALED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-surface-container-high text-dark-navy">Privacy Lifted</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Door / Flat details unmasked (2-hr window)</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">EN_ROUTE, CANCELLED_PENALTY</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-12 (Privacy Masking)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">06. EN_ROUTE</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-primary-fixed-dim text-dark-navy">En Route</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Engineer begins navigation with GPS active</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">REACHED, BREAKDOWN_ALERT</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-13 (Speed &amp; Traffic SLA)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">07. REACHED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-secondary-container text-on-secondary-container">At Door</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Geofence validation + Customer Arrival OTP verified</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">IN_PROGRESS, NO_SHOW_TIMEOUT</td>
+<td class="py-2.5 px-space-md text-po-checkpoint-text font-bold font-data-mono-sm text-data-mono-sm">PO-13 (15 Min Timeout)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">08. IN_PROGRESS</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-primary text-on-primary">Diagnostics/Work</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Pre-service photo uploaded; diagnostic underway</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">SPARE_PENDING, REPAIR_COMPLETED</td>
+<td class="py-2.5 px-space-md text-po-checkpoint-text font-bold font-data-mono-sm text-data-mono-sm">PO-09 (Diagnosis Liability)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">09. REPAIR_COMPLETED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-secondary-fixed-dim text-dark-navy">Post-Verified</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Post-service test pass media + customer demo signed</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">PAYMENT_PENDING</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-16 (Post Evid Retention)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">10. PAYMENT_PENDING</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-po-checkpoint-bg text-po-checkpoint-text">Collection</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Final bill invoice generated with parts breakdown</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-primary">ORDER_COMPLETED, ESCALATED_DISPUTE</td>
+<td class="py-2.5 px-space-md text-po-checkpoint-text font-bold font-data-mono-sm text-data-mono-sm">PO-10 (Payment Failure)</td>
+</tr>
+<tr class="hover:bg-surface-base/50 transition-colors">
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-dark-navy font-semibold">11. ORDER_COMPLETED</td>
+<td class="py-2.5 px-space-md"><span class="px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-success text-on-primary">Closed/Settled</span></td>
+<td class="py-2.5 px-space-md text-text-primary">Escrow cleared, rating captured, warranty active</td>
+<td class="py-2.5 px-space-md font-data-mono-sm text-data-mono-sm text-text-muted">TERMINAL STATE</td>
+<td class="py-2.5 px-space-md text-text-muted font-data-mono-sm text-data-mono-sm">PO-17 (90-Day Warranty)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Tab Content 2: Engineer Lifecycle (4 states) -->
+<div class="hidden flex flex-col bg-surface-card rounded-xl shadow-sm p-space-lg" id="tab-content-eng">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Field Service Engineer Credential &amp; Availability State Engine</h3>
+<p class="font-body-sm text-body-sm text-text-muted">Governs automated match candidacy in the Chennai metropolitan dispatch pool.</p>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm bg-surface-container px-2 py-0.5 rounded text-text-muted">F1-FSM-ENG-V2</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Eng State 1 -->
+<div class="bg-surface-base rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">STATE 01</span>
+<span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-accent-green/20 text-accent-green">VERIFIED</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Active &amp; Eligible</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-2">Passed background check, identity Aadhaar KYC, and Tier 1 or Tier 2 practical hardware bench test. Fully eligible to receive batch pings.</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-card rounded p-space-xs">
+<span class="font-label-sm text-label-sm text-text-muted uppercase block font-bold">Allowed Moves:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-medium">DISCIPLINARY, EXPIRED, INACTIVE</span>
+</div>
+</div>
+<!-- Eng State 2 -->
+<div class="bg-surface-base rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">STATE 02</span>
+<span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-po-checkpoint-bg text-po-checkpoint-text">EXPIRED</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Certification Expired</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-2">12-month certification validity elapsed without clearing the annual re-qualification syllabus. Temporarily removed from auto-match.</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-card rounded p-space-xs">
+<span class="font-label-sm text-label-sm text-text-muted uppercase block font-bold">Allowed Moves:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-medium">VERIFIED (via Retest), INACTIVE</span>
+</div>
+</div>
+<!-- Eng State 3 -->
+<div class="bg-surface-base rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">STATE 03</span>
+<span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-error-alert/20 text-error-alert">SUSPENDED</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Disciplinary Suspension</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-2">Triggered by safety incident, customer fraud accusation, or 3 consecutive contradictory diagnostics. Payout wallet frozen pending audit.</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-card rounded p-space-xs">
+<span class="font-label-sm text-label-sm text-text-muted uppercase block font-bold">Allowed Moves:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-error font-medium">TERMINATED, VERIFIED (Ops Dual Sign)</span>
+</div>
+</div>
+<!-- Eng State 4 -->
+<div class="bg-surface-base rounded-xl p-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-dark-navy">STATE 04</span>
+<span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-surface-container text-text-muted">OFF-DUTY</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Voluntary Inactive</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-2">Engineer toggled app offline, completed maximum weekly hours, or scheduled leave. No penal rating impacts incurred.</p>
+</div>
+<div class="mt-space-md pt-space-xs bg-surface-card rounded p-space-xs">
+<span class="font-label-sm text-label-sm text-text-muted uppercase block font-bold">Allowed Moves:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-primary font-medium">VERIFIED (Toggle Online)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Tab Content 3: Customer Interaction Security Gates -->
+<div class="hidden flex flex-col bg-surface-card rounded-xl shadow-sm p-space-lg" id="tab-content-cust">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Customer Security &amp; Address Reveal Sequence</h3>
+<p class="font-body-sm text-body-sm text-text-muted">Zero-knowledge customer address policy prior to authenticated arrival stage.</p>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm bg-surface-container px-2 py-0.5 rounded text-text-muted">F1-FSM-SEC-V1</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-space-md bg-surface-base rounded-xl flex flex-col">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Gate 1: Pre-Acceptance Mask</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-1">Engineer only views postal sector (e.g. 'Adyar 600020 - Radius 2.5km') and symptom summary. Exact street, building, and customer phone number are cryptographically masked.</p>
+<div class="mt-3 text-primary font-data-mono-sm text-data-mono-sm font-semibold">Security Level: Maximum</div>
+</div>
+<div class="p-space-md bg-surface-base rounded-xl flex flex-col">
+<div class="w-8 h-8 rounded-lg bg-warning-pending text-on-primary flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">key</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Gate 2: En Route Geo-Fence</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-1">Street name and apartment number reveal strictly when Engineer changes status to EN_ROUTE within scheduled time slot (-30 min to +15 min tolerance).</p>
+<div class="mt-3 text-warning-pending font-data-mono-sm text-data-mono-sm font-semibold">Security Level: Restricted</div>
+</div>
+<div class="p-space-md bg-surface-base rounded-xl flex flex-col">
+<div class="w-8 h-8 rounded-lg bg-accent-teal text-on-primary flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-dark-navy">Gate 3: Doorstep OTP Handshake</h4>
+<p class="font-body-sm text-body-sm text-text-muted mt-1">Work timer and pre-service photo upload actions remain completely disabled until the customer verbally shares the 4-digit arrival OTP generated in customer app.</p>
+<div class="mt-3 text-accent-teal font-data-mono-sm text-data-mono-sm font-semibold">Security Level: Mutual Confirmed</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Real-Time PO Decision Audit Drawer (Interactive Modal Overlay) -->
+<div class="fixed inset-0 z-50 bg-dark-navy/60 hidden items-center justify-center p-space-md backdrop-blur-sm" id="po-drawer">
+<div class="bg-surface-card rounded-xl shadow-xl max-w-2xl w-full p-space-lg flex flex-col">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="font-data-mono-sm text-data-mono-sm font-bold bg-po-checkpoint-bg text-po-checkpoint-text px-2 py-0.5 rounded" id="drawer-po-id">PO-09</span>
+<span class="font-headline-sm text-headline-sm font-bold text-dark-navy" id="drawer-po-title">Audit Review</span>
+</div>
+<button class="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-base" onclick="closePoDrawer()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="py-space-md flex flex-col gap-space-sm" id="drawer-po-body">
+<div class="p-space-sm bg-surface-base rounded-lg">
+<span class="font-label-sm text-label-sm text-text-muted uppercase font-bold block mb-1">Architecture Working Hypothesis</span>
+<p class="font-body-sm text-body-sm text-text-primary" id="drawer-po-hypothesis">Hypothesis text goes here...</p>
+</div>
+<div class="p-space-sm bg-error-container/30 rounded-lg">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase block mb-1">Steering Committee Question</span>
+<p class="font-body-sm text-body-sm text-dark-navy font-semibold" id="drawer-po-question">Question text goes here...</p>
+</div>
+<div class="flex flex-col gap-1 mt-1">
+<label class="font-label-sm text-label-sm font-bold text-dark-navy uppercase">Product Owner Sign-Off Input (Provisional Simulation)</label>
+<textarea class="w-full p-space-xs bg-surface-base rounded text-body-sm text-text-primary outline-none focus:bg-surface-card" placeholder="Enter Product Owner decision rationale, policy clauses, or ratification notes..." rows="3"></textarea>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-sm">
+<button class="px-space-md py-1.5 rounded-lg text-text-primary hover:bg-surface-base font-label-md text-label-md" onclick="closePoDrawer()" type="button">Close Review</button>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md py-1.5 bg-error-alert hover:bg-error text-on-primary rounded-lg font-label-md text-label-md" onclick="recordDecision('REJECTED')" type="button">Reject Assumption</button>
+<button class="px-space-md py-1.5 bg-success hover:bg-accent-teal text-on-primary rounded-lg font-label-md text-label-md font-semibold" onclick="recordDecision('CONFIRMED')" type="button">Confirm PO Logic</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Logic -->
+<script>
+  function switchStateTab(tab) {
+    const tabs = ['req', 'eng', 'cust'];
+    tabs.forEach(t => {
+      const content = document.getElementById('tab-content-' + t);
+      const btn = document.getElementById('tab-btn-' + t);
+      if (t === tab) {
+        content.classList.remove('hidden');
+        btn.classList.remove('text-text-muted', 'hover:text-text-primary');
+        btn.classList.add('text-primary', 'bg-surface-card', 'shadow-sm', 'font-semibold');
+      } else {
+        content.classList.add('hidden');
+        btn.classList.add('text-text-muted', 'hover:text-text-primary');
+        btn.classList.remove('text-primary', 'bg-surface-card', 'shadow-sm', 'font-semibold');
+      }
+    });
+  }
+
+  function filterLane(laneKey) {
+    const lanes = document.querySelectorAll('[data-lane]');
+    lanes.forEach(lane => {
+      if (laneKey === 'all') {
+        lane.style.opacity = '1';
+      } else if (laneKey === 'dispatch') {
+        if (lane.getAttribute('data-lane') === 'customer' || lane.getAttribute('data-lane') === 'admin') {
+          lane.style.opacity = '1';
+        } else {
+          lane.style.opacity = '0.35';
+        }
+      } else if (laneKey === 'field') {
+        if (lane.getAttribute('data-lane') === 'engineer' || lane.getAttribute('data-lane') === 'customer') {
+          lane.style.opacity = '1';
+        } else {
+          lane.style.opacity = '0.35';
+        }
+      } else if (laneKey === 'spares') {
+        if (lane.getAttribute('data-lane') === 'vendor' || lane.getAttribute('data-lane') === 'admin') {
+          lane.style.opacity = '1';
+        } else {
+          lane.style.opacity = '0.35';
+        }
+      }
+    });
+  }
+
+  const poDossiers = {
+    'PO-09': {
+      title: 'Incorrect Diagnosis & Contradiction Liability Model',
+      hypothesis: 'If Engineer A quotes a Motherboard replacement (INR 4,500) and the customer contests, secondary Engineer B inspects. If Engineer B resolves with an SMPS fuse swap (INR 300), Engineer A absorbs a 50% diagnostic reversal penalty deducted from their weekly wallet payout.',
+      question: 'Does the platform penalize Engineer A if component misdiagnosis is unintentional vs fraudulent? Who covers Engineer B\'s travel fee if customer was incorrect?'
+    },
+    'PO-10': {
+      title: 'Payment Failure & Negative Balance Policy',
+      hypothesis: 'Upon job completion, payment gateway triggers razorpay webhooks. If UPI/Card fails at doorstep, engineer cannot leave until customer pays; after 15 min, job converts to "Debt Outstanding" with engineer receiving base pay credited by platform reserve.',
+      question: 'Should the customer account be instantly suspended across phone number and GSTIN if overdue > 48 hours, and does F1 absorb 100% of vendor spare costs upfront?'
+    },
+    'PO-11': {
+      title: 'Multi-Engineer & AMC Job Assignment & Billing Flow',
+      hypothesis: 'B2B annual maintenance contracts (AMCs) needing multiple workstations serviced concurrently dispatch a "Lead Engineer" who distributes child tickets to 2-3 associate technicians. Lead takes 15% override commission.',
+      question: 'How are rating deductions prorated if 1 technician damages hardware while the other 2 complete flawlessly under one single AMC master invoice?'
+    },
+    'PO-13': {
+      title: 'Customer No-Show 10-15 Min Timeout & Travel Visit Charges',
+      hypothesis: 'Engineer arrives, clicks "Arrived" (geofence verified < 80m). Automated IVR & push ping triggers. If customer is unresponsive after 12 minutes, engineer may mark "Customer No-Show" with mandatory facade photo.',
+      question: 'Is the INR 199 travel convenience fee auto-charged to customer card/wallet, or billed as a block on next booking? What if GPS accuracy is degraded in high-rises?'
+    },
+    'PO-04': {
+      title: 'Engineer Certification Validity (6-12 mo) & Assessment Rules',
+      hypothesis: 'Apple/Cisco/Microsoft Tier-2 skill badges granted for a flat 365 days. 30 days prior to expiry, app alerts re-certification exam. If failed once, a grace window of 14 days is granted without queue removal.',
+      question: 'Should high-risk repairs (e.g. server racks, cleanroom PCB soldering) expire at 6 months instead of 12? Does failed exam immediately degrade tier matching priority?'
+    },
+    'PO-06': {
+      title: 'Disciplinary Suspension vs Certification Expiry Distinction',
+      hypothesis: 'System differentiates SUSPENDED_DISCIPLINARY (fraud, code of conduct, rating < 3.8) from SUSPENDED_ADMIN_EXPIRED (badge expired). Disciplinary freezes wallet payouts; Admin Expiry permits wallet withdrawal of earned balance.',
+      question: 'Can an Operations Supervisor manually override a disciplinary freeze without Head of Operations 2-person signoff?'
+    },
+    'PO-14': {
+      title: 'Configurable Rate Cards & Diagnosis Fee Structure',
+      hypothesis: 'Diagnosis fee is flat INR 249 across laptops, INR 349 for laser printers. If repair estimate > INR 1,200 is accepted, diagnosis fee is 100% credited against total labor.',
+      question: 'What is the exact commission split on standalone unaccepted diagnostic fees? Does F1 keep 20% or pass 100% to the engineer as fuel compensation?'
+    }
+  };
+
+  function openPoDrawer(poId) {
+    const data = poDossiers[poId];
+    if (!data) return;
+    document.getElementById('drawer-po-id').innerText = poId;
+    document.getElementById('drawer-po-title').innerText = data.title;
+    document.getElementById('drawer-po-hypothesis').innerText = data.hypothesis;
+    document.getElementById('drawer-po-question').innerText = data.question;
+    const drawer = document.getElementById('po-drawer');
+    drawer.classList.remove('hidden');
+    drawer.classList.add('flex');
+  }
+
+  function closePoDrawer() {
+    const drawer = document.getElementById('po-drawer');
+    drawer.classList.add('hidden');
+    drawer.classList.remove('flex');
+  }
+
+  function recordDecision(status) {
+    const id = document.getElementById('drawer-po-id').innerText;
+    alert('Decision Recorded for ' + id + ': ' + status + '\nAudit Trail stamp appended to Chennai Core Engine.');
+    closePoDrawer();
+  }
+
+  function exportAuditManifest() {
+    const manifest = {
+      application: "F1 Help Desk Enterprise Core",
+      region: "Chennai (CHN-01)",
+      timestamp: new Date().toISOString(),
+      checkpoints: poDossiers
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifest, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "F1_PO_Architecture_Manifest.json");
+    dlAnchorElem.click();
+  }
+</script></main></div></body></html>
