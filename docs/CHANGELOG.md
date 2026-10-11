@@ -4,6 +4,19 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-11 — Approved TEST Data Purge
+
+Executed the owner-approved 67-row purge after fresh counts matched the approved scope and the owner confirmed both backups. Locations 5-8 remained excluded.
+
+### Verification
+- Fresh read-only preview matched 67 rows: configurations 2, master data 2, locations 9, admins 11, partners 21, status requests 11, inventory 11. No non-purge references were found.
+- Deleted exactly those rows in one SERIALIZABLE transaction and dependency order. Per-table `DELETE ... RETURNING` row counts were verified before commit.
+- Post-purge read-only verification passed: super admin ID 1 exists; master-data IDs 1-4 and 7-9 exist; seeded configuration ID 2 exists; locations 5-8 remain; all 67 purge-target IDs are absent.
+- The transaction was attempted twice before success; both attempts rolled back without committing changes. First, an obsolete guard incorrectly required nonexistent baseline locations 1-3. Second, code counted TypeORM driver's `[rows, rowCount]` return tuple instead of the returned rows. The guard was corrected and the final retry used the proper row count.
+- The location 1-3 guard was removed because those locations were never part of the actual baseline. Locations 5-8 remained excluded at the owner's direction.
+- Backup branch `pre-purge-backup-20261010` and the external `pg_dump` file were confirmed by the owner before the successful transaction.
+- `docs/purge-plan.md` contains the approved IDs, exclusions, execution and verification record. `docs/completed-checklist.md` marks those test fixtures purged and retains their IDs for audit.
+
 ## 2026-10-10 — Milestone 17: Smoke Pass and Demo Readiness
 
 Completed the V0 smoke pass and two small API/UI updates. No new feature area or inventory delete route was added.
@@ -15,7 +28,7 @@ Completed the V0 smoke pass and two small API/UI updates. No new feature area or
 - `frontend/src/app/admin/engineers/page.tsx` — reads the current admin's requests after load/submission and shows pending/approved/rejected beside the engineer.
 - `backend/src/inventory/inventory.service.spec.ts` and `backend/src/status-requests/status-requests.service.spec.ts` — cover location-name serialization, admin request owner filtering, and JWT/role guard metadata.
 - `docs/development-docs.md` — documented the additive response field and admin status endpoint.
-- `docs/demo-script.md` and `docs/purge-plan.md` — added a password-placeholder demo walkthrough and an approval-gated, dry-run-first purge proposal. The purge was not run.
+- `docs/demo-script.md` and `docs/purge-plan.md` — added a password-placeholder demo walkthrough and the purge plan; its approved execution is recorded in the 2026-10-11 entry above.
 
 ### Verification
 - Real browser flow: super admin account 1 created location 15 and admin 15; admin 15 created vendor 21, direct engineer 22, vendor-owned engineer 23 and inventory item 10. Requests 10/11 were submitted, approved/rejected through the super-admin queue, and refreshed on the admin engineer page.
@@ -31,7 +44,7 @@ Completed the V0 smoke pass and two small API/UI updates. No new feature area or
 - The configured frontend targeted an older backend process on port 7681, which initially returned 404 for the new route. The stale F1 process was replaced with the current backend; the endpoint then returned 401 unauthenticated and worked in the browser. No source fix was needed for this runtime mismatch.
 - Clean-database seed reproduction was not tested because no isolated Neon database/branch was configured. During environment discovery, `seed:super-admin` was invoked against the configured main Neon branch; it reported account ID 1 already present and skipped, with no database write. No other seed was rerun in M17.
 - `.env`/`.env.local` files are ignored and no such file is tracked. History/working-tree scan found no committed Neon connection string, JWT, or provider token. The M17 demo script uses password placeholders only.
-- Open issues are recorded by severity in `docs/completed-checklist.md`. No purge was run; exact IDs/counts and the proposed SQL are in `docs/purge-plan.md` pending owner approval.
+- Open issues are recorded by severity in `docs/completed-checklist.md`. The approved purge and post-purge verification are recorded in the 2026-10-11 entry above and `docs/purge-plan.md`.
 
 ## 2026-10-09 — Milestone 16: Admin UI
 

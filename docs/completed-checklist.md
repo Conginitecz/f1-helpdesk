@@ -39,7 +39,7 @@ Backend regressions: focused inventory/status tests passed (2 files, 4 tests); c
 ### Part D — Demo Readiness
 
 - Demo click-through and password placeholders: `docs/demo-script.md`.
-- Purge proposal (72 listed TEST rows, dry-run default, dependency order, backup suggestion): `docs/purge-plan.md`. **Not run; owner approval is required.**
+- Purge execution record, exact IDs, retained rows, backup confirmation, and post-purge verification: `docs/purge-plan.md`.
 - Read-only Neon count verification matched the purge plan exactly: configurations 3, test master-data 2, locations 13, admins 11, partners 21, status requests 11, inventory items 11. No rows were changed by this check.
 - Seed safety: clean-database reproduction was not tested because no isolated Neon database/branch is configured. During environment discovery, `seed:super-admin` was invoked once against the configured main Neon branch; it returned “already exists (id=1) — skipped” and made no write. No other seed was rerun in M17. Master-data IDs 7-9 from M16 remain active. Do not claim clean-database seeding is verified.
 - Secret hygiene: `backend/.env`, `backend/.env.local`, `frontend/.env`, and `frontend/.env.local` are git-ignored; no `.env` file is tracked. `git log`/working-tree scanning found no committed Neon connection string, JWT, or provider token. `.env.example` files contain placeholders only. No passwords or temporary credentials were committed.
@@ -331,31 +331,19 @@ migrations were made. Live checks used the backend on `:7676` and Neon via
 - Audit check 3 deviation: prompt assumed actor columns; the doc defines timestamps only. §1.4 and the M3 migration agree, so no schema change was needed or made.
 - The required uppercase/hyphenated `TEST-M7-` key form conflicts with config key validation; the test key uses compliant lowercase prefix `test_m7_`.
 
-### Test data to purge before demo
+### Test Data Purge — Completed 2026-10-11
 
-No rows were deleted. Retained test records:
+Owner approved the 67-row plan after confirming the Neon backup branch and `pg_dump` backup. Purge completed in one SERIALIZABLE transaction; no locations 5-8 were included. The following are the purged records and retained audit IDs:
 - `admins`: ID 6 (`admin6_test@example.com`); ID 7 (`m6test1791492882268@example.com`).
-- `locations`: IDs 4 (`test-location-$(date +%s)`), 5 (`Test Location`), 6 (`Location before patch`), 7 (`Location A`), 8 (`Patch Me`), 9 (`Loc-1791491006`), 10 and 11 (`TEST-M6-m6test1791492882268-R`).
-- `master_data`: ID 5 (`TEST-M7-1791502495989`).
-- `configurations`: ID 1 (`TEST-M7-smoke-config`, value restored to `100`).
-- `admins`: ID 8 (`test-admin-m7@example.com`, standing account for M8–M11; dummy password remains in ignored `backend/.env`).
-- `configurations`: ID 2 (`min_service_charge`, dummy value `500`; replace with the agreed production value before demo).
-- `configurations`: ID 4 (`test_m7_1791504779535`, value `TEST-M7-value`).
-- `partners`: ID 5 (`TEST-M8-Vendor`) and ID 6 (`TEST-M8-Engineer`, inactive after approved deactivation request).
-- `status_change_requests`: ID 1 (approved deactivation of partner 6), ID 2 (rejected deactivation of partner 5), and ID 3 (rejected deactivation request for partner 8; partner 8 remains active).
-- `partners`: IDs 7, 8, and 9 (`TEST-M10` vendor, direct engineer, and vendor-owned engineer).
-- `admins`: ID 9 (`test-m10-second-1791549917024@example.com`, TEST admin used for M10 isolation checks).
-- `inventory_items`: ID 1 (`TEST-M11`, created during the M11 route probe before the M10 commit gate was noticed); ID 2 (`TEST-M9`, patched during the live M9 verification).
-- `inventory_items`: ID 3 (`TEST-M11-1791550307949`, admin-location override fixture).
-- `master_data`: ID 6 (`TEST-M11-INACTIVE-1791550289605`, inactive `inventory_category` fixture used to verify filtering).
-- Previous M12 journey: `locations` ID 12; `admins` ID 10; `partners` IDs 10–12 (vendor and two engineers); `status_change_requests` ID 4; `inventory_items` IDs 4–5.
-- Final M12 journey: `locations` ID 13; `admins` ID 11; `partners` IDs 13–15 (vendor and two engineers); `status_change_requests` ID 5 (approved); `inventory_items` IDs 6–7.
-- M14 browser flow: `locations` ID 14 (`TEST-M14-Location-1791564887345`); `admins` ID 12 (`test-m14-admin-1791564917141@example.com`); `partners` IDs 16/17 (TEST direct engineers); `status_change_requests` IDs 6/7 (approved/rejected respectively).
-- M15 browser flow: `inventory_items` ID 8 (`TEST-M15-1791566009132-edited`, location 4, category 5, edited to 11 units at 23.45, created by super admin 1).
-- M16 browser flow: `admins` IDs 13/14 (`test-m16-admin-20261009@example.com`, `test-m16-second-20261009@example.com`); `partners` IDs 18-20 (TEST vendor, direct engineer, vendor-owned engineer); `status_change_requests` IDs 8/9 (pending deactivation requests for partners 19/20); `inventory_items` ID 9 (`TEST-M16-Inventory-20261009`, location 14, type 7, created by admin 13).
+- `locations`: IDs 4 (`test-location-$(date +%s)`), 9 (`Loc-1791491006`), 10 and 11 (`TEST-M6-m6test1791492882268-R`), and 12-16 (M12/M14/M17 demo locations). Locations 5-8 were excluded and remain.
+- `master_data`: IDs 5 (`TEST-M7-1791502495989`) and 6 (`TEST-M11-INACTIVE-1791550289605`).
+- `configurations`: IDs 1 (`TEST-M7-smoke-config`, value `100`) and 4 (`test_m7_1791504779535`, value `TEST-M7-value`).
+- `admins`: ID 8 (`test-admin-m7@example.com`, the former standing account for M8–M11).
+- Purged `partners`: IDs 5-25 (all M8, M10, M12, M14, M16 and M17 partner fixtures).
+- Purged `admins`: IDs 6-16; purged `status_change_requests`: IDs 1-11; purged `inventory_items`: IDs 1-11.
 - M16 demo seed: `master_data` IDs 7-9 (`Spare part`, `Consumable`, `Accessory`, active `inventory_type` rows; retain for the demo baseline).
-- M17 browser flow: `locations` IDs 15/16 (`TEST-M17-Location-20261010`, `TEST-M17-Location-B-20261010`); `admins` IDs 15/16 (`test-m17-primary-20261010@example.com`, `test-m17-second-20261010@example.com`); `partners` IDs 21-25 (primary vendor/direct engineer/vendor-owned engineer, second-admin double-click vendor/direct engineer); `status_change_requests` IDs 10/11 (approved deactivation of partner 22; rejected deactivation of partner 23); `inventory_items` IDs 10/11 (`TEST-M17-Inventory-20261010` at location 15 and `TEST-M17-Double-Inventory-20261010` at location 16).
-- M17 seeded-data retention: keep `master_data` IDs 7-9 active for the inventory demo dropdowns; they are intentionally excluded from `docs/purge-plan.md`.
+- Retained seeded rows: configuration ID 2 (`min_service_charge=500`); `master_data` IDs 1-4 and 7-9; super admin ID 1.
+- Read-only post-purge verification: super admin 1 exists; 7 retained master-data rows exist; config 2 exists; locations 5-8 exist; zero target IDs remain across configurations, master_data, locations, admins, partners, requests, and inventory. Purged total: 67. No locations 1-3 were expected or created.
 
 ## Milestone 4 — Core Schema: Partners & Supporting Tables — Completed 2026-10-08
 
