@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
 import { Button } from "@/components/ui/button";
+import { Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
+import { Notice } from "@/components/ui/notice";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiRequest, ApiError } from "@/lib/api";
 
 interface StatusRequest {
@@ -93,29 +96,29 @@ export default function StatusRequestsPage() {
         <h1>Status requests</h1>
         <p>Review admin-submitted deactivation requests.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
-      {actionError && <p className="form-error action-message" role="alert">{actionError}</p>}
+      {notice && <Notice>{notice}</Notice>}
+      {actionError && <Notice tone="error">{actionError}</Notice>}
       {loading ? <ScreenState kind="loading" message="Loading status requests…" /> : error ? (
         <ScreenState kind="error" message={error} onRetry={() => void loadRequests()} />
       ) : requests.length === 0 ? <ScreenState kind="empty" message="There are no deactivation requests yet." /> : (
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Engineer</th><th>Requested by</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+        <TableWrap>
+          <Table>
+            <thead><Tr><Th>Engineer</Th><Th>Requested by</Th><Th>Submitted</Th><Th>Status</Th><Th>Action</Th></Tr></thead>
             <tbody>{requests.map((request) => {
               const partner = partners.find((item) => item.id === request.entity_id);
               const admin = admins.find((item) => item.id === request.requested_by_admin_id);
               return (
-                <tr key={request.id}>
-                  <td><strong>{partner?.name ?? `Partner #${request.entity_id}`}</strong><span className="cell-secondary">Request #{request.id} · Deactivation</span></td>
-                  <td>{admin ? `${admin.first_name} ${admin.last_name}` : `Admin #${request.requested_by_admin_id}`}<span className="cell-secondary">{admin?.email ?? ""}</span></td>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td><span className={`status-pill status-${request.status}`}>{request.status}</span></td>
-                  <td>{request.status === "pending" ? <div className="row-actions"><Button size="compact" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "approve")} type="button">Approve</Button><Button size="compact" variant="secondary" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "reject")} type="button">Reject</Button></div> : <span className="cell-secondary">Resolved</span>}</td>
-                </tr>
+                <Tr key={request.id}>
+                  <Td><strong className="font-medium text-text-primary">{partner?.name ?? `Partner #${request.entity_id}`}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">Request #{request.id} · Deactivation</span></Td>
+                  <Td>{admin ? `${admin.first_name} ${admin.last_name}` : `Admin #${request.requested_by_admin_id}`}<span className="mt-0.5 block font-body text-body-sm text-text-muted">{admin?.email ?? ""}</span></Td>
+                  <Td>{new Date(request.created_at).toLocaleDateString()}</Td>
+                  <Td><StatusBadge status={request.status}>{request.status}</StatusBadge></Td>
+                  <Td>{request.status === "pending" ? <div className="row-actions"><Button size="compact" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "approve")} type="button">Approve</Button><Button size="compact" variant="secondary" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "reject")} type="button">Reject</Button></div> : <span className="font-body text-body-sm text-text-muted">Resolved</span>}</Td>
+                </Tr>
               );
             })}</tbody>
-          </table>
-        </div>
+          </Table>
+        </TableWrap>
       )}
     </RoleShell>
   );

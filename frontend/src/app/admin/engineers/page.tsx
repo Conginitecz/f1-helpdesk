@@ -6,7 +6,10 @@ import type { AdminLookup, AdminPartner, StatusRequest } from "@/components/admi
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
 import { Button } from "@/components/ui/button";
+import { Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
 import { SelectField } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiRequest, ApiError } from "@/lib/api";
 
 const VENDOR_REFERENCE_CODE = "d6Rq1Ae3Uv9sH5pM";
@@ -116,8 +119,8 @@ export default function AdminEngineersPage() {
         <h1>Service engineers</h1>
         <p>Direct engineers and engineers registered under your vendors.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
-      {error && <div className="inline-error" role="alert"><span>{error}</span><Button variant="ghost" size="compact" onClick={() => void loadPage()} type="button">Retry loading</Button></div>}
+      {notice && <Notice>{notice}</Notice>}
+      {error && <Notice tone="error"><span>{error}</span><Button variant="ghost" size="compact" onClick={() => void loadPage()} type="button">Retry loading</Button></Notice>}
       {loading ? <ScreenState kind="loading" message="Loading engineers and options…" /> : !error && (
         <>
           <SelectField className="admin-vendor-select" label="Owner" name="engineer-vendor" onChange={(event) => setSelectedVendorId(event.target.value)} value={selectedVendorId}><option value="">Direct admin</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</SelectField>
@@ -128,27 +131,27 @@ export default function AdminEngineersPage() {
               <span className="section-count">{engineers.length}</span>
             </div>
             {engineers.length === 0 ? <ScreenState kind="empty" message="You have not added any service engineers yet." /> : (
-              <div className="table-wrap admin-table-wrap">
-                <table className="data-table">
-                  <thead><tr><th>Engineer</th><th>Type</th><th>Owner</th><th>Phone</th><th>Skill</th><th>Category</th><th>Status</th><th>Request status</th><th /></tr></thead>
+              <TableWrap className="admin-table-wrap">
+                <Table>
+                  <thead><Tr><Th>Engineer</Th><Th>Type</Th><Th>Owner</Th><Th>Phone</Th><Th>Skill</Th><Th>Category</Th><Th>Status</Th><Th>Request status</Th><Th /></Tr></thead>
                   <tbody>{engineers.map((engineer) => {
                     const request = requestStatuses[engineer.id];
                     return (
-                      <tr key={engineer.id}>
-                        <td><strong>{engineer.name}</strong><span className="cell-secondary">ID {engineer.id}</span></td>
-                        <td><span className="type-pill">Service engineer</span></td>
-                        <td>{ownerFor(engineer)}</td>
-                        <td>{engineer.phone_number}</td>
-                        <td>{lookupLabel(skills, engineer.skill_id)}</td>
-                        <td>{lookupLabel(categories, engineer.category_id)}</td>
-                        <td><span className={engineer.is_active && !engineer.is_deleted ? "status-pill status-active" : "status-pill status-inactive"}>{engineer.is_active && !engineer.is_deleted ? "Active" : "Inactive"}</span></td>
-                        <td>{request ? <span className={`status-pill status-${request.status}`}>{request.status === "pending" ? "Pending approval" : request.status} ({request.requested_action})</span> : "—"}</td>
-                        <td><Button variant="secondary" size="compact" disabled={requestingId === engineer.id || request?.status === "pending"} onClick={() => void requestStatusChange(engineer)} type="button">{requestingId === engineer.id ? "Submitting…" : request?.status === "pending" ? "Pending approval" : engineer.is_active ? "Request deactivation" : "Request activation"}</Button></td>
-                      </tr>
+                      <Tr key={engineer.id}>
+                        <Td><strong className="font-medium text-text-primary">{engineer.name}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">ID {engineer.id}</span></Td>
+                        <Td><StatusBadge status="neutral">Service engineer</StatusBadge></Td>
+                        <Td>{ownerFor(engineer)}</Td>
+                        <Td>{engineer.phone_number}</Td>
+                        <Td>{lookupLabel(skills, engineer.skill_id)}</Td>
+                        <Td>{lookupLabel(categories, engineer.category_id)}</Td>
+                        <Td><StatusBadge status={engineer.is_active && !engineer.is_deleted ? "active" : "inactive"}>{engineer.is_active && !engineer.is_deleted ? "Active" : "Inactive"}</StatusBadge></Td>
+                        <Td>{request ? <StatusBadge status={request.status}>{request.status === "pending" ? "Pending approval" : request.status} ({request.requested_action})</StatusBadge> : "—"}</Td>
+                        <Td><Button variant="secondary" size="compact" disabled={requestingId === engineer.id || request?.status === "pending"} onClick={() => void requestStatusChange(engineer)} type="button">{requestingId === engineer.id ? "Submitting…" : request?.status === "pending" ? "Pending approval" : engineer.is_active ? "Request deactivation" : "Request activation"}</Button></Td>
+                      </Tr>
                     );
                   })}</tbody>
-                </table>
-              </div>
+                </Table>
+              </TableWrap>
             )}
           </section>
         </>

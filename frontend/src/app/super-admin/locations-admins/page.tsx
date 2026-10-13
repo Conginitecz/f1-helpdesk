@@ -5,6 +5,8 @@ import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiRequest, ApiError } from "@/lib/api";
 
 interface LocationRow {
@@ -131,7 +133,7 @@ export default function LocationsAdminsPage() {
         <h1>Locations &amp; admins</h1>
         <p>Create service locations and assign each admin to a location.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
+      {notice && <Notice>{notice}</Notice>}
       {loadError ? (
         <ScreenState kind="error" message={loadError} onRetry={() => void loadLists()} />
       ) : loading ? (
@@ -148,9 +150,9 @@ export default function LocationsAdminsPage() {
                 {locations.map((location) => (
                   <div className="data-row" key={location.id}>
                     <strong>{location.name}</strong>
-                    <span className={location.is_active ? "status-pill status-active" : "status-pill status-inactive"}>
+                    <StatusBadge status={location.is_active ? "active" : "inactive"}>
                       {location.is_active ? "Active" : "Inactive"}
-                    </span>
+                    </StatusBadge>
                   </div>
                 ))}
               </div>
@@ -167,7 +169,7 @@ export default function LocationsAdminsPage() {
                 />
                 <Button disabled={savingLocation} type="submit">{savingLocation ? "Creating…" : "Create"}</Button>
               </div>
-              {locationError && <p className="form-error" role="alert">{locationError}</p>}
+              {locationError && <Notice tone="error">{locationError}</Notice>}
             </form>
           </section>
 
@@ -183,7 +185,7 @@ export default function LocationsAdminsPage() {
                     <div><strong>{admin.first_name} {admin.last_name}</strong><span>{admin.email}</span></div>
                     <div className="admin-row-meta">
                       <span>{locations.find((location) => location.id === admin.location_id)?.name ?? "No location"}</span>
-                      <span className={admin.is_active ? "status-pill status-active" : "status-pill status-inactive"}>{admin.is_active ? "Active" : "Inactive"}</span>
+                      <StatusBadge status={admin.is_active ? "active" : "inactive"}>{admin.is_active ? "Active" : "Inactive"}</StatusBadge>
                     </div>
                   </div>
                 ))}
@@ -201,7 +203,7 @@ export default function LocationsAdminsPage() {
                 <TextField className="field-wide" label="Address" name="admin-address" value={adminForm.address} onChange={(event) => updateAdminField("address", event.target.value)} required />
                 <SelectField className="field-wide" label="Assigned location" name="admin-location" onChange={(event) => updateAdminField("location_id", event.target.value)} required value={adminForm.location_id}><option value="">Choose a location</option>{locations.filter((location) => location.is_active).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</SelectField>
               </div>
-              {adminError && <p className="form-error" role="alert">{adminError}</p>}
+              {adminError && <Notice tone="error">{adminError}</Notice>}
               <Button disabled={savingAdmin || locations.filter((location) => location.is_active).length === 0} type="submit">{savingAdmin ? "Creating account…" : "Create admin"}</Button>
             </form>
           </section>

@@ -7,6 +7,9 @@ import type { AdminPartner } from "@/components/admin/types";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
 import { Button } from "@/components/ui/button";
+import { Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
+import { Notice } from "@/components/ui/notice";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { apiRequest, ApiError } from "@/lib/api";
 
 export default function AdminVendorsPage() {
@@ -55,7 +58,7 @@ export default function AdminVendorsPage() {
         <h1>Vendors</h1>
         <p>Vendors onboarded by your admin account.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
+      {notice && <Notice>{notice}</Notice>}
       <PartnerForm kind="vendor" onSubmit={createVendor} saving={saving} />
       <section className="inventory-list-section admin-directory" aria-labelledby="vendors-list-title">
         <div className="inventory-list-heading">
@@ -65,23 +68,23 @@ export default function AdminVendorsPage() {
         {loading ? <ScreenState kind="loading" message="Loading your vendors…" /> : error ? (
           <ScreenState kind="error" message={error} onRetry={() => void loadVendors()} />
         ) : vendors.length === 0 ? <ScreenState kind="empty" message="You have not added any vendors yet." /> : (
-          <div className="table-wrap admin-table-wrap">
-            <table className="data-table">
-              <thead><tr><th>Vendor</th><th>Type</th><th>Phone</th><th>Email</th><th>Address</th><th>Status</th><th>Created</th><th /></tr></thead>
+          <TableWrap className="admin-table-wrap">
+            <Table>
+              <thead><Tr><Th>Vendor</Th><Th>Type</Th><Th>Phone</Th><Th>Email</Th><Th>Address</Th><Th>Status</Th><Th>Created</Th><Th /></Tr></thead>
               <tbody>{vendors.map((vendor) => (
-                <tr key={vendor.id}>
-                  <td><strong>{vendor.name}</strong><span className="cell-secondary">ID {vendor.id}</span></td>
-                  <td><span className="type-pill">Vendor</span></td>
-                  <td>{vendor.phone_number}</td>
-                  <td>{vendor.email ?? "—"}</td>
-                  <td>{vendor.address ?? "—"}</td>
-                  <td><span className={vendor.is_active && !vendor.is_deleted ? "status-pill status-active" : "status-pill status-inactive"}>{vendor.is_active && !vendor.is_deleted ? "Active" : "Inactive"}</span></td>
-                  <td>{formatDate(vendor.created_at)}</td>
-                  <td><Button variant="secondary" size="compact" onClick={() => router.push(`/admin/engineers?vendorId=${vendor.id}`)} type="button">Add engineer</Button></td>
-                </tr>
+                <Tr key={vendor.id}>
+                  <Td><strong className="font-medium text-text-primary">{vendor.name}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">ID {vendor.id}</span></Td>
+                  <Td><StatusBadge status="neutral">Vendor</StatusBadge></Td>
+                  <Td>{vendor.phone_number}</Td>
+                  <Td>{vendor.email ?? "—"}</Td>
+                  <Td>{vendor.address ?? "—"}</Td>
+                  <Td><StatusBadge status={vendor.is_active && !vendor.is_deleted ? "active" : "inactive"}>{vendor.is_active && !vendor.is_deleted ? "Active" : "Inactive"}</StatusBadge></Td>
+                  <Td>{formatDate(vendor.created_at)}</Td>
+                  <Td><Button variant="secondary" size="compact" onClick={() => router.push(`/admin/engineers?vendorId=${vendor.id}`)} type="button">Add engineer</Button></Td>
+                </Tr>
               ))}</tbody>
-            </table>
-          </div>
+            </Table>
+          </TableWrap>
         )}
       </section>
     </RoleShell>

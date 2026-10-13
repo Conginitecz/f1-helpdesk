@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { MonoTd, Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
 import { Checkbox, SelectField, TextField, TextareaField } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
+import { Notice } from "@/components/ui/notice";
 import { Panel } from "@/components/ui/panel";
 import { ScreenState } from "@/components/screen-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 /*
  * /design-preview - a developer reference sheet for the shared components
@@ -67,6 +69,18 @@ export default function DesignPreviewPage() {
         <Badge tone="pending">Certification pending</Badge>
         <Badge>Draft</Badge>
         <CheckpointBadge>PO-09 pending confirmation</CheckpointBadge>
+        <StatusBadge status="active">Active</StatusBadge>
+        <StatusBadge status="inactive">Inactive</StatusBadge>
+        <StatusBadge status="pending">Pending approval</StatusBadge>
+        <StatusBadge status="approved">Approved</StatusBadge>
+        <StatusBadge status="rejected">Rejected</StatusBadge>
+      </Section>
+
+      <Section title="Notices">
+        <div className="grid w-full gap-space-md">
+          <Notice>Vendor Acme created.</Notice>
+          <Notice tone="error">Could not create this vendor. Please try again.</Notice>
+        </div>
       </Section>
 
       <Section title="Form fields">

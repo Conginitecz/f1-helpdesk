@@ -6,6 +6,7 @@ import { InventoryForm, type InventoryPayload } from "@/components/inventory/inv
 import { InventoryList } from "@/components/inventory/inventory-list";
 import type { InventoryItem, InventoryLookup } from "@/components/inventory/types";
 import { ScreenState } from "@/components/screen-state";
+import { Notice } from "@/components/ui/notice";
 import { apiRequest, ApiError } from "@/lib/api";
 
 export default function AdminInventoryPage() {
@@ -77,7 +78,7 @@ export default function AdminInventoryPage() {
         <h1>Inventory</h1>
         <p>View and add inventory assigned to your location.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
+      {notice && <Notice>{notice}</Notice>}
       {loadingOptions ? <ScreenState kind="loading" message="Loading active inventory options…" /> : optionsError ? (
         <ScreenState kind="error" message={optionsError} onRetry={() => void loadOptions()} />
       ) : (

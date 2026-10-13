@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Checkbox, SelectField, TextField } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
 import type { InventoryItem, InventoryLocation, InventoryLookup } from "./types";
 
 export interface InventoryPayload {
@@ -138,7 +139,7 @@ export function InventoryForm({
           <div className="field-label field-wide"><span>Assigned location</span><div className="assigned-location">{locationControl.assignedLocationName ?? `Location #${locationControl.assignedLocationId ?? "—"}`}</div></div>
         )}
       </div>
-      {formError && <p className="form-error" role="alert">{formError}</p>}
+      {formError && <Notice tone="error">{formError}</Notice>}
       <Button disabled={saving} type="submit">{saving ? "Saving…" : editing ? "Save changes" : "Create item"}</Button>
     </form>
   );

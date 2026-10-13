@@ -7,6 +7,7 @@ import { InventoryForm, type InventoryPayload } from "@/components/inventory/inv
 import { InventoryList } from "@/components/inventory/inventory-list";
 import type { InventoryCreator, InventoryItem, InventoryLocation, InventoryLookup } from "@/components/inventory/types";
 import { apiRequest, ApiError } from "@/lib/api";
+import { Notice } from "@/components/ui/notice";
 
 export default function SuperAdminInventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -101,7 +102,7 @@ export default function SuperAdminInventoryPage() {
         <h1>Inventory</h1>
         <p>Track stock, pricing and location across the network.</p>
       </div>
-      {notice && <p className="success-message" role="status">{notice}</p>}
+      {notice && <Notice>{notice}</Notice>}
       {screenError ? <ScreenState kind="error" message={screenError} onRetry={() => void loadScreenData()} /> : screenLoading ? (
         <ScreenState kind="loading" message="Loading locations and lookup options…" />
       ) : (

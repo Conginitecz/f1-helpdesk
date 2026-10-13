@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
 
 export interface PartnerFormPayload {
   name: string;
@@ -99,7 +100,7 @@ export function PartnerForm({ kind, skills = [], categories = [], vendorName, sa
           </>
         )}
       </div>
-      {formError && <p className="form-error" role="alert">{formError}</p>}
+      {formError && <Notice tone="error">{formError}</Notice>}
       <Button disabled={saving} type="submit">{saving ? "Creating…" : isVendor ? "Create vendor" : "Create engineer"}</Button>
     </form>
   );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, getSession, login, type UserRole } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
 
 const roleHome: Record<UserRole, string> = {
   super_admin: "/super-admin",
@@ -75,7 +76,7 @@ export default function LoginPage() {
             value={password}
           />
 
-          {error && <p className="form-error" role="alert">{error}</p>}
+          {error && <Notice tone="error">{error}</Notice>}
 
           <Button className="login-submit" disabled={loading} type="submit">
             {loading ? "Signing in…" : "Sign in"}

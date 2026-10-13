@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
 import { apiRequest, ApiError } from "@/lib/api";
 
 interface Partner {
@@ -82,26 +84,26 @@ export default function PartnersPage() {
       {loading ? <ScreenState kind="loading" message="Loading partner directory…" /> : error ? (
         <ScreenState kind="error" message={error} onRetry={() => void loadPartners()} />
       ) : partners.length === 0 ? <ScreenState kind="empty" message="No vendors or engineers have been added yet." /> : (
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Name</th><th>Type</th><th>Owner admin</th><th>Location</th><th>Status</th></tr></thead>
+        <TableWrap>
+          <Table>
+            <thead><Tr><Th>Name</Th><Th>Type</Th><Th>Owner admin</Th><Th>Location</Th><Th>Status</Th></Tr></thead>
             <tbody>{partners.map((partner) => {
               const owner = admins.find((admin) => admin.id === partner.created_by_admin_id);
               const masterRow = typeCodes.find((row) => row.id === partner.partner_type_id);
               const typeLabel = masterRow ? partnerTypeLabels[masterRow.text] ?? "Partner" : "Unknown";
               const locationName = locations.find((location) => location.id === owner?.location_id)?.name ?? "Unassigned";
               return (
-                <tr key={partner.id}>
-                  <td><strong>{partner.name}</strong><span className="cell-secondary">ID {partner.id}</span></td>
-                  <td><span className="type-pill">{typeLabel}</span></td>
-                  <td>{owner ? `${owner.first_name} ${owner.last_name}` : "Unknown admin"}<span className="cell-secondary">{owner?.email ?? `Admin #${partner.created_by_admin_id}`}</span></td>
-                  <td>{locationName}</td>
-                  <td><span className={partner.is_active && !partner.is_deleted ? "status-pill status-active" : "status-pill status-inactive"}>{partner.is_active && !partner.is_deleted ? "Active" : "Inactive"}</span></td>
-                </tr>
+                <Tr key={partner.id}>
+                  <Td><strong className="font-medium text-text-primary">{partner.name}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">ID {partner.id}</span></Td>
+                  <Td><StatusBadge status="neutral">{typeLabel}</StatusBadge></Td>
+                  <Td>{owner ? `${owner.first_name} ${owner.last_name}` : "Unknown admin"}<span className="mt-0.5 block font-body text-body-sm text-text-muted">{owner?.email ?? `Admin #${partner.created_by_admin_id}`}</span></Td>
+                  <Td>{locationName}</Td>
+                  <Td><StatusBadge status={partner.is_active && !partner.is_deleted ? "active" : "inactive"}>{partner.is_active && !partner.is_deleted ? "Active" : "Inactive"}</StatusBadge></Td>
+                </Tr>
               );
             })}</tbody>
-          </table>
-        </div>
+          </Table>
+        </TableWrap>
       )}
     </RoleShell>
   );

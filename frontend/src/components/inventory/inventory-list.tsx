@@ -2,7 +2,9 @@
 
 import { ScreenState } from "@/components/screen-state";
 import { Button } from "@/components/ui/button";
+import { MonoTd, Table, TableWrap, Td, Th, Tr } from "@/components/ui/data-table";
 import { SelectField } from "@/components/ui/field";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { InventoryCreator, InventoryItem, InventoryLocation, InventoryLookup } from "./types";
 
 interface InventoryListProps {
@@ -47,28 +49,28 @@ export function InventoryList({
       {loading ? <ScreenState kind="loading" message="Loading inventory…" /> : error ? (
         <ScreenState kind="error" message={error} onRetry={onRetry} />
       ) : items.length === 0 ? <ScreenState kind="empty" message="No inventory items match this view." /> : (
-        <div className="table-wrap inventory-table-wrap">
-          <table className="data-table inventory-table">
-            <thead><tr><th>Item</th><th>Type</th><th>Category</th><th>Units</th><th>Price / unit</th><th>Tax</th><th>Location</th>{!assignedMode && <th>Creator</th>}<th>Status</th>{!assignedMode && <th />}</tr></thead>
+        <TableWrap className="inventory-table-wrap">
+          <Table>
+            <thead><Tr><Th>Item</Th><Th>Type</Th><Th>Category</Th><Th>Units</Th><Th>Price / unit</Th><Th>Tax</Th><Th>Location</Th>{!assignedMode && <Th>Creator</Th>}<Th>Status</Th>{!assignedMode && <Th />}</Tr></thead>
             <tbody>{items.map((item) => {
               const creator = item.created_by_admin_id === null ? null : admins.find((admin) => admin.id === item.created_by_admin_id);
               return (
-                <tr key={item.id}>
-                  <td><strong>{item.name}</strong><span className="cell-secondary">ID {item.id}</span></td>
-                  <td>{lookupLabel(types, item.type_id)}</td>
-                  <td>{lookupLabel(categories, item.category_id)}</td>
-                  <td>{item.units}</td>
-                  <td>{formatMoney(item.price_per_unit)}</td>
-                  <td>{item.tax_applicable ? `${item.tax_percentage ?? "0"}%` : "No tax"}</td>
-                  <td>{item.location_name || locations.find((location) => location.id === item.location_id)?.name || `Location #${item.location_id}`}</td>
-                  {!assignedMode && <td>{creator ? `${creator.first_name} ${creator.last_name}` : `Super admin #${item.created_by_super_admin_id ?? "?"}`}</td>}
-                  <td><span className={item.is_active ? "status-pill status-active" : "status-pill status-inactive"}>{item.is_active ? "Active" : "Inactive"}</span></td>
-                  {!assignedMode && <td><Button variant="secondary" size="compact" onClick={() => onEdit(item)} type="button">Edit</Button></td>}
-                </tr>
+                <Tr key={item.id}>
+                  <Td><strong className="font-medium text-text-primary">{item.name}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">ID {item.id}</span></Td>
+                  <Td>{lookupLabel(types, item.type_id)}</Td>
+                  <Td>{lookupLabel(categories, item.category_id)}</Td>
+                  <MonoTd>{item.units}</MonoTd>
+                  <MonoTd>{formatMoney(item.price_per_unit)}</MonoTd>
+                  <Td>{item.tax_applicable ? `${item.tax_percentage ?? "0"}%` : "No tax"}</Td>
+                  <Td>{item.location_name || locations.find((location) => location.id === item.location_id)?.name || <span className="font-mono text-data-mono-sm">Location #{item.location_id}</span>}</Td>
+                  {!assignedMode && <Td>{creator ? `${creator.first_name} ${creator.last_name}` : <span className="font-mono text-data-mono-sm">Super admin #{item.created_by_super_admin_id ?? "?"}</span>}</Td>}
+                  <Td><StatusBadge status={item.is_active ? "active" : "inactive"}>{item.is_active ? "Active" : "Inactive"}</StatusBadge></Td>
+                  {!assignedMode && <Td><Button variant="secondary" size="compact" onClick={() => onEdit(item)} type="button">Edit</Button></Td>}
+                </Tr>
               );
             })}</tbody>
-          </table>
-        </div>
+          </Table>
+        </TableWrap>
       )}
     </section>
   );

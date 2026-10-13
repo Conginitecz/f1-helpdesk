@@ -69,7 +69,7 @@ export default function SuperAdminArea() {
         <ScreenState kind="error" message={error} onRetry={() => void loadCounts()} />
       ) : counts ? (
         <>
-          <div className="count-grid">
+          <div className="grid gap-space-md sm:grid-cols-2 xl:grid-cols-4">
             <Count label="Locations" value={counts.locations} href="/super-admin/locations-admins" />
             <Count label="Admins" value={counts.admins} href="/super-admin/locations-admins" />
             <Count label="Partners" value={counts.partners} href="/super-admin/partners" />
@@ -88,9 +88,9 @@ export default function SuperAdminArea() {
 
 function Count({ label, value, href }: { label: string; value: number; href: string }) {
   return (
-    <Link className="count-tile" href={href}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <Link className="rounded-panel border border-border-subtle bg-surface-card p-space-md shadow-level-1 transition-colors hover:bg-surface-base" href={href}>
+      <span className="block font-body text-label-md text-text-muted">{label}</span>
+      <strong className="mt-1 block font-headline text-headline-lg tabular-nums text-text-primary">{value}</strong>
     </Link>
   );
 }
