@@ -150,6 +150,8 @@
   --color-po-checkpoint-bg: #fef3c7;
   --color-po-checkpoint-border: #d97706;
   --color-po-checkpoint-text: #92400e;
+  --color-destructive-hover: #dc2626;
+  --color-row-hover: #f0f4f8;
 }
 
 /*
