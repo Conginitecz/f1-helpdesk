@@ -1,29 +1,38 @@
 @import "tailwindcss";
 
+/* Design tokens and the self-hosted icon font, from src/styles/. */
+@import "../styles/tokens.css";
+@import "../styles/icons.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
+/* ---------------------------------------------------------------- legacy
+ * The original hand-written green-palette CSS, 1008 lines. It styles only the
+ * screens that have not been migrated yet, so it is kept and deleted
+ * screen-by-screen as each one converts to design tokens. Currently 799 lines:
+ * the role-shell rules were removed in Phase 2 step (a), which rebuilt the
+ * shell in role-shell.tsx from tokens.
+ *
+ * Two adjustments were forced by the token work:
+ *   1. `--font-geist-sans` no longer exists (Geist was replaced by the
+ *      DESIGN.md type stack), so this rule would have resolved to the bare
+ *      `sans-serif` fallback.
+ *   2. The dark-mode block below flipped the whole app to a near-black canvas
+ *      whenever the OS asked for dark, which no migrated design supports.
+ * Both now defer to the token-driven `body` rule in layout.tsx. The custom
+ * properties are left defined because legacy screen rules still read them.
+ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
-}
 
 .login-page {
   display: grid;
@@ -39,8 +48,7 @@ body {
   margin: 56px auto;
 }
 
-.login-brand,
-.brand-mark {
+.login-brand {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -115,8 +123,7 @@ body {
   box-shadow: 0 0 0 3px #34745a22;
 }
 
-.login-submit,
-.logout-button {
+.login-submit {
   min-height: 42px;
   border: 0;
   border-radius: 3px;
@@ -178,147 +185,13 @@ body {
   background: #e9a15a;
 }
 
-.role-layout {
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: 248px minmax(0, 1fr);
-  background: #f3f5f1;
-  color: #17231d;
-}
-
-.role-sidebar {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  border-right: 1px solid #dce3dc;
-  padding: 24px 16px 18px;
-  background: #fff;
-}
-
-.brand-mark {
-  padding: 0 8px 24px;
-  text-decoration: none;
-}
-
-.role-identity {
-  display: grid;
-  gap: 7px;
-  border-top: 1px solid #e4e9e3;
-  border-bottom: 1px solid #e4e9e3;
-  padding: 20px 8px;
-}
-
-.role-identity strong {
-  color: #183b30;
-  font-size: 15px;
-}
-
-.identity-id {
-  color: #738077;
-  font-size: 12px;
-}
-
-.role-nav {
-  display: grid;
-  gap: 5px;
-  margin-top: 22px;
-}
-
-.role-nav a,
-.nav-upcoming {
-  display: flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: space-between;
-  border: 0;
-  border-radius: 3px;
-  padding: 0 10px;
-  background: transparent;
-  color: #405248;
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  text-decoration: none;
-}
-
-.role-nav .nav-link:hover {
-  background: #f2f6f2;
-  color: #1c5a43;
-}
-
-.role-nav .nav-current {
-  background: #e7f0e9;
-  color: #1c5a43;
-  font-weight: 650;
-}
-
-.nav-upcoming:disabled {
-  color: #79857d;
-  cursor: not-allowed;
-  opacity: 0.75;
-}
-
-.nav-soon {
-  color: #829087;
-  font-size: 10px;
-  text-transform: uppercase;
-}
-
-.logout-button {
-  margin-top: auto;
-  border: 1px solid #cdd8ce;
-  background: #fff;
-  color: #285541;
-}
-
-.logout-button:hover {
-  background: #f1f6f1;
-}
-
-.role-main {
-  min-width: 0;
-}
-
-.role-topbar {
-  display: flex;
-  min-height: 64px;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #dce3dc;
-  padding: 0 30px;
-  background: #fff;
-  color: #425248;
-  font-size: 13px;
-}
-
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #65766b;
-  font-size: 12px;
-}
-
-.status-indicator span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #399265;
-}
-
-.role-content {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 42px 36px;
-}
-
-.nav-current[aria-current="page"] {
-  background: #e7f0e9;
-}
-
 .m14-columns {
   display: grid;
-  grid-template-columns: minmax(280px, 0.8fr) minmax(420px, 1.2fr);
+  /* minmax(0, …) rather than fixed 280px/420px floors: the fixed floors need
+     ~840px including the 64px tablet dock and 24px margins, so they pushed the
+     page past the viewport at 768-839px. The 0.8fr / 1.2fr ratio is kept and
+     the tracks simply shrink to the available width. */
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   gap: 28px;
   align-items: start;
   margin-top: 30px;
@@ -874,39 +747,6 @@ body {
   line-height: 1.2;
 }
 
-.empty-workspace {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 36px;
-  border-top: 1px solid #dce3dc;
-  border-bottom: 1px solid #dce3dc;
-  padding: 24px 0;
-}
-
-.empty-mark {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  place-items: center;
-  background: #e4eee6;
-  color: #246044;
-  font-weight: 750;
-}
-
-.empty-workspace h2 {
-  margin: 0 0 5px;
-  color: #244334;
-  font-size: 15px;
-}
-
-.empty-workspace p {
-  margin: 0;
-  color: #68766e;
-  font-size: 13px;
-}
-
 .route-loading {
   display: grid;
   min-height: 100vh;
@@ -938,49 +778,6 @@ body {
 
   .login-side-note {
     display: none;
-  }
-
-  .role-layout {
-    display: block;
-  }
-
-  .role-sidebar {
-    min-height: auto;
-    border-right: 0;
-    border-bottom: 1px solid #dce3dc;
-    padding: 14px 16px;
-  }
-
-  .brand-mark {
-    padding: 0 0 12px;
-  }
-
-  .role-identity {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    padding: 12px 0;
-  }
-
-  .role-identity .eyebrow {
-    grid-column: 1 / -1;
-  }
-
-  .role-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: 12px;
-  }
-
-  .logout-button {
-    margin-top: 14px;
-  }
-
-  .role-topbar {
-    min-height: 52px;
-    padding: 0 18px;
-  }
-
-  .role-content {
-    padding: 30px 20px;
   }
 
   .m14-columns {

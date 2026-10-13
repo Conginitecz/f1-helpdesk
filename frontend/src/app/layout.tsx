@@ -1,33 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { AuthNavigation } from "@/components/auth-navigation";
+import { fontVariables } from "./fonts";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "F1 Help Desk",
   description: "F1 Help Desk — Admin & Super Admin dashboard",
 };
 
+/*
+ * All three design type families are self-hosted through next/font (see
+ * fonts.ts) and every icon is a self-hosted subset (src/styles/icons.css), so
+ * there is no runtime request to Google Fonts and no third-party stylesheet in
+ * the document head.
+ */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${fontVariables} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-surface-base font-body text-body-md text-text-primary">
         <AuthNavigation />
         {children}
       </body>
     </html>
   );
 }
+
+

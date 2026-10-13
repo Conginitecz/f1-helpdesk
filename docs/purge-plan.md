@@ -117,3 +117,18 @@ UNION ALL SELECT 'inventory_items', count(*) FROM inventory_items WHERE id = ANY
 ```
 
 For any future cleanup, prepare a new scoped plan and obtain fresh approval. Post-purge verification requires no locations 1-3; it checks retained config ID 2 and locations 5-8.
+
+## Pending Purge: Phase 2 UI Verification Record (added 2026-10-13)
+
+The 67-row scope above is complete. One further test row exists that was created
+during Phase 2 of the UI restructure and is **not** covered by the executed
+purge. It is recorded here so it is not forgotten:
+
+| Table | ID | Value | Created | Password |
+|---|---:|---|---|---|
+| `admins` | 17 | `p2verify-admin@example.invalid` (display name `Phase2 Verify`) | Through the running application by the super admin, for browser verification of the rebuilt shell | Placeholder stored at `/tmp/p2pw` |
+
+It is assigned to location ID 5 (`Test Location`), which is an excluded/retained
+row, so removing this admin does not disturb the retained scope. No SQL, seed or
+purge has been run for it. When it is time to purge, add it to a freshly approved
+plan — do not reuse or re-run the script above.

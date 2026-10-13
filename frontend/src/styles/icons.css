@@ -1,0 +1,53 @@
+/*
+ * Self-hosted Material Symbols Outlined.
+ *
+ * The file is a subset built by scripts/build-icon-font.py from the upstream
+ * variable font: 142 icons at about 120KB, served from our own origin. There is
+ * no runtime request to fonts.googleapis.com and no CDN dependency, so the
+ * icons render offline and cannot shift layout on first paint.
+ *
+ * The subset is addressed by private-use codepoint (see
+ * src/styles/icon-codepoints.ts), NOT by ligature. Keeping the ligature GSUB
+ * rules would have pulled in the whole alphabet and grown the file past 1MB.
+ */
+
+@font-face {
+  font-family: "F1 Icons";
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url("/fonts/material-symbols-outlined.woff2") format("woff2");
+}
+
+/*
+ * Base class applied by components/icon.tsx.
+ *
+ * font-display is block rather than swap: an icon is never text, so there is
+ * nothing useful to show while the font loads, and a swap would flash the raw
+ * codepoint box. Block keeps the space reserved and paints once ready.
+ */
+.f1-icon {
+  font-family: "F1 Icons";
+  font-weight: normal;
+  font-style: normal;
+  /* Optical size and the FILL/weight axes are pinned to the design defaults. */
+  font-variation-settings:
+    "OPSZ" 20,
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  /* Never let the codepoint be selected or announced as text. */
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  /* Icons are square: callers set font-size, this keeps the box matched. */
+  flex-shrink: 0;
+  text-align: center;
+  vertical-align: middle;
+}

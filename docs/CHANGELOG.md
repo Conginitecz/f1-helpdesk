@@ -4,6 +4,70 @@ All notable changes to the F1 Help Desk project. Newest entries first.
 
 ---
 
+## 2026-10-13 — UI Restructure Phase 2, Step a: Design Tokens, Fonts, Icon Font and Role Shell
+
+Frontend only. No backend, auth, seed, purge or SQL change. Every colour, type,
+spacing, radius and elevation value now comes from `docs/design/design-system/DESIGN.md`
+via one token file, and all authenticated screens sit in a single responsive shell.
+
+### Added
+
+- `frontend/src/styles/tokens.css` — the only definition point for colour, type,
+  spacing, radius and elevation tokens, emitted as a Tailwind v4 `@theme` block so
+  screens consume them as utilities (`bg-surface-card`, `p-space-md`,
+  `shadow-level-1`) instead of hard-coded hex values.
+- `frontend/src/app/fonts.ts` — Hanken Grotesk (headings), Inter (body/controls)
+  and JetBrains Mono (telemetry/IDs) through `next/font`, self-hosted with no
+  request to Google Fonts. Exposed as `--f1-headline` / `--f1-body` / `--f1-mono`.
+- `frontend/src/styles/icons.css` + `frontend/src/styles/icon-codepoints.ts` +
+  `frontend/public/fonts/material-symbols-outlined.woff2` — the "F1 Icons" web
+  font (Material Symbols subset) with its codepoint map, and
+  `frontend/scripts/build-icon-font.py` which regenerates the subset from the
+  design's icon list.
+
+### Changed
+
+- `frontend/src/components/role-shell.tsx` — one shell for all three bands:
+  mobile (<768px) uses a header plus a bottom sheet, tablet (768-1279px) a 64px
+  icon dock, desktop (>=1280px) a 260px sidebar; the header is 64px at every
+  width and main content offsets by the rail width (`md:pl-[64px] xl:pl-[260px]`).
+  The mobile sheet splits navigation from a separate unified action bar so all
+  five destinations plus Log out fit a 390px viewport.
+- `frontend/src/app/layout.tsx` — mounts the font variables, token stylesheet and
+  icon font.
+- `frontend/src/app/globals.css` — legacy ad-hoc colour and type declarations
+  replaced by the token set (net -249 lines).
+
+### Defect found by the browser check and fixed
+
+`.m14-columns` declared `minmax(280px, .8fr) minmax(420px, 1.2fr)`. Those fixed
+floors need about 840px once the 64px tablet dock and 24px margins are added, so
+the Locations & admins screen pushed the page 16px past a 768-839px viewport and
+produced a horizontal scrollbar. The floors are now `minmax(0, …)`; the 0.8fr /
+1.2fr ratio is unchanged, so desktop is unaffected and narrower widths simply
+shrink the tracks.
+
+### Verification (real browser, Chromium/Playwright)
+
+- `npm run lint` exits 0; `npm run build` compiles all 14 routes.
+- 55 checks = 2 roles x 5 viewport widths (1440, 1280, 1279, 800, 390) x
+  (login page + shell probe + every role route, measured after data has loaded):
+  - horizontal scroll: 0 occurrences;
+  - rail: 260px at 1440 and 1280, 64px at 1279 and 800, none (bottom sheet) at 390;
+  - header: 64px everywhere; main content offset matches the rail;
+  - console errors: 0;
+  - both logins land on `/super-admin` and `/admin`.
+- Screenshots in `/tmp/p2shots/`, including the 390px bottom sheet and the
+  800px Locations & admins screen after the grid fix.
+
+### Test records created for verification — must be purged
+
+- Super-admin-created admin: **id 17**, `p2verify-admin@example.invalid`
+  ("Phase2 Verify"), password recorded at `/tmp/p2pw`. Placeholder credentials
+  only. Listed in `docs/purge-plan.md`; no production data was touched.
+
+---
+
 ## 2026-10-11 — UI Restructure Phase 1: Audit + Design Reference Staged
 
 No application code changed. `frontend/` and `backend/` are byte-identical to
