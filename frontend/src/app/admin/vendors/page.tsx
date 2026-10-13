@@ -53,34 +53,41 @@ export default function AdminVendorsPage() {
 
   return (
     <RoleShell role="admin">
-      <div className="page-heading">
-        <p className="eyebrow">PARTNER DIRECTORY</p>
-        <h1>Vendors</h1>
-        <p>Vendors onboarded by your admin account.</p>
+      <div className="mb-space-xl border-b border-border-subtle pb-space-lg">
+        <p className="mb-space-xs font-mono text-data-mono-sm font-semibold uppercase text-accent-teal">Partner directory</p>
+        <h1 className="font-headline text-headline-xl text-text-primary">Vendors</h1>
+        <p className="mt-space-xs font-body text-body-md text-text-muted">Vendors onboarded by your admin account.</p>
       </div>
-      {notice && <Notice>{notice}</Notice>}
+      {notice && <Notice className="mb-space-md">{notice}</Notice>}
       <PartnerForm kind="vendor" onSubmit={createVendor} saving={saving} />
-      <section className="inventory-list-section admin-directory" aria-labelledby="vendors-list-title">
-        <div className="inventory-list-heading">
-          <div><p className="eyebrow">YOUR DIRECTORY</p><h2 id="vendors-list-title">Vendors</h2></div>
-          {!loading && !error && <span className="section-count">{vendors.length}</span>}
+      <section className="mt-space-xl" aria-labelledby="vendors-list-title">
+        <div className="mb-space-sm flex items-end justify-between gap-space-md">
+          <div>
+            <p className="mb-space-xs font-mono text-data-mono-sm font-semibold uppercase text-text-muted">Your directory</p>
+            <h2 className="font-headline text-headline-md text-text-primary" id="vendors-list-title">Vendor records</h2>
+          </div>
+          {!loading && !error && (
+            <span className="rounded-pill bg-surface-variant px-space-sm py-space-xs font-mono text-data-mono-sm tabular-nums text-text-primary">
+              {vendors.length}
+            </span>
+          )}
         </div>
         {loading ? <ScreenState kind="loading" message="Loading your vendors…" /> : error ? (
           <ScreenState kind="error" message={error} onRetry={() => void loadVendors()} />
         ) : vendors.length === 0 ? <ScreenState kind="empty" message="You have not added any vendors yet." /> : (
-          <TableWrap className="admin-table-wrap">
+          <TableWrap>
             <Table>
-              <thead><Tr><Th>Vendor</Th><Th>Type</Th><Th>Phone</Th><Th>Email</Th><Th>Address</Th><Th>Status</Th><Th>Created</Th><Th /></Tr></thead>
+              <thead><Tr><Th>Vendor</Th><Th>Type</Th><Th>Phone</Th><Th>Email</Th><Th className="hidden lg:table-cell">Address</Th><Th>Status</Th><Th>Created</Th><Th aria-label="Actions" /></Tr></thead>
               <tbody>{vendors.map((vendor) => (
                 <Tr key={vendor.id}>
                   <Td><strong className="font-medium text-text-primary">{vendor.name}</strong><span className="mt-0.5 block font-mono text-data-mono-sm text-text-muted">ID {vendor.id}</span></Td>
                   <Td><StatusBadge status="neutral">Vendor</StatusBadge></Td>
                   <Td>{vendor.phone_number}</Td>
                   <Td>{vendor.email ?? "—"}</Td>
-                  <Td>{vendor.address ?? "—"}</Td>
+                  <Td className="hidden lg:table-cell">{vendor.address ?? "—"}</Td>
                   <Td><StatusBadge status={vendor.is_active && !vendor.is_deleted ? "active" : "inactive"}>{vendor.is_active && !vendor.is_deleted ? "Active" : "Inactive"}</StatusBadge></Td>
                   <Td>{formatDate(vendor.created_at)}</Td>
-                  <Td><Button variant="secondary" size="compact" onClick={() => router.push(`/admin/engineers?vendorId=${vendor.id}`)} type="button">Add engineer</Button></Td>
+                  <Td><Button className="whitespace-nowrap" variant="secondary" size="compact" onClick={() => router.push(`/admin/engineers?vendorId=${vendor.id}`)} type="button">Add engineer</Button></Td>
                 </Tr>
               ))}</tbody>
             </Table>

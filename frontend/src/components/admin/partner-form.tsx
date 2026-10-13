@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
+import { Panel } from "@/components/ui/panel";
 
 export interface PartnerFormPayload {
   name: string;
@@ -81,28 +82,30 @@ export function PartnerForm({ kind, skills = [], categories = [], vendorName, sa
   }
 
   return (
-    <form className="m14-form admin-partner-form" onSubmit={submit}>
-      <div className="form-section-title">
-        <div><p className="eyebrow">NEW {isVendor ? "VENDOR" : "ENGINEER"}</p><h2>{isVendor ? "Create vendor" : vendorName ? `Add engineer under ${vendorName}` : "Create service engineer"}</h2></div>
-      </div>
-      <div className="form-grid">
-        <TextField label="Name" name="partner-name" value={fields.name} onChange={(event) => updateField("name", event.target.value)} error={errors.name} required />
-        <TextField label="Phone number" name="partner-phone_number" value={fields.phone_number} onChange={(event) => updateField("phone_number", event.target.value)} error={errors.phone_number} required />
-        {isVendor ? (
-          <>
-            <TextField label="Email" name="partner-email" type="email" value={fields.email} onChange={(event) => updateField("email", event.target.value)} error={errors.email} />
-            <TextareaField className="field-wide" label="Address" name="partner-address" onChange={(event) => updateField("address", event.target.value)} value={fields.address} error={errors.address} />
-          </>
-        ) : (
-          <>
-            <LookupSelect label="Skill" field="skill_id" rows={skills} value={fields.skill_id} onChange={updateField} error={errors.skill_id} />
-            <LookupSelect label="Category" field="category_id" rows={categories} value={fields.category_id} onChange={updateField} error={errors.category_id} />
-          </>
-        )}
-      </div>
-      {formError && <Notice tone="error">{formError}</Notice>}
-      <Button disabled={saving} type="submit">{saving ? "Creating…" : isVendor ? "Create vendor" : "Create engineer"}</Button>
-    </form>
+    <Panel
+      className="mb-space-xl max-w-5xl"
+      title={isVendor ? "Create vendor" : vendorName ? `Add engineer under ${vendorName}` : "Create service engineer"}
+    >
+      <form className="grid gap-space-md" onSubmit={submit}>
+        <div className="grid gap-space-md md:grid-cols-2">
+          <TextField label="Name" name="partner-name" value={fields.name} onChange={(event) => updateField("name", event.target.value)} error={errors.name} required />
+          <TextField label="Phone number" name="partner-phone_number" value={fields.phone_number} onChange={(event) => updateField("phone_number", event.target.value)} error={errors.phone_number} required />
+          {isVendor ? (
+            <>
+              <TextField label="Email" name="partner-email" type="email" value={fields.email} onChange={(event) => updateField("email", event.target.value)} error={errors.email} />
+              <TextareaField className="min-h-24 md:col-span-2" label="Address" name="partner-address" onChange={(event) => updateField("address", event.target.value)} value={fields.address} error={errors.address} />
+            </>
+          ) : (
+            <>
+              <LookupSelect label="Skill" field="skill_id" rows={skills} value={fields.skill_id} onChange={updateField} error={errors.skill_id} />
+              <LookupSelect label="Category" field="category_id" rows={categories} value={fields.category_id} onChange={updateField} error={errors.category_id} />
+            </>
+          )}
+        </div>
+        {formError && <Notice tone="error">{formError}</Notice>}
+        <Button className="justify-self-start" disabled={saving} type="submit">{saving ? "Creating…" : isVendor ? "Create vendor" : "Create engineer"}</Button>
+      </form>
+    </Panel>
   );
 }
 
