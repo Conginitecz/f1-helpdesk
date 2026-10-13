@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { SelectField, TextareaField, TextField } from "@/components/ui/field";
 
 export interface PartnerFormPayload {
   name: string;
@@ -83,12 +85,12 @@ export function PartnerForm({ kind, skills = [], categories = [], vendorName, sa
         <div><p className="eyebrow">NEW {isVendor ? "VENDOR" : "ENGINEER"}</p><h2>{isVendor ? "Create vendor" : vendorName ? `Add engineer under ${vendorName}` : "Create service engineer"}</h2></div>
       </div>
       <div className="form-grid">
-        <Field label="Name" field="name" value={fields.name} onChange={updateField} error={errors.name} required />
-        <Field label="Phone number" field="phone_number" value={fields.phone_number} onChange={updateField} error={errors.phone_number} required />
+        <TextField label="Name" name="partner-name" value={fields.name} onChange={(event) => updateField("name", event.target.value)} error={errors.name} required />
+        <TextField label="Phone number" name="partner-phone_number" value={fields.phone_number} onChange={(event) => updateField("phone_number", event.target.value)} error={errors.phone_number} required />
         {isVendor ? (
           <>
-            <Field label="Email" field="email" type="email" value={fields.email} onChange={updateField} error={errors.email} />
-            <label className="field-label field-wide" htmlFor="partner-address">Address<textarea id="partner-address" onChange={(event) => updateField("address", event.target.value)} value={fields.address} />{errors.address && <span className="field-error">{errors.address}</span>}</label>
+            <TextField label="Email" name="partner-email" type="email" value={fields.email} onChange={(event) => updateField("email", event.target.value)} error={errors.email} />
+            <TextareaField className="field-wide" label="Address" name="partner-address" onChange={(event) => updateField("address", event.target.value)} value={fields.address} error={errors.address} />
           </>
         ) : (
           <>
@@ -98,30 +100,9 @@ export function PartnerForm({ kind, skills = [], categories = [], vendorName, sa
         )}
       </div>
       {formError && <p className="form-error" role="alert">{formError}</p>}
-      <button className="primary-button" disabled={saving} type="submit">{saving ? "Creating…" : isVendor ? "Create vendor" : "Create engineer"}</button>
+      <Button disabled={saving} type="submit">{saving ? "Creating…" : isVendor ? "Create vendor" : "Create engineer"}</Button>
     </form>
   );
-}
-
-function Field({
-  label,
-  field,
-  value,
-  onChange,
-  error,
-  required = false,
-  type = "text",
-}: {
-  label: string;
-  field: keyof typeof emptyFields;
-  value: string;
-  onChange: (field: keyof typeof emptyFields, value: string) => void;
-  error?: string;
-  required?: boolean;
-  type?: string;
-}) {
-  const id = `partner-${field}`;
-  return <label className="field-label" htmlFor={id}>{label}<input aria-invalid={Boolean(error)} id={id} onChange={(event) => onChange(field, event.target.value)} required={required} type={type} value={value} />{error && <span className="field-error">{error}</span>}</label>;
 }
 
 function LookupSelect({
@@ -141,7 +122,7 @@ function LookupSelect({
 }) {
   const id = `partner-${field}`;
   return (
-    <label className="field-label" htmlFor={id}>{label}<select aria-invalid={Boolean(error)} id={id} onChange={(event) => onChange(field, event.target.value)} value={value}><option value="">Not specified</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.text}</option>)}</select>{rows.length === 0 && <span className="field-help">No active {label.toLowerCase()} options configured.</span>}{error && <span className="field-error">{error}</span>}</label>
+    <SelectField label={label} name={id} onChange={(event) => onChange(field, event.target.value)} value={value} error={error} hint={rows.length === 0 ? `No active ${label.toLowerCase()} options configured.` : undefined}><option value="">Not specified</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.text}</option>)}</SelectField>
   );
 }
 

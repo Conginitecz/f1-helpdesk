@@ -5,6 +5,8 @@ import { PartnerForm, type PartnerFormPayload } from "@/components/admin/partner
 import type { AdminLookup, AdminPartner, StatusRequest } from "@/components/admin/types";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
+import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/ui/field";
 import { apiRequest, ApiError } from "@/lib/api";
 
 const VENDOR_REFERENCE_CODE = "d6Rq1Ae3Uv9sH5pM";
@@ -115,10 +117,10 @@ export default function AdminEngineersPage() {
         <p>Direct engineers and engineers registered under your vendors.</p>
       </div>
       {notice && <p className="success-message" role="status">{notice}</p>}
-      {error && <div className="inline-error" role="alert"><span>{error}</span><button className="text-button" onClick={() => void loadPage()} type="button">Retry loading</button></div>}
+      {error && <div className="inline-error" role="alert"><span>{error}</span><Button variant="ghost" size="compact" onClick={() => void loadPage()} type="button">Retry loading</Button></div>}
       {loading ? <ScreenState kind="loading" message="Loading engineers and options…" /> : !error && (
         <>
-          <label className="field-label admin-vendor-select" htmlFor="engineer-vendor">Owner<select id="engineer-vendor" onChange={(event) => setSelectedVendorId(event.target.value)} value={selectedVendorId}><option value="">Direct admin</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select></label>
+          <SelectField className="admin-vendor-select" label="Owner" name="engineer-vendor" onChange={(event) => setSelectedVendorId(event.target.value)} value={selectedVendorId}><option value="">Direct admin</option>{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</SelectField>
           <PartnerForm categories={categories} kind="engineer" onSubmit={createEngineer} saving={saving} skills={skills} vendorName={vendors.find((vendor) => String(vendor.id) === selectedVendorId)?.name} />
           <section className="inventory-list-section admin-directory" aria-labelledby="engineers-list-title">
             <div className="inventory-list-heading">
@@ -141,7 +143,7 @@ export default function AdminEngineersPage() {
                         <td>{lookupLabel(categories, engineer.category_id)}</td>
                         <td><span className={engineer.is_active && !engineer.is_deleted ? "status-pill status-active" : "status-pill status-inactive"}>{engineer.is_active && !engineer.is_deleted ? "Active" : "Inactive"}</span></td>
                         <td>{request ? <span className={`status-pill status-${request.status}`}>{request.status === "pending" ? "Pending approval" : request.status} ({request.requested_action})</span> : "—"}</td>
-                        <td><button className="secondary-button compact-button" disabled={requestingId === engineer.id || request?.status === "pending"} onClick={() => void requestStatusChange(engineer)} type="button">{requestingId === engineer.id ? "Submitting…" : request?.status === "pending" ? "Pending approval" : engineer.is_active ? "Request deactivation" : "Request activation"}</button></td>
+                        <td><Button variant="secondary" size="compact" disabled={requestingId === engineer.id || request?.status === "pending"} onClick={() => void requestStatusChange(engineer)} type="button">{requestingId === engineer.id ? "Submitting…" : request?.status === "pending" ? "Pending approval" : engineer.is_active ? "Request deactivation" : "Request activation"}</Button></td>
                       </tr>
                     );
                   })}</tbody>

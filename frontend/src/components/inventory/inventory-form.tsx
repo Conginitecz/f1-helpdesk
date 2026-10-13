@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Checkbox, SelectField, TextField } from "@/components/ui/field";
 import type { InventoryItem, InventoryLocation, InventoryLookup } from "./types";
 
 export interface InventoryPayload {
@@ -120,50 +122,46 @@ export function InventoryForm({
     <form className="inventory-form m14-form" onSubmit={submit}>
       <div className="form-section-title">
         <div><p className="eyebrow">{editing ? "UPDATE STOCK" : "NEW STOCK"}</p><h2>{editing ? `Edit ${initialItem?.name ?? "item"}` : "Add inventory item"}</h2></div>
-        {editing && onCancelEdit && <button className="text-button" onClick={onCancelEdit} type="button">Cancel edit</button>}
+        {editing && onCancelEdit && <Button variant="ghost" size="compact" onClick={onCancelEdit} type="button">Cancel edit</Button>}
       </div>
       <div className="form-grid">
-        <Field label="Item name" name="inventory-name" error={fieldErrors.name} required value={fields.name} onChange={(value) => setField("name", value)} />
-        <label className="field-label" htmlFor="inventory-type">Type<select id="inventory-type" onChange={(event) => setField("type_id", event.target.value)} value={fields.type_id}><option value="">Not specified</option>{types.map((row) => <option key={row.id} value={row.id}>{row.text}</option>)}</select>{types.length === 0 && <span className="field-help">No active inventory types configured.</span>}{fieldErrors.type_id && <span className="field-error">{fieldErrors.type_id}</span>}</label>
-        <label className="field-label" htmlFor="inventory-category">Category<select id="inventory-category" onChange={(event) => setField("category_id", event.target.value)} value={fields.category_id}><option value="">Not specified</option>{categories.map((row) => <option key={row.id} value={row.id}>{row.text}</option>)}</select>{categories.length === 0 && <span className="field-help">No active categories configured.</span>}{fieldErrors.category_id && <span className="field-error">{fieldErrors.category_id}</span>}</label>
-        <Field label="Units" name="inventory-units" min="0" required type="number" value={fields.units} onChange={(value) => setField("units", value)} error={fieldErrors.units} />
-        <Field label="Price per unit" name="inventory-price" min="0" step="0.01" required type="number" value={fields.price_per_unit} onChange={(value) => setField("price_per_unit", value)} error={fieldErrors.price_per_unit} />
-        <label className="field-label inventory-toggle" htmlFor="inventory-tax"><span>Tax applicable</span><input checked={fields.tax_applicable} id="inventory-tax" onChange={(event) => setField("tax_applicable", event.target.checked)} type="checkbox" /></label>
-        {fields.tax_applicable && <Field label="Tax percentage" name="inventory-tax-percentage" min="0" step="0.01" type="number" value={fields.tax_percentage} onChange={(value) => setField("tax_percentage", value)} error={fieldErrors.tax_percentage} />}
+        <TextField label="Item name" name="inventory-name" error={fieldErrors.name} required value={fields.name} onChange={(event) => setField("name", event.target.value)} />
+        <LookupField label="Type" name="inventory-type" value={fields.type_id} onChange={(value) => setField("type_id", value)} rows={types} emptyHint="No active inventory types configured." error={fieldErrors.type_id} />
+        <LookupField label="Category" name="inventory-category" value={fields.category_id} onChange={(value) => setField("category_id", value)} rows={categories} emptyHint="No active categories configured." error={fieldErrors.category_id} />
+        <TextField label="Units" name="inventory-units" min="0" required type="number" value={fields.units} onChange={(event) => setField("units", event.target.value)} error={fieldErrors.units} />
+        <TextField label="Price per unit" name="inventory-price" min="0" step="0.01" required type="number" value={fields.price_per_unit} onChange={(event) => setField("price_per_unit", event.target.value)} error={fieldErrors.price_per_unit} />
+        <Checkbox label="Tax applicable" name="inventory-tax" checked={fields.tax_applicable} onChange={(event) => setField("tax_applicable", event.target.checked)} />
+        {fields.tax_applicable && <TextField label="Tax percentage" name="inventory-tax-percentage" min="0" step="0.01" type="number" value={fields.tax_percentage} onChange={(event) => setField("tax_percentage", event.target.value)} error={fieldErrors.tax_percentage} />}
         {locationControl.mode === "select" ? (
-          <label className="field-label field-wide" htmlFor="inventory-location">Location<select id="inventory-location" onChange={(event) => setField("location_id", event.target.value)} required value={fields.location_id}><option value="">Choose a location</option>{locationControl.locations?.filter((location) => location.is_active).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select>{fieldErrors.location_id && <span className="field-error">{fieldErrors.location_id}</span>}</label>
+          <SelectField className="field-wide" label="Location" name="inventory-location" onChange={(event) => setField("location_id", event.target.value)} required value={fields.location_id} error={fieldErrors.location_id}><option value="">Choose a location</option>{locationControl.locations?.filter((location) => location.is_active).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</SelectField>
         ) : (
           <div className="field-label field-wide"><span>Assigned location</span><div className="assigned-location">{locationControl.assignedLocationName ?? `Location #${locationControl.assignedLocationId ?? "—"}`}</div></div>
         )}
       </div>
       {formError && <p className="form-error" role="alert">{formError}</p>}
-      <button className="primary-button" disabled={saving} type="submit">{saving ? "Saving…" : editing ? "Save changes" : "Create item"}</button>
+      <Button disabled={saving} type="submit">{saving ? "Saving…" : editing ? "Save changes" : "Create item"}</Button>
     </form>
   );
 }
 
-function Field({
+function LookupField({
   label,
   name,
   value,
   onChange,
-  required = false,
-  type = "text",
-  min,
-  step,
+  rows,
+  emptyHint,
   error,
 }: {
   label: string;
   name: string;
   value: string;
   onChange: (value: string) => void;
-  required?: boolean;
-  type?: string;
-  min?: string;
-  step?: string;
+  rows: InventoryLookup[];
+  emptyHint: string;
   error?: string;
 }) {
-  return <label className="field-label" htmlFor={name}>{label}<input id={name} min={min} onChange={(event) => onChange(event.target.value)} required={required} step={step} type={type} value={value} />{error && <span className="field-error">{error}</span>}</label>;
+  return <SelectField label={label} name={name} value={value} onChange={(event) => onChange(event.target.value)} error={error} hint={rows.length === 0 ? emptyHint : undefined}><option value="">Not specified</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.text}</option>)}</SelectField>;
 }
 
 function splitFieldErrors(message: string): { fields: Record<string, string>; general: string } {

@@ -1,6 +1,8 @@
 "use client";
 
 import { ScreenState } from "@/components/screen-state";
+import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/ui/field";
 import type { InventoryCreator, InventoryItem, InventoryLocation, InventoryLookup } from "./types";
 
 interface InventoryListProps {
@@ -37,13 +39,10 @@ export function InventoryList({
     <section className="inventory-list-section" aria-labelledby="inventory-list-title">
       <div className="inventory-list-heading">
         <div><p className="eyebrow">STOCK REGISTER</p><h2 id="inventory-list-title">Inventory items</h2></div>
-        {!assignedMode && <label className="inventory-filter" htmlFor="inventory-location-filter">
-            Location
-            <select id="inventory-location-filter" onChange={(event) => onLocationChange(event.target.value)} value={selectedLocation}>
-              <option value="">All locations</option>
-              {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
-            </select>
-          </label>}
+        {!assignedMode && <SelectField className="inventory-filter" label="Location" name="inventory-location-filter" onChange={(event) => onLocationChange(event.target.value)} value={selectedLocation}>
+            <option value="">All locations</option>
+            {locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}
+          </SelectField>}
       </div>
       {loading ? <ScreenState kind="loading" message="Loading inventory…" /> : error ? (
         <ScreenState kind="error" message={error} onRetry={onRetry} />
@@ -64,7 +63,7 @@ export function InventoryList({
                   <td>{item.location_name || locations.find((location) => location.id === item.location_id)?.name || `Location #${item.location_id}`}</td>
                   {!assignedMode && <td>{creator ? `${creator.first_name} ${creator.last_name}` : `Super admin #${item.created_by_super_admin_id ?? "?"}`}</td>}
                   <td><span className={item.is_active ? "status-pill status-active" : "status-pill status-inactive"}>{item.is_active ? "Active" : "Inactive"}</span></td>
-                  {!assignedMode && <td><button className="secondary-button compact-button" onClick={() => onEdit(item)} type="button">Edit</button></td>}
+                  {!assignedMode && <td><Button variant="secondary" size="compact" onClick={() => onEdit(item)} type="button">Edit</Button></td>}
                 </tr>
               );
             })}</tbody>

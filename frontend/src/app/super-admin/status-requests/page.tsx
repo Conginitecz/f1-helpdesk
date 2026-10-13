@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
+import { Button } from "@/components/ui/button";
 import { apiRequest, ApiError } from "@/lib/api";
 
 interface StatusRequest {
@@ -109,7 +110,7 @@ export default function StatusRequestsPage() {
                   <td>{admin ? `${admin.first_name} ${admin.last_name}` : `Admin #${request.requested_by_admin_id}`}<span className="cell-secondary">{admin?.email ?? ""}</span></td>
                   <td>{new Date(request.created_at).toLocaleDateString()}</td>
                   <td><span className={`status-pill status-${request.status}`}>{request.status}</span></td>
-                  <td>{request.status === "pending" ? <div className="row-actions"><button className="primary-button compact-button" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "approve")} type="button">Approve</button><button className="secondary-button compact-button" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "reject")} type="button">Reject</button></div> : <span className="cell-secondary">Resolved</span>}</td>
+                  <td>{request.status === "pending" ? <div className="row-actions"><Button size="compact" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "approve")} type="button">Approve</Button><Button size="compact" variant="secondary" disabled={busyId === request.id} onClick={() => void resolveRequest(request, "reject")} type="button">Reject</Button></div> : <span className="cell-secondary">Resolved</span>}</td>
                 </tr>
               );
             })}</tbody>

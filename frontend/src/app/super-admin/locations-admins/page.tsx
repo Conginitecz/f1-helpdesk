@@ -3,6 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
+import { Button } from "@/components/ui/button";
+import { SelectField, TextField } from "@/components/ui/field";
 import { apiRequest, ApiError } from "@/lib/api";
 
 interface LocationRow {
@@ -154,10 +156,16 @@ export default function LocationsAdminsPage() {
               </div>
             ) : <ScreenState kind="empty" message="No locations yet." />}
             <form className="m14-form compact-form" onSubmit={createLocation}>
-              <label htmlFor="location-name">New location</label>
               <div className="inline-form-row">
-                <input id="location-name" maxLength={255} onChange={(event) => setLocationName(event.target.value)} required value={locationName} />
-                <button className="primary-button" disabled={savingLocation} type="submit">{savingLocation ? "Creating…" : "Create"}</button>
+                <TextField
+                  id="location-name"
+                  label="New location"
+                  maxLength={255}
+                  onChange={(event) => setLocationName(event.target.value)}
+                  required
+                  value={locationName}
+                />
+                <Button disabled={savingLocation} type="submit">{savingLocation ? "Creating…" : "Create"}</Button>
               </div>
               {locationError && <p className="form-error" role="alert">{locationError}</p>}
             </form>
@@ -184,27 +192,23 @@ export default function LocationsAdminsPage() {
             <form className="m14-form admin-create-form" onSubmit={createAdmin}>
               <h3>Create admin account</h3>
               <div className="form-grid">
-                <Field label="First name" name="admin-first-name" value={adminForm.first_name} onChange={(value) => updateAdminField("first_name", value)} required />
-                <Field label="Last name" name="admin-last-name" value={adminForm.last_name} onChange={(value) => updateAdminField("last_name", value)} required />
-                <Field label="Email" name="admin-email" type="email" value={adminForm.email} onChange={(value) => updateAdminField("email", value)} required />
-                <Field label="Username" name="admin-username" value={adminForm.username} onChange={(value) => updateAdminField("username", value)} required />
-                <Field label="Temporary password" name="admin-password" type="password" value={adminForm.password} onChange={(value) => updateAdminField("password", value)} required />
-                <Field label="Phone number" name="admin-phone" value={adminForm.phone_number} onChange={(value) => updateAdminField("phone_number", value)} required />
-                <label className="field-label field-wide" htmlFor="admin-address">Address<input id="admin-address" onChange={(event) => updateAdminField("address", event.target.value)} required value={adminForm.address} /></label>
-                <label className="field-label field-wide" htmlFor="admin-location">Assigned location<select id="admin-location" onChange={(event) => updateAdminField("location_id", event.target.value)} required value={adminForm.location_id}><option value="">Choose a location</option>{locations.filter((location) => location.is_active).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select></label>
+                <TextField label="First name" name="admin-first-name" value={adminForm.first_name} onChange={(event) => updateAdminField("first_name", event.target.value)} required />
+                <TextField label="Last name" name="admin-last-name" value={adminForm.last_name} onChange={(event) => updateAdminField("last_name", event.target.value)} required />
+                <TextField label="Email" name="admin-email" type="email" value={adminForm.email} onChange={(event) => updateAdminField("email", event.target.value)} required />
+                <TextField label="Username" name="admin-username" value={adminForm.username} onChange={(event) => updateAdminField("username", event.target.value)} required />
+                <TextField label="Temporary password" name="admin-password" type="password" value={adminForm.password} onChange={(event) => updateAdminField("password", event.target.value)} required />
+                <TextField label="Phone number" name="admin-phone" value={adminForm.phone_number} onChange={(event) => updateAdminField("phone_number", event.target.value)} required />
+                <TextField className="field-wide" label="Address" name="admin-address" value={adminForm.address} onChange={(event) => updateAdminField("address", event.target.value)} required />
+                <SelectField className="field-wide" label="Assigned location" name="admin-location" onChange={(event) => updateAdminField("location_id", event.target.value)} required value={adminForm.location_id}><option value="">Choose a location</option>{locations.filter((location) => location.is_active).map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</SelectField>
               </div>
               {adminError && <p className="form-error" role="alert">{adminError}</p>}
-              <button className="primary-button" disabled={savingAdmin || locations.filter((location) => location.is_active).length === 0} type="submit">{savingAdmin ? "Creating account…" : "Create admin"}</button>
+              <Button disabled={savingAdmin || locations.filter((location) => location.is_active).length === 0} type="submit">{savingAdmin ? "Creating account…" : "Create admin"}</Button>
             </form>
           </section>
         </div>
       )}
     </RoleShell>
   );
-}
-
-function Field({ label, name, value, onChange, required, type = "text" }: { label: string; name: string; value: string; onChange: (value: string) => void; required: boolean; type?: string }) {
-  return <label className="field-label" htmlFor={name}>{label}<input autoComplete={type === "password" ? "new-password" : undefined} id={name} onChange={(event) => onChange(event.target.value)} required={required} type={type} value={value} /></label>;
 }
 
 function messageFor(reason: unknown, fallback: string): string {

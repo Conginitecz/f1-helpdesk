@@ -3,6 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, getSession, login, type UserRole } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/field";
 
 const roleHome: Record<UserRole, string> = {
   super_admin: "/super-admin",
@@ -51,10 +53,10 @@ export default function LoginPage() {
         <p className="login-intro">Use your assigned account to continue.</p>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
-          <input
+          <TextField
             autoComplete="username"
             id="email"
+            label="Email"
             name="email"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -62,10 +64,10 @@ export default function LoginPage() {
             value={email}
           />
 
-          <label htmlFor="password">Password</label>
-          <input
+          <TextField
             autoComplete="current-password"
             id="password"
+            label="Password"
             name="password"
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -75,9 +77,9 @@ export default function LoginPage() {
 
           {error && <p className="form-error" role="alert">{error}</p>}
 
-          <button className="login-submit" disabled={loading} type="submit">
+          <Button className="login-submit" disabled={loading} type="submit">
             {loading ? "Signing in…" : "Sign in"}
-          </button>
+          </Button>
         </form>
       </section>
       <aside className="login-side-note" aria-hidden="true">

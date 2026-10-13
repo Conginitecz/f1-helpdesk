@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PartnerForm, type PartnerFormPayload } from "@/components/admin/partner-form";
 import type { AdminPartner } from "@/components/admin/types";
 import { RoleShell } from "@/components/role-shell";
 import { ScreenState } from "@/components/screen-state";
+import { Button } from "@/components/ui/button";
 import { apiRequest, ApiError } from "@/lib/api";
 
 export default function AdminVendorsPage() {
+  const router = useRouter();
   const [vendors, setVendors] = useState<AdminPartner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,7 +77,7 @@ export default function AdminVendorsPage() {
                   <td>{vendor.address ?? "—"}</td>
                   <td><span className={vendor.is_active && !vendor.is_deleted ? "status-pill status-active" : "status-pill status-inactive"}>{vendor.is_active && !vendor.is_deleted ? "Active" : "Inactive"}</span></td>
                   <td>{formatDate(vendor.created_at)}</td>
-                  <td><Link className="secondary-button compact-button" href={`/admin/engineers?vendorId=${vendor.id}`}>Add engineer</Link></td>
+                  <td><Button variant="secondary" size="compact" onClick={() => router.push(`/admin/engineers?vendorId=${vendor.id}`)} type="button">Add engineer</Button></td>
                 </tr>
               ))}</tbody>
             </table>
