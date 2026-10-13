@@ -5,8 +5,38 @@
 @import "../styles/icons.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9f9ff;
+  --foreground: #041b3c;
+  --surface-base: #f5f9fa;
+  --surface-card: #ffffff;
+  --text-primary: #172b4d;
+  --text-muted: #64748b;
+  --primary: #004ac6;
+  --primary-container: #2563eb;
+  --secondary: #006a64;
+  --tertiary: #3750a0;
+  --deep-blue: #1e3a8a;
+  --dark-navy: #102a43;
+  --accent-teal: #0f9d95;
+  --accent-green: #16a085;
+  --border-subtle: #d9e3ea;
+  --success: #16a085;
+  --warning-pending: #f59e0b;
+  --error: #ba1a1a;
+  --error-alert: #ef4444;
+  --info-blue: #2563eb;
+  --font-headline: "Hanken Grotesk", system-ui, sans-serif;
+  --font-body: Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --gutter: 1rem;
+  --gutter-desktop: 1.5rem;
+  --margin: 1rem;
+  --margin-desktop: 2rem;
 }
 
 
@@ -28,8 +58,8 @@
  */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    --background: #f9f9ff;
+    --foreground: #041b3c;
   }
 }
 
