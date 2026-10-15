@@ -69,6 +69,10 @@ export class Partner {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  /** Nullable during compatibility rollout; null means lifecycle mapping is pending review. */
+  @Column({ name: 'lifecycle_status', type: 'varchar', nullable: true })
+  lifecycleStatus: string | null;
+
   @Column({ name: 'is_deleted', type: 'boolean', default: false })
   isDeleted: boolean;
 

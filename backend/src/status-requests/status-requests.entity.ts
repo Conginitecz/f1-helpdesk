@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Admin } from '../admins/admins.entity.js';
 import { SuperAdmin } from '../super-admins/super-admins.entity.js';
+import { StatusRequestType } from './request-types.js';
 
 /**
  * docs/development-docs.md §1.9 status_change_requests
@@ -35,6 +36,10 @@ export class StatusChangeRequest {
   @Column({ name: 'requested_action', type: 'varchar' })
   requestedAction: string;
 
+  /** Nullable for legacy rows that cannot be mapped without guessing. */
+  @Column({ name: 'request_type', type: 'varchar', nullable: true })
+  requestType: StatusRequestType | null;
+
   /** FK -> admins.id, NOT NULL (the admin who submitted the request) */
   @ManyToOne(() => Admin, { nullable: false })
   @JoinColumn({ name: 'requested_by_admin_id' })
@@ -43,6 +48,10 @@ export class StatusChangeRequest {
   /** pending / approved / rejected — NOT NULL, DEFAULT 'pending' */
   @Column({ type: 'varchar', default: 'pending' })
   status: string;
+
+  /** Nullable for existing rows; M3 submission will persist new reasons. */
+  @Column({ type: 'varchar', nullable: true })
+  reason: string | null;
 
   /** FK -> super_admins.id, nullable (set when a super admin resolves it) */
   @ManyToOne(() => SuperAdmin, { nullable: true })

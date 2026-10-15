@@ -109,4 +109,40 @@ describe('InventoryService', () => {
       }),
     );
   });
+
+  it('requires active master-data rows to have the expected type', async () => {
+    const inventoryRepo = { create: vi.fn(), find: vi.fn(), findOne: vi.fn(), save: vi.fn() };
+    const locationRepo = { findOne: vi.fn(async () => ({ id: 4, isActive: true })) };
+    const masterDataRepo = {
+      findOne: vi.fn(async ({ where }) =>
+        where.type === 'inventory_type' ? { id: where.id, type: where.type, isActive: true } : null),
+    };
+    const adminRepo = { findOne: vi.fn(async () => ({
+      id: 8, isActive: true, isDeleted: false, location: { id: 4 },
+    })) };
+    const service = new InventoryService(inventoryRepo as any, locationRepo as any, masterDataRepo as any, adminRepo as any);
+
+    await expect(service.createForAdmin({
+      name: 'Item', type_id: 10, category_id: 11, location_id: 99, units: 1,
+      price_per_unit: '1.00', tax_applicable: false,
+    }, { userId: 8, role: Role.ADMIN })).rejects.toThrow(BadRequestException);
+    expect(masterDataRepo.findOne).toHaveBeenCalledWith({ where: { id: 11, type: 'inventory_category', isActive: true } });
+    expect(inventoryRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects inactive and nonexistent master-data rows', async () => {
+    const inventoryRepo = { create: vi.fn(), find: vi.fn(), findOne: vi.fn(), save: vi.fn() };
+    const locationRepo = { findOne: vi.fn(async () => ({ id: 4, isActive: true })) };
+    const masterDataRepo = { findOne: vi.fn().mockResolvedValue(null) };
+    const adminRepo = { findOne: vi.fn(async () => ({
+      id: 8, isActive: true, isDeleted: false, location: { id: 4 },
+    })) };
+    const service = new InventoryService(inventoryRepo as any, locationRepo as any, masterDataRepo as any, adminRepo as any);
+
+    await expect(service.createForAdmin({
+      name: 'Item', type_id: 10, category_id: undefined, location_id: 99, units: 1,
+      price_per_unit: '1.00', tax_applicable: false,
+    }, { userId: 8, role: Role.ADMIN })).rejects.toThrow(BadRequestException);
+    expect(inventoryRepo.create).not.toHaveBeenCalled();
+  });
 });

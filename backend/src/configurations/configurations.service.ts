@@ -1,10 +1,16 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SuperAdmin } from '../super-admins/super-admins.entity.js';
 import { Configuration } from './configurations.entity.js';
 import { CreateConfigurationDto } from './create-configuration.dto.js';
 import { UpdateConfigurationDto } from './update-configuration.dto.js';
+
+const EDITABLE_CONFIGURATION_KEYS = new Set([
+  'session_idle_timeout_minutes',
+  'max_vendor_attachment_mb',
+  'default_timezone',
+]);
 
 export interface ConfigurationResponse {
   id: number;
@@ -28,6 +34,7 @@ export class ConfigurationsService {
   }
 
   async create(dto: CreateConfigurationDto, superAdminId: number): Promise<ConfigurationResponse> {
+    this.assertEditableKey(dto.key);
     const existing = await this.configurationsRepo.findOne({
       where: { configKey: dto.key },
     });
@@ -50,6 +57,7 @@ export class ConfigurationsService {
     dto: UpdateConfigurationDto,
     superAdminId: number,
   ): Promise<ConfigurationResponse> {
+    this.assertEditableKey(key);
     const row = await this.configurationsRepo.findOne({ where: { configKey: key } });
     if (!row) {
       throw new NotFoundException(`Configuration key ${key} not found`);
@@ -59,6 +67,12 @@ export class ConfigurationsService {
     row.updatedBySuperAdmin = { id: superAdminId } as SuperAdmin;
     const saved = await this.configurationsRepo.save(row);
     return this.toResponse(saved, superAdminId);
+  }
+
+  private assertEditableKey(key: string): void {
+    if (!EDITABLE_CONFIGURATION_KEYS.has(key)) {
+      throw new BadRequestException(`Configuration key ${key} is not editable`);
+    }
   }
 
   private toResponse(row: Configuration, updaterId?: number): ConfigurationResponse {

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,7 +9,10 @@ import { In, Repository } from 'typeorm';
 import { MasterData } from '../master-data/master-data.entity.js';
 import { StatusChangeRequest } from '../status-requests/status-requests.entity.js';
 import type { StatusRequestResponse } from '../status-requests/status-requests.service.js';
+import { CreateStatusRequestDto } from '../status-requests/create-status-request.dto.js';
+import { StatusRequestType } from '../status-requests/request-types.js';
 import { Partner } from './partners.entity.js';
+import { compatibilityIsActive, PartnerLifecycleStatus } from './partner-lifecycle.js';
 
 const PARTNER_TYPE_CODES = {
   vendor: 'q7Kf2mZ9xRw4tB6y',
@@ -32,6 +36,7 @@ export interface PartnerResponse {
   reference_type_id: number | null;
   reference_id: number | null;
   is_active: boolean;
+  lifecycle_status: PartnerLifecycleStatus | null;
   is_deleted: boolean;
   created_by_admin_id: number;
   created_at: Date;
@@ -54,6 +59,7 @@ const PARTNER_READ_OPTIONS = {
     address: true,
     referenceId: true,
     isActive: true,
+    lifecycleStatus: true,
     isDeleted: true,
     createdAt: true,
     updatedAt: true,
@@ -168,8 +174,8 @@ export class PartnersService {
     return [...uniqueRows.values()].sort((a, b) => a.id - b.id).map((row) => this.toResponse(row));
   }
 
-  async createForAdmin(dto: CreatePartnerPayload, adminId: number): Promise<PartnerResponse> {
-    const partnerTypeId = await this.resolvePartnerTypeId(dto.type);
+  async createVendorForAdmin(dto: Omit<CreatePartnerPayload, 'type'>, adminId: number): Promise<PartnerResponse> {
+    const partnerTypeId = await this.resolvePartnerTypeId('vendor');
     const row = this.partnersRepo.create({
       name: dto.name,
       phoneNumber: dto.phone_number,
@@ -179,17 +185,12 @@ export class PartnersService {
       category: dto.category_id ? ({ id: dto.category_id } as MasterData) : null,
       partnerType: { id: partnerTypeId },
       createdByAdmin: { id: adminId },
-      isActive: true,
+      isActive: false,
+      lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
       isDeleted: false,
       referenceType: null,
       referenceId: null,
     });
-
-    if (dto.type === 'engineer') {
-      const adminReferenceTypeId = await this.resolveReferenceTypeId('admin');
-      row.referenceType = { id: adminReferenceTypeId } as MasterData;
-      row.referenceId = adminId;
-    }
 
     const saved = await this.partnersRepo.save(row);
     return this.toResponse(saved);
@@ -219,6 +220,9 @@ export class PartnersService {
     if (!vendor) {
       throw new NotFoundException(`Vendor partner with id ${vendorPartnerId} not found`);
     }
+    if (vendor.lifecycleStatus !== PartnerLifecycleStatus.ACTIVE) {
+      throw new BadRequestException('Vendor is not eligible for service engineer creation');
+    }
 
     const engineerTypeId = await this.resolvePartnerTypeId('engineer');
     const vendorReferenceTypeId = await this.resolveReferenceTypeId('vendor');
@@ -234,6 +238,7 @@ export class PartnersService {
       referenceId: vendor.id,
       createdByAdmin: { id: adminId },
       isActive: true,
+      lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
       isDeleted: false,
     });
 
@@ -244,7 +249,7 @@ export class PartnersService {
   async requestStatusChange(
     adminId: number,
     partnerId: number,
-    action: 'activate' | 'deactivate',
+    dto: CreateStatusRequestDto,
   ): Promise<StatusRequestResponse> {
     const partner = await this.partnersRepo.findOne({
       ...PARTNER_READ_OPTIONS,
@@ -257,25 +262,97 @@ export class PartnersService {
       throw new NotFoundException(`Partner with id ${partnerId} not found`);
     }
 
+    const vendorTypeId = await this.resolvePartnerTypeId('vendor');
     const engineerTypeId = await this.resolvePartnerTypeId('engineer');
-    if (partner.partnerType.id !== engineerTypeId) {
-      throw new BadRequestException('Only service engineer rows can request a status change');
+    const isVendor = partner.partnerType.id === vendorTypeId;
+    const isEngineer = partner.partnerType.id === engineerTypeId;
+    const requestedAction = this.requestActionForType(dto.request_type);
+
+    if (isVendor) {
+      if (
+        dto.request_type !== StatusRequestType.VENDOR_ONBOARDING &&
+        dto.request_type !== StatusRequestType.VENDOR_ACTIVATION &&
+        dto.request_type !== StatusRequestType.VENDOR_DEACTIVATION
+      ) {
+        throw new BadRequestException('Request type does not match Vendor target');
+      }
+      if (
+        dto.request_type === StatusRequestType.VENDOR_ONBOARDING &&
+        partner.lifecycleStatus !== PartnerLifecycleStatus.PENDING_APPROVAL &&
+        partner.lifecycleStatus !== PartnerLifecycleStatus.REJECTED
+      ) {
+        throw new BadRequestException('Vendor is not eligible for onboarding request');
+      }
+      if (
+        dto.request_type === StatusRequestType.VENDOR_ACTIVATION &&
+        partner.lifecycleStatus !== PartnerLifecycleStatus.INACTIVE
+      ) {
+        throw new BadRequestException('Vendor is not eligible for activation request');
+      }
+      if (
+        dto.request_type === StatusRequestType.VENDOR_DEACTIVATION &&
+        partner.lifecycleStatus !== PartnerLifecycleStatus.ACTIVE
+      ) {
+        throw new BadRequestException('Vendor is not eligible for deactivation request');
+      }
+    } else if (isEngineer) {
+      if (
+        dto.request_type !== StatusRequestType.ENGINEER_ACTIVATION &&
+        dto.request_type !== StatusRequestType.ENGINEER_DEACTIVATION
+      ) {
+        throw new BadRequestException('Request type does not match service engineer target');
+      }
+      if (
+        (dto.request_type === StatusRequestType.ENGINEER_ACTIVATION &&
+          partner.lifecycleStatus !== PartnerLifecycleStatus.INACTIVE) ||
+        (dto.request_type === StatusRequestType.ENGINEER_DEACTIVATION &&
+          partner.lifecycleStatus !== PartnerLifecycleStatus.ACTIVE)
+      ) {
+        throw new BadRequestException('Service engineer is not eligible for this request');
+      }
+      await this.assertEligibleEngineerVendor(partner);
+    } else {
+      throw new BadRequestException('Only Vendor or Service Engineer rows can receive requests');
+    }
+
+    const existing = await this.statusRequestsRepo.findOne({
+      where: {
+        entityType: 'partner',
+        entityId: partner.id,
+        requestType: dto.request_type,
+        status: 'pending',
+      },
+    });
+    if (existing) {
+      throw new ConflictException('An equivalent pending request already exists');
     }
 
     const request = this.statusRequestsRepo.create({
       entityType: 'partner',
       entityId: partner.id,
-      requestedAction: action,
+      requestedAction,
+      requestType: dto.request_type,
+      reason: dto.reason ?? null,
       requestedByAdmin: { id: adminId } as any,
       status: 'pending',
     });
 
-    const saved = await this.statusRequestsRepo.save(request);
+    let saved: StatusChangeRequest;
+    try {
+      saved = await this.statusRequestsRepo.save(request);
+    } catch (error) {
+      if (isPendingRequestUniqueViolation(error)) {
+        throw new ConflictException('An equivalent pending request already exists');
+      }
+      throw error;
+    }
     return {
       id: saved.id,
       entity_type: saved.entityType,
       entity_id: saved.entityId,
       requested_action: saved.requestedAction,
+      request_type: saved.requestType ?? null,
+      reason: saved.reason ?? null,
       requested_by_admin_id: saved.requestedByAdmin.id,
       status: saved.status,
       resolved_by_super_admin_id: saved.resolvedBySuperAdmin?.id ?? null,
@@ -284,17 +361,37 @@ export class PartnersService {
     };
   }
 
-  async setActive(id: number, isActive: boolean): Promise<PartnerResponse> {
-    const row = await this.partnersRepo.findOne({
-      ...PARTNER_READ_OPTIONS,
-      where: { id },
-    });
-    if (!row) {
-      throw new NotFoundException(`Partner with id ${id} not found`);
+  private requestActionForType(type: StatusRequestType): string {
+    if (type === StatusRequestType.VENDOR_ONBOARDING) return 'onboard';
+    if (type === StatusRequestType.VENDOR_ACTIVATION || type === StatusRequestType.ENGINEER_ACTIVATION) {
+      return 'activate';
     }
-    row.isActive = isActive;
-    const saved = await this.partnersRepo.save(row);
-    return this.toResponse(saved);
+    return 'deactivate';
+  }
+
+  private async assertEligibleEngineerVendor(partner: Partner): Promise<void> {
+    const vendorReferenceTypeId = await this.resolveReferenceTypeId('vendor');
+    if (partner.referenceId === null || partner.referenceType?.id !== vendorReferenceTypeId) {
+      throw new BadRequestException('Service engineer has no valid Vendor association');
+    }
+    const vendorTypeId = await this.resolvePartnerTypeId('vendor');
+    const vendor = await this.partnersRepo.findOne({
+      where: {
+        id: partner.referenceId,
+        partnerType: { id: vendorTypeId },
+        createdByAdmin: { id: partner.createdByAdmin.id },
+        lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+      },
+    });
+    if (!vendor) {
+      throw new BadRequestException('Service engineer Vendor association is not eligible');
+    }
+  }
+
+  async setActive(_id: number, _isActive: boolean): Promise<PartnerResponse> {
+    throw new BadRequestException(
+      'Direct Super Admin partner activation is disabled; use the status-request workflow',
+    );
   }
 
   private async resolvePartnerTypeId(type: 'vendor' | 'engineer'): Promise<number> {
@@ -331,11 +428,22 @@ export class PartnersService {
       category_id: row.category?.id ?? null,
       reference_type_id: row.referenceType?.id ?? null,
       reference_id: row.referenceId,
-      is_active: row.isActive,
+      is_active: compatibilityIsActive(
+        row.lifecycleStatus as PartnerLifecycleStatus | null,
+        row.isActive,
+      ),
+      lifecycle_status: row.lifecycleStatus as PartnerLifecycleStatus | null,
       is_deleted: row.isDeleted,
       created_by_admin_id: row.createdByAdmin.id,
       created_at: row.createdAt,
       updated_at: row.updatedAt,
     };
   }
+}
+
+const PENDING_REQUEST_INDEX = 'UQ_status_requests_pending_target_type';
+
+function isPendingRequestUniqueViolation(error: unknown): boolean {
+  const candidate = error as { code?: string; constraint?: string };
+  return candidate.code === '23505' && candidate.constraint === PENDING_REQUEST_INDEX;
 }

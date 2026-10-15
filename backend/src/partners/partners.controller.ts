@@ -5,8 +5,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { Role } from '../auth/roles.enum.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
-import { CreatePartnerDto } from './create-partner.dto.js';
-import { RequestStatusChangeDto } from './request-status-change.dto.js';
+import { CreateVendorDto } from './create-vendor.dto.js';
+import { CreateEngineerDto } from './create-engineer.dto.js';
+import { CreateStatusRequestDto } from '../status-requests/create-status-request.dto.js';
 import { PartnersService } from './partners.service.js';
 import type { PartnerResponse } from './partners.service.js';
 import type { StatusRequestResponse } from '../status-requests/status-requests.service.js';
@@ -49,16 +50,16 @@ export class AdminPartnersController {
 
   @Post()
   create(
-    @Body() dto: CreatePartnerDto,
+    @Body() dto: CreateVendorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<PartnerResponse> {
-    return this.partnersService.createForAdmin(dto, user.userId);
+    return this.partnersService.createVendorForAdmin(dto, user.userId);
   }
 
   @Post(':vendorPartnerId/service-engineers')
   createEngineerUnderVendor(
     @Param('vendorPartnerId', ParseIntPipe) vendorPartnerId: number,
-    @Body() dto: Omit<CreatePartnerDto, 'type'>,
+    @Body() dto: CreateEngineerDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<PartnerResponse> {
     return this.partnersService.createEngineerForVendor(user.userId, vendorPartnerId, dto);
@@ -67,9 +68,9 @@ export class AdminPartnersController {
   @Post(':id/request-status-change')
   requestStatusChange(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: RequestStatusChangeDto,
+    @Body() dto: CreateStatusRequestDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<StatusRequestResponse> {
-    return this.partnersService.requestStatusChange(user.userId, id, dto.action);
+    return this.partnersService.requestStatusChange(user.userId, id, dto);
   }
 }

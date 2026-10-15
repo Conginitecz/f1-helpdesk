@@ -229,7 +229,7 @@ export class InventoryService {
     }
 
     const row = await this.masterDataRepo.findOne({
-      where: { id, isActive: true },
+      where: { id, type: expectedType, isActive: true },
     });
 
     if (!row) {
