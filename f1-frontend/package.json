@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "../backend/node_modules/.bin/tsx --import ./test/setup.ts --test 'test/**/*.test.ts'"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -26,7 +27,10 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
     "postcss": "^8.5",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "5.7.3"
   }

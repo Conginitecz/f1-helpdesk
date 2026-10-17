@@ -27,4 +27,8 @@ export class CreateVendorDto {
   @Type(() => Number)
   @IsInt({ message: 'category_id must be an integer' })
   category_id?: number | null;
+
+  @IsOptional()
+  @IsString()
+  reason?: string | null;
 }

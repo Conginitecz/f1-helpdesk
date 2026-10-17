@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,28 @@ import bcrypt from 'bcryptjs';
 import { Admin } from '../admins/admins.entity.js';
 import { SuperAdmin } from '../super-admins/super-admins.entity.js';
 import { Role } from './roles.enum.js';
+
+/**
+ * Authenticated user profile — returned by GET /auth/me.
+ * Provides the display name and, for Admins, the assigned location name
+ * that the frontend needs for scoping and display.
+ * Super Admins are global (no location assignment), so location_name is null.
+ */
+export interface MeResponse {
+  id: number;
+  role: Role;
+  /** Concatenated first_name + last_name for display. */
+  display_name: string;
+  /** Username, unique per user. */
+  username: string;
+  email: string;
+  /**
+   * Name of the admin's assigned location.
+   * null for super_admin (global access, no location assignment).
+   */
+  location_id: number | null;
+  location_name: string | null;
+}
 
 /**
  * A single, generic failure for every authentication problem (unknown email,
@@ -107,6 +129,59 @@ export class AuthService {
       token_type: 'Bearer',
       expires_in: expiresIn,
       user: { id, role },
+    };
+  }
+
+  /**
+   * Returns the full profile for the currently authenticated user.
+   * Called by GET /auth/me (protected by JwtAuthGuard).
+   * Used by the frontend immediately after login and on page refresh to
+   * restore the display name and, for Admins, the assigned location.
+   */
+  async getMe(userId: number, role: Role): Promise<MeResponse> {
+    if (role === Role.SUPER_ADMIN) {
+      const superAdmin = await this.superAdminsRepo.findOne({
+        select: { id: true, email: true, username: true, firstName: true, lastName: true },
+        where: { id: userId },
+      });
+      if (!superAdmin) {
+        throw new NotFoundException('Authenticated super admin not found');
+      }
+      return {
+        id: superAdmin.id,
+        role,
+        display_name: `${superAdmin.firstName} ${superAdmin.lastName}`.trim(),
+        username: superAdmin.username,
+        email: superAdmin.email,
+        location_id: null,
+        location_name: null,
+      };
+    }
+
+    // Role.ADMIN — load with location relation to get the location name.
+    const admin = await this.adminsRepo.findOne({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        location: { id: true, name: true },
+      },
+      relations: { location: true },
+      where: { id: userId },
+    });
+    if (!admin) {
+      throw new NotFoundException('Authenticated admin not found');
+    }
+    return {
+      id: admin.id,
+      role,
+      display_name: `${admin.firstName} ${admin.lastName}`.trim(),
+      username: admin.username,
+      email: admin.email,
+      location_id: admin.location?.id ?? null,
+      location_name: admin.location?.name ?? null,
     };
   }
 }

@@ -56,6 +56,17 @@ export class AdminPartnersController {
     return this.partnersService.createVendorForAdmin(dto, user.userId);
   }
 
+  @Post('service-engineers')
+  createEngineer(
+    @Body() dto: CreateEngineerDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<PartnerResponse> {
+    if (dto.vendor_id) {
+      return this.partnersService.createEngineerForVendor(user.userId, dto.vendor_id, dto);
+    }
+    return this.partnersService.createDirectEngineerForAdmin(user.userId, dto);
+  }
+
   @Post(':vendorPartnerId/service-engineers')
   createEngineerUnderVendor(
     @Param('vendorPartnerId', ParseIntPipe) vendorPartnerId: number,

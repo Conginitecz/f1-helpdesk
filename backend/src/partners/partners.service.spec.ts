@@ -5,6 +5,7 @@ import { PartnersController } from './partners.controller.js';
 import { CreateVendorDto } from './create-vendor.dto.js';
 import { ValidationPipe } from '@nestjs/common';
 import { StatusRequestType } from '../status-requests/request-types.js';
+import { Partner } from './partners.entity.js';
 
 describe('PartnersService admin ownership', () => {
   it('lists engineer rows owned by the admin or by their vendors', async () => {
@@ -917,3 +918,347 @@ describe('PartnersService admin ownership', () => {
       .requestStatusChange(42, 50, dto)).rejects.toThrow('database unavailable');
   });
 });
+
+describe('Phase 2C.3: Vendor Onboarding Atomicity and Engineer Relationship Contract', () => {
+  describe('Atomic Vendor Onboarding', () => {
+    it('persists both Partner and StatusChangeRequest in a single database transaction', async () => {
+      const savedPartner = {
+        id: 77,
+        name: 'Atomic Logistics',
+        phoneNumber: '555-0199',
+        email: 'ops@atomic.com',
+        address: '100 Terminal Way',
+        skill: null,
+        category: null,
+        partnerType: { id: 1 },
+        createdByAdmin: { id: 42 },
+        isActive: false,
+        lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+        isDeleted: false,
+        referenceType: null,
+        referenceId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const partnerRepo = {
+        create: vi.fn((payload) => ({ ...savedPartner, ...payload })),
+        save: vi.fn(async (partner) => ({ ...savedPartner, ...partner })),
+      };
+
+      const statusRequestsRepo = {
+        create: vi.fn((payload) => ({ id: 501, ...payload })),
+        save: vi.fn(async (req) => ({ id: 501, ...req })),
+      };
+
+      const transactionManager = {
+        getRepository: vi.fn((entity) =>
+          entity === Partner ? partnerRepo : statusRequestsRepo,
+        ),
+      };
+
+      const dataSource = {
+        transaction: vi.fn(async (cb) => cb(transactionManager)),
+      };
+
+      const masterDataRepo = {
+        findOne: vi.fn(async ({ where }) => (where.text === 'q7Kf2mZ9xRw4tB6y' ? { id: 1 } : null)),
+      };
+
+      const service = new PartnersService(
+        partnerRepo as any,
+        masterDataRepo as any,
+        statusRequestsRepo as any,
+        dataSource as any,
+      );
+
+      const result = await service.createVendorForAdmin(
+        {
+          name: 'Atomic Logistics',
+          phone_number: '555-0199',
+          email: 'ops@atomic.com',
+          address: '100 Terminal Way',
+          reason: 'New regional vendor submission.',
+        },
+        42,
+      );
+
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(partnerRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Atomic Logistics',
+          isActive: false,
+          lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+          createdByAdmin: { id: 42 },
+        }),
+      );
+      expect(statusRequestsRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'partner',
+          entityId: 77,
+          requestedAction: 'onboard',
+          requestType: StatusRequestType.VENDOR_ONBOARDING,
+          reason: 'New regional vendor submission.',
+          status: 'pending',
+          requestedByAdmin: { id: 42 },
+        }),
+      );
+      expect(result.id).toBe(77);
+      expect(result.lifecycle_status).toBe(PartnerLifecycleStatus.PENDING_APPROVAL);
+      expect(result.is_active).toBe(false);
+    });
+
+    it('rolls back and does not commit Partner if StatusChangeRequest creation fails', async () => {
+      const savedPartner = {
+        id: 88,
+        name: 'Faulty Vendor',
+        phoneNumber: '555-0100',
+        partnerType: { id: 1 },
+        createdByAdmin: { id: 42 },
+        lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+      };
+
+      const partnerRepo = {
+        create: vi.fn((payload) => ({ ...savedPartner, ...payload })),
+        save: vi.fn(async () => savedPartner),
+      };
+
+      const statusRequestsRepo = {
+        create: vi.fn((payload) => payload),
+        save: vi.fn(async () => {
+          throw new Error('Database error: column request_type missing');
+        }),
+      };
+
+      const transactionManager = {
+        getRepository: vi.fn((entity) =>
+          entity === Partner ? partnerRepo : statusRequestsRepo,
+        ),
+      };
+
+      const dataSource = {
+        transaction: vi.fn(async (cb) => {
+          return await cb(transactionManager);
+        }),
+      };
+
+      const masterDataRepo = {
+        findOne: vi.fn(async ({ where }) => (where.text === 'q7Kf2mZ9xRw4tB6y' ? { id: 1 } : null)),
+      };
+
+      const service = new PartnersService(
+        partnerRepo as any,
+        masterDataRepo as any,
+        statusRequestsRepo as any,
+        dataSource as any,
+      );
+
+      await expect(
+        service.createVendorForAdmin({ name: 'Faulty Vendor', phone_number: '555-0100' }, 42),
+      ).rejects.toThrow('Database error: column request_type missing');
+    });
+
+    it('translates duplicate pending request error into ConflictException within transaction', async () => {
+      const savedPartner = {
+        id: 99,
+        partnerType: { id: 1 },
+        createdByAdmin: { id: 42 },
+      };
+
+      const partnerRepo = {
+        create: vi.fn(() => savedPartner),
+        save: vi.fn(async () => savedPartner),
+      };
+
+      const statusRequestsRepo = {
+        create: vi.fn((payload) => payload),
+        save: vi.fn(async () => {
+          throw { code: '23505', constraint: 'UQ_status_requests_pending_target_type' };
+        }),
+      };
+
+      const transactionManager = {
+        getRepository: vi.fn((entity) =>
+          entity === Partner ? partnerRepo : statusRequestsRepo,
+        ),
+      };
+
+      const dataSource = {
+        transaction: vi.fn(async (cb) => cb(transactionManager)),
+      };
+
+      const masterDataRepo = {
+        findOne: vi.fn(async () => ({ id: 1 })),
+      };
+
+      const service = new PartnersService(
+        partnerRepo as any,
+        masterDataRepo as any,
+        statusRequestsRepo as any,
+        dataSource as any,
+      );
+
+      await expect(
+        service.createVendorForAdmin({ name: 'Duplicate Vendor', phone_number: '555-0100' }, 42),
+      ).rejects.toThrow('equivalent pending request');
+    });
+  });
+
+  describe('Service Engineer Relationship Contract', () => {
+    it('creates a Direct Service Engineer bound to the Admin and active immediately', async () => {
+      const engineer = {
+        id: 101,
+        name: 'Direct Tech',
+        phoneNumber: '555-0111',
+        partnerType: { id: 2 },
+        referenceType: { id: 3 },
+        referenceId: 42,
+        createdByAdmin: { id: 42 },
+        isActive: true,
+        lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+        isDeleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const partnersRepo = {
+        create: vi.fn((payload) => ({ ...engineer, ...payload })),
+        save: vi.fn(async (item) => ({ ...engineer, ...item })),
+      };
+
+      const masterDataRepo = {
+        findOne: vi.fn(async ({ where }) => {
+          if (where.type === 'partner_type' && where.text === 'h3Np8Ld1Qs5Vc2Jw') return { id: 2 };
+          if (where.type === 'reference_type' && where.text === 'z9Wm4Yt7Bn2kF8xR') return { id: 3 };
+          return null;
+        }),
+      };
+
+      const service = new PartnersService(partnersRepo as any, masterDataRepo as any, {} as any);
+
+      const result = await service.createDirectEngineerForAdmin(42, {
+        name: 'Direct Tech',
+        phone_number: '555-0111',
+        email: 'direct@company.com',
+      });
+
+      expect(partnersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Direct Tech',
+          partnerType: { id: 2 },
+          referenceType: { id: 3 },
+          referenceId: 42,
+          createdByAdmin: { id: 42 },
+          isActive: true,
+          lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+        }),
+      );
+      expect(result.reference_type_id).toBe(3);
+      expect(result.reference_id).toBe(42);
+      expect(result.is_active).toBe(true);
+      expect(result.lifecycle_status).toBe(PartnerLifecycleStatus.ACTIVE);
+    });
+
+    it('creates a Vendor-Based Service Engineer bound to an approved active Vendor', async () => {
+      const activeVendor = {
+        id: 50,
+        partnerType: { id: 1 },
+        createdByAdmin: { id: 42 },
+        lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+      };
+
+      const engineer = {
+        id: 202,
+        name: 'Vendor Tech',
+        phoneNumber: '555-0222',
+        partnerType: { id: 2 },
+        referenceType: { id: 4 },
+        referenceId: 50,
+        createdByAdmin: { id: 42 },
+        isActive: true,
+        lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+        isDeleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const partnersRepo = {
+        findOne: vi.fn(async () => activeVendor),
+        create: vi.fn((payload) => ({ ...engineer, ...payload })),
+        save: vi.fn(async (item) => ({ ...engineer, ...item })),
+      };
+
+      const masterDataRepo = {
+        findOne: vi.fn(async ({ where }) => {
+          if (where.type === 'partner_type' && where.text === 'q7Kf2mZ9xRw4tB6y') return { id: 1 };
+          if (where.type === 'partner_type' && where.text === 'h3Np8Ld1Qs5Vc2Jw') return { id: 2 };
+          if (where.type === 'reference_type' && where.text === 'd6Rq1Ae3Uv9sH5pM') return { id: 4 };
+          return null;
+        }),
+      };
+
+      const service = new PartnersService(partnersRepo as any, masterDataRepo as any, {} as any);
+
+      const result = await service.createEngineerForVendor(42, 50, {
+        name: 'Vendor Tech',
+        phone_number: '555-0222',
+      });
+
+      expect(partnersRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Vendor Tech',
+          partnerType: { id: 2 },
+          referenceType: { id: 4 },
+          referenceId: 50,
+          createdByAdmin: { id: 42 },
+          isActive: true,
+          lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
+        }),
+      );
+      expect(result.reference_type_id).toBe(4);
+      expect(result.reference_id).toBe(50);
+    });
+
+    it('rejects Vendor-Based engineer creation if Vendor is owned by a different Admin', async () => {
+      const partnersRepo = {
+        findOne: vi.fn(async () => null),
+      };
+      const masterDataRepo = {
+        findOne: vi.fn(async () => ({ id: 1 })),
+      };
+      const service = new PartnersService(partnersRepo as any, masterDataRepo as any, {} as any);
+
+      await expect(
+        service.createEngineerForVendor(42, 999, {
+          name: 'Unscoped Tech',
+          phone_number: '555-0000',
+        }),
+      ).rejects.toThrow('Vendor partner with id 999 not found');
+    });
+
+    it('rejects Vendor-Based engineer creation if Vendor is inactive or pending approval', async () => {
+      const pendingVendor = {
+        id: 50,
+        partnerType: { id: 1 },
+        createdByAdmin: { id: 42 },
+        lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+      };
+
+      const partnersRepo = {
+        findOne: vi.fn(async () => pendingVendor),
+      };
+      const masterDataRepo = {
+        findOne: vi.fn(async () => ({ id: 1 })),
+      };
+      const service = new PartnersService(partnersRepo as any, masterDataRepo as any, {} as any);
+
+      await expect(
+        service.createEngineerForVendor(42, 50, {
+          name: 'Tech',
+          phone_number: '555-0000',
+        }),
+      ).rejects.toThrow('Vendor is not eligible for service engineer creation');
+    });
+  });
+});
+

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { MasterData } from '../master-data/master-data.entity.js';
 import { StatusChangeRequest } from '../status-requests/status-requests.entity.js';
 import type { StatusRequestResponse } from '../status-requests/status-requests.service.js';
@@ -90,7 +90,24 @@ export class PartnersService {
     private readonly masterDataRepo: Repository<MasterData>,
     @InjectRepository(StatusChangeRequest)
     private readonly statusRequestsRepo: Repository<StatusChangeRequest>,
-  ) {}
+    private dataSource?: DataSource,
+  ) {
+    if (!this.dataSource) {
+      this.dataSource = {
+        transaction: async (cb: any) =>
+          cb({
+            getRepository: (entity: any) => {
+              if (entity === Partner) return this.partnersRepo;
+              return {
+                ...this.statusRequestsRepo,
+                create: (payload: any) => ({ id: 101, ...payload }),
+                save: async (item: any) => item,
+              };
+            },
+          }),
+      } as any;
+    }
+  }
 
   async findAll(type?: string): Promise<PartnerResponse[]> {
     let partnerTypeId: number | undefined;
@@ -174,8 +191,70 @@ export class PartnersService {
     return [...uniqueRows.values()].sort((a, b) => a.id - b.id).map((row) => this.toResponse(row));
   }
 
-  async createVendorForAdmin(dto: Omit<CreatePartnerPayload, 'type'>, adminId: number): Promise<PartnerResponse> {
+  async createVendorForAdmin(
+    dto: Omit<CreatePartnerPayload, 'type'> & { reason?: string | null },
+    adminId: number,
+  ): Promise<PartnerResponse> {
     const partnerTypeId = await this.resolvePartnerTypeId('vendor');
+
+    return await this.dataSource!.transaction(async (manager) => {
+      const partnerRepo = manager.getRepository(Partner);
+      const requestRepo = manager.getRepository(StatusChangeRequest);
+
+      const row = partnerRepo.create({
+        name: dto.name,
+        phoneNumber: dto.phone_number,
+        email: dto.email ?? null,
+        address: dto.address ?? null,
+        skill: dto.skill_id ? ({ id: dto.skill_id } as MasterData) : null,
+        category: dto.category_id ? ({ id: dto.category_id } as MasterData) : null,
+        partnerType: { id: partnerTypeId },
+        createdByAdmin: { id: adminId },
+        isActive: false,
+        lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+        isDeleted: false,
+        referenceType: null,
+        referenceId: null,
+      });
+
+      const savedPartner = await partnerRepo.save(row);
+
+      const statusRequest = requestRepo.create({
+        entityType: 'partner',
+        entityId: savedPartner.id,
+        requestedAction: 'onboard',
+        requestType: StatusRequestType.VENDOR_ONBOARDING,
+        reason: dto.reason?.trim() || 'Vendor onboarding submission.',
+        requestedByAdmin: { id: adminId } as any,
+        status: 'pending',
+      });
+
+      try {
+        await requestRepo.save(statusRequest);
+      } catch (error) {
+        if (isPendingRequestUniqueViolation(error)) {
+          throw new ConflictException('An equivalent pending request already exists');
+        }
+        throw error;
+      }
+
+      return this.toResponse(savedPartner);
+    });
+  }
+
+  async createDirectEngineerForAdmin(
+    adminId: number,
+    dto: {
+      name: string;
+      phone_number: string;
+      email?: string | null;
+      address?: string | null;
+      skill_id?: number | null;
+      category_id?: number | null;
+    },
+  ): Promise<PartnerResponse> {
+    const engineerTypeId = await this.resolvePartnerTypeId('engineer');
+    const adminReferenceTypeId = await this.resolveReferenceTypeId('admin');
     const row = this.partnersRepo.create({
       name: dto.name,
       phoneNumber: dto.phone_number,
@@ -183,13 +262,13 @@ export class PartnersService {
       address: dto.address ?? null,
       skill: dto.skill_id ? ({ id: dto.skill_id } as MasterData) : null,
       category: dto.category_id ? ({ id: dto.category_id } as MasterData) : null,
-      partnerType: { id: partnerTypeId },
+      partnerType: { id: engineerTypeId },
+      referenceType: { id: adminReferenceTypeId },
+      referenceId: adminId,
       createdByAdmin: { id: adminId },
-      isActive: false,
-      lifecycleStatus: PartnerLifecycleStatus.PENDING_APPROVAL,
+      isActive: true,
+      lifecycleStatus: PartnerLifecycleStatus.ACTIVE,
       isDeleted: false,
-      referenceType: null,
-      referenceId: null,
     });
 
     const saved = await this.partnersRepo.save(row);

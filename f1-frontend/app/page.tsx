@@ -1,12 +1,69 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { loginWithMockCredentials, validateMockLogin, type MockUser } from '../lib/mock-auth'
-import { locationService, type Location, type LocationStatus } from '../lib/locations-service'
-import { adminService, type Admin, type AdminStatus } from '../lib/admin-service'
-import { vendorService, type VendorRecord, type VendorForm, type VendorStatusRequest, emptyVendorForm, validateVendorInput, vendorScopeAllows, vendorStatusRequests } from '../lib/vendors-service'
-import { engineerService, type EngineerRecord, type EngineerStatusRequest, engineerInAdminScope, pendingEngineerRequest } from '../lib/engineers-service'
-import { requestService, type RequestRecord, requestTypeLabel } from '../lib/requests-service'
+import { useState, useEffect } from "react";
+import {
+  loginWithMockCredentials,
+  validateMockLogin,
+  type MockUser,
+} from "../lib/mock-auth";
+import {
+  realLogin,
+  restoreSession,
+  realLogout,
+  isApiConfigured,
+  type AppUser,
+} from "../lib/auth";
+import {
+  locationService,
+  type Location,
+  type LocationStatus,
+} from "../lib/locations-service";
+import {
+  adminService,
+  type Admin,
+  type AdminStatus,
+} from "../lib/admin-service";
+import {
+  vendorService,
+  type VendorRecord,
+  type VendorForm,
+  type VendorStatusRequest,
+  emptyVendorForm,
+  validateVendorInput,
+  vendorScopeAllows,
+  vendorStatusRequests,
+} from "../lib/vendors-service";
+import {
+  engineerService,
+  type EngineerRecord,
+  type EngineerStatusRequest,
+  engineerInAdminScope,
+  pendingEngineerRequest,
+} from "../lib/engineers-service";
+import {
+  requestService,
+  type RequestRecord,
+  requestTypeLabel,
+} from "../lib/requests-service";
+import {
+  inventoryService,
+  type InventoryItem,
+  type CreateInventoryInput,
+  type UpdateInventoryInput,
+} from "../lib/inventory-service";
+import {
+  configurationService,
+  type ConfigurationItem,
+  configKeyTitle,
+  configDisplayValue,
+} from "../lib/config-service";
+import {
+  masterDataService,
+  type MasterDataItem,
+  type MasterDataType,
+  MASTER_DATA_TYPES,
+  masterDataTypeLabel,
+} from "../lib/master-data-service";
 import {
   ArrowRight,
   Bell,
@@ -32,280 +89,5438 @@ import {
   Building2,
   Eye,
   EyeOff,
-} from 'lucide-react'
+} from "lucide-react";
 
-type Role = 'SUPER_ADMIN' | 'ADMIN'
-type Status = 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'REJECTED'
-type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
-type RequestType = 'VENDOR_ONBOARDING' | 'VENDOR_DEACTIVATION' | 'SERVICE_ENGINEER_ACTIVATION' | 'SERVICE_ENGINEER_DEACTIVATION'
+type Role = "SUPER_ADMIN" | "ADMIN";
+type Status = "ACTIVE" | "INACTIVE" | "PENDING_APPROVAL" | "REJECTED";
+type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+type RequestType =
+  | "VENDOR_ONBOARDING"
+  | "VENDOR_DEACTIVATION"
+  | "SERVICE_ENGINEER_ACTIVATION"
+  | "SERVICE_ENGINEER_DEACTIVATION";
 
-type Vendor = VendorRecord
-type Engineer = { id: string; name: string; relationship: 'DIRECT' | 'VENDOR_BASED'; vendor?: string; location: string; status: 'ACTIVE' | 'INACTIVE' }
-type Approval = { id: string; type: RequestType; entity: string; action: string; current: string; requester: string; location: string; reason: string; status: RequestStatus; created: string }
+type Vendor = VendorRecord;
+type Engineer = {
+  id: string;
+  name: string;
+  relationship: "DIRECT" | "VENDOR_BASED";
+  vendor?: string;
+  location: string;
+  status: "ACTIVE" | "INACTIVE";
+};
+type Approval = {
+  id: string;
+  type: RequestType;
+  entity: string;
+  action: string;
+  current: string;
+  requester: string;
+  location: string;
+  reason: string;
+  status: RequestStatus;
+  created: string;
+};
 
-  const navSuper = [
-  ['Overview', LayoutDashboard], ['Locations', MapPin], ['Admins', Users], ['Vendors', Building2], ['Service Engineers', ShieldCheck], ['Approval Requests', ClipboardCheck], ['Inventory', Package],
-  ] as const
-const navAdmin = [['Overview', LayoutDashboard], ['Vendors', Building2], ['Service Engineers', ShieldCheck], ['My Requests', ClipboardCheck], ['Inventory', Package]] as const
+const navSuper = [
+  ["Overview", LayoutDashboard],
+  ["Locations", MapPin],
+  ["Admins", Users],
+  ["Vendors", Building2],
+  ["Service Engineers", ShieldCheck],
+  ["Approval Requests", ClipboardCheck],
+  ["Inventory", Package],
+  ["Configuration", Settings],
+  ["Master Data", Database],
+] as const;
+const navAdmin = [
+  ["Overview", LayoutDashboard],
+  ["Vendors", Building2],
+  ["Service Engineers", ShieldCheck],
+  ["My Requests", ClipboardCheck],
+  ["Inventory", Package],
+] as const;
 
 const initialEngineers: Engineer[] = [
-  { id: 'e-1', name: 'Marcus Chen', relationship: 'VENDOR_BASED', vendor: 'Apex Technical Services', location: 'Downtown HQ', status: 'ACTIVE' },
-  { id: 'e-2', name: 'Priya Shah', relationship: 'DIRECT', location: 'Downtown HQ', status: 'ACTIVE' },
-  { id: 'e-3', name: 'Ethan Brooks', relationship: 'VENDOR_BASED', vendor: 'BluePeak Maintenance', location: 'Downtown HQ', status: 'INACTIVE' },
-  { id: 'e-4', name: 'Sofia Rodriguez', relationship: 'DIRECT', location: 'North Campus', status: 'ACTIVE' },
-]
-const inventoryRecords = [{ name: 'CCTV Camera', category: 'Security', quantity: 24, value: '$148.00', location: 'Downtown HQ', status: 'Active' }, { name: 'Network Router', category: 'Networking', quantity: 12, value: '$220.00', location: 'North Campus', status: 'Active' }, { name: 'Power Supply Unit', category: 'Hardware', quantity: 18, value: '$64.00', location: 'Downtown HQ', status: 'Active' }, { name: 'Fiber Patch Cable', category: 'Cabling', quantity: 86, value: '$12.50', location: 'West Operations', status: 'Active' }] as const
+  {
+    id: "e-1",
+    name: "Marcus Chen",
+    relationship: "VENDOR_BASED",
+    vendor: "Apex Technical Services",
+    location: "Downtown HQ",
+    status: "ACTIVE",
+  },
+  {
+    id: "e-2",
+    name: "Priya Shah",
+    relationship: "DIRECT",
+    location: "Downtown HQ",
+    status: "ACTIVE",
+  },
+  {
+    id: "e-3",
+    name: "Ethan Brooks",
+    relationship: "VENDOR_BASED",
+    vendor: "BluePeak Maintenance",
+    location: "Downtown HQ",
+    status: "INACTIVE",
+  },
+  {
+    id: "e-4",
+    name: "Sofia Rodriguez",
+    relationship: "DIRECT",
+    location: "North Campus",
+    status: "ACTIVE",
+  },
+];
+
 const initialApprovals: Approval[] = [
-  { id: 'APR-1048', type: 'VENDOR_ONBOARDING', entity: 'Northstar Field Support', action: 'Approve onboarding', current: 'Pending Approval', requester: 'Noah Williams', location: 'North Campus', reason: 'New regional support coverage for the north campus.', status: 'PENDING', created: 'Today, 09:42 AM' },
-]
+  {
+    id: "APR-1048",
+    type: "VENDOR_ONBOARDING",
+    entity: "Northstar Field Support",
+    action: "Approve onboarding",
+    current: "Pending Approval",
+    requester: "Noah Williams",
+    location: "North Campus",
+    reason: "New regional support coverage for the north campus.",
+    status: "PENDING",
+    created: "Today, 09:42 AM",
+  },
+];
 
 function Logo() {
-  return <div className="brand"><div className="brand-mark">F1</div><div><strong>F1 Help Desk</strong><span>Operations Console</span></div></div>
+  return (
+    <div className="brand">
+      <div className="brand-mark">F1</div>
+      <div>
+        <strong>F1 Help Desk</strong>
+        <span>Operations Console</span>
+      </div>
+    </div>
+  );
 }
 function StatusBadge({ status }: { status: string }) {
-  const label = status === 'PENDING_APPROVAL' ? 'Pending approval' : status[0] + status.slice(1).toLowerCase()
-  return <span className={`status status-${status.toLowerCase()}`}>{label}</span>
+  const label =
+    status === "PENDING_APPROVAL"
+      ? "Pending approval"
+      : status[0] + status.slice(1).toLowerCase();
+  return (
+    <span className={`status status-${status.toLowerCase()}`}>{label}</span>
+  );
 }
-function Metric({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: typeof Users; tone?: string }) {
-  return <div className="metric"><div className={`metric-icon ${tone || ''}`}><Icon size={18} /></div><div><span>{label}</span><strong>{value}</strong></div></div>
+function Metric({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof Users;
+  tone?: string;
+}) {
+  const metricColor = {
+    teal: {
+      background: "#e5f7f3",
+      color: "#0f9488",
+    },
+    purple: {
+      background: "#f0edfb",
+      color: "#7257b6",
+    },
+    amber: {
+      background: "#fff4d8",
+      color: "#b7791f",
+    },
+    rose: {
+      background: "#fff0ef",
+      color: "#c64b46",
+    },
+    default: {
+      background: "#fff0ef",
+      color: "blue",
+    },
+  };
+  return (
+    <div className="metric">
+      <div className="w-8">
+        <div className={`w-40 mt-2px flex justify-between items-center ${tone || ""}`}>
+          <span style={{ color: "var(--muted)" }} className={"flex "}>{label}</span>
+          <Icon
+            size={18}
+            color={
+              metricColor[(tone || "default") as keyof typeof metricColor]
+                ?.color || "black"
+            }
+          />
+          {/* {JSON.stringify(
+            metricColor[(tone || "default") as keyof typeof metricColor]?.color,
+          )} */}
+        </div>
+        <strong className={"m-0 p-0"}>{value}</strong>
+      </div>
+    </div>
+  );
 }
 
 export default function Page() {
-  const [user, setUser] = useState<MockUser | null>(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loginError, setLoginError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [page, setPage] = useState('Overview')
-  const [mobileNav, setMobileNav] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [vendors, setVendors] = useState<Vendor[]>(() => vendorService.snapshot())
-  const [editingVendor, setEditingVendor] = useState<VendorRecord | null>(null)
-  const [vendorForm, setVendorForm] = useState<VendorForm>(emptyVendorForm)
-  const [vendorSaving, setVendorSaving] = useState(false)
-  const [vendorError, setVendorError] = useState('')
-  const [vendorDetail, setVendorDetail] = useState<VendorRecord | null>(null)
-  const [statusRequests, setStatusRequests] = useState<VendorStatusRequest[]>(() => vendorStatusRequests())
-  const [requestTarget, setRequestTarget] = useState<{ vendor: VendorRecord; action: 'ACTIVATE' | 'DEACTIVATE' } | null>(null)
-  const [engineers, setEngineers] = useState<EngineerRecord[]>(() => engineerService.snapshot())
-  const [engineerRequests, setEngineerRequests] = useState<EngineerStatusRequest[]>(() => engineerService.requests())
-  const [engineerDetail, setEngineerDetail] = useState<EngineerRecord | null>(null)
-  const [editingEngineer, setEditingEngineer] = useState<EngineerRecord | null>(null)
-  const [engineerSearch, setEngineerSearch] = useState('')
-  const [approvals, setApprovals] = useState(initialApprovals)
-  const [canonicalRequests, setCanonicalRequests] = useState<RequestRecord[]>(() => requestService.snapshot())
-  const [requestSearch, setRequestSearch] = useState('')
-  const [requestTab, setRequestTab] = useState<'PENDING' | 'ALL' | 'APPROVED' | 'REJECTED'>('PENDING')
-  const [requestDetail, setRequestDetail] = useState<RequestRecord | null>(null)
-  const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null)
-  const [toast, setToast] = useState('')
-  const [search, setSearch] = useState('')
-  const [demoBOpen, setDemoBOpen] = useState(false)
-  const [admins, setAdmins] = useState<Admin[]>(() => adminService.snapshot())
-  const [adminSearch, setAdminSearch] = useState('')
-  const [adminStatusFilter, setAdminStatusFilter] = useState<'ALL' | AdminStatus>('ALL')
-  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null)
-  const [adminForm, setAdminForm] = useState({ name: '', email: '', location: '', status: 'ACTIVE' as AdminStatus })
-  const [adminSaving, setAdminSaving] = useState(false)
-  const [adminError, setAdminError] = useState('')
+  const [user, setUser] = useState<AppUser | MockUser | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [page, setPage] = useState("Overview");
+  const [mobileNav, setMobileNav] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [vendors, setVendors] = useState<Vendor[]>(() =>
+    vendorService.snapshot(),
+  );
+  const [editingVendor, setEditingVendor] = useState<VendorRecord | null>(null);
+  const [vendorForm, setVendorForm] = useState<VendorForm>(emptyVendorForm);
+  const [vendorSaving, setVendorSaving] = useState(false);
+  const [vendorError, setVendorError] = useState("");
+  const [vendorDetail, setVendorDetail] = useState<VendorRecord | null>(null);
+  const [statusRequests, setStatusRequests] = useState<VendorStatusRequest[]>(
+    () => vendorStatusRequests(),
+  );
+  const [requestTarget, setRequestTarget] = useState<{
+    vendor: VendorRecord;
+    action: "ACTIVATE" | "DEACTIVATE";
+  } | null>(null);
+  const [engineers, setEngineers] = useState<EngineerRecord[]>(() =>
+    engineerService.snapshot(),
+  );
+  const [engineerRequests, setEngineerRequests] = useState<
+    EngineerStatusRequest[]
+  >(() => engineerService.requests());
+  const [engineerDetail, setEngineerDetail] = useState<EngineerRecord | null>(
+    null,
+  );
+  const [editingEngineer, setEditingEngineer] = useState<EngineerRecord | null>(
+    null,
+  );
+  const [engineerSearch, setEngineerSearch] = useState("");
+  const [approvals, setApprovals] = useState(initialApprovals);
+  const [canonicalRequests, setCanonicalRequests] = useState<RequestRecord[]>(
+    () => requestService.snapshot(),
+  );
+  const [requestSearch, setRequestSearch] = useState("");
+  const [requestTab, setRequestTab] = useState<
+    "PENDING" | "ALL" | "APPROVED" | "REJECTED"
+  >("PENDING");
+  const [requestDetail, setRequestDetail] = useState<RequestRecord | null>(
+    null,
+  );
+  const [selectedApproval, setSelectedApproval] = useState<Approval | null>(
+    null,
+  );
+  const [toast, setToast] = useState("");
+  const [search, setSearch] = useState("");
+  const [demoBOpen, setDemoBOpen] = useState(false);
+  const [admins, setAdmins] = useState<Admin[]>(() => adminService.snapshot());
+  const [adminSearch, setAdminSearch] = useState("");
+  const [adminStatusFilter, setAdminStatusFilter] = useState<
+    "ALL" | AdminStatus
+  >("ALL");
+  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [adminForm, setAdminForm] = useState<{
+    name: string;
+    email: string;
+    username?: string;
+    password?: string;
+    phoneNumber?: string;
+    address?: string;
+    location: string;
+    status: AdminStatus;
+  }>({ name: "", email: "", location: "", status: "ACTIVE" as AdminStatus });
+  const [adminSaving, setAdminSaving] = useState(false);
+  const [adminError, setAdminError] = useState("");
+  const [loadErrors, setLoadErrors] = useState<{
+    vendors?: string;
+    engineers?: string;
+    requests?: string;
+    inventory?: string;
+    config?: string;
+    masterData?: string;
+  }>({});
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() =>
+    inventoryService.snapshot(),
+  );
+  const [editingInventory, setEditingInventory] =
+    useState<InventoryItem | null>(null);
+  const [inventoryDrawerOpen, setInventoryDrawerOpen] = useState(false);
+  const [inventorySaving, setInventorySaving] = useState(false);
+  const [inventoryError, setInventoryError] = useState("");
 
-  const pending = canonicalRequests.filter((item) => item.status === 'PENDING')
-  function decide(approval: Approval, outcome: 'APPROVED' | 'REJECTED') { const record = canonicalRequests.find((item) => item.entity === approval.entity && item.type === approval.type && item.status === 'PENDING'); if (!record) { notify('Request is no longer pending.'); return }; const feedback = outcome === 'REJECTED' ? window.prompt('Rejection feedback') || '' : ''; void requestService.decide(record.id, outcome, feedback).then((updated) => { setCanonicalRequests(requestService.snapshot()); void applyCanonicalDecision(updated); setSelectedApproval(null); notify(outcome === 'APPROVED' ? 'Request approved successfully.' : 'Request rejected. Entity status unchanged.') }).catch((cause) => notify(cause instanceof Error ? cause.message : 'Unable to decide request.')) }
-  const nav = user?.role === 'SUPER_ADMIN' ? navSuper : navAdmin
-  const scopedVendors = user?.role === 'ADMIN' ? vendors.filter((v) => vendorScopeAllows(user.location, v)) : vendors
-  const visibleEngineers = user?.role === 'ADMIN' && user ? engineers.filter((engineer) => engineerInAdminScope(engineer, user)) : engineers
-  const visibleLocations = user?.role === 'ADMIN' && user ? locationService.snapshot().filter((location) => location.name === user.location) : locationService.snapshot()
-  const visibleAdmins = user?.role === 'ADMIN' && user ? admins.filter((admin) => admin.name === user.name || admin.location === user.location) : admins
-  const visibleApprovals = user?.role === 'ADMIN' && user ? pending.filter((item) => item.requester === user.name) : pending
-  const inventoryCount = user?.role === 'ADMIN' && user ? inventoryRecords.filter((item) => item.location === user.location).reduce((sum, item) => sum + item.quantity, 0) : inventoryRecords.reduce((sum, item) => sum + item.quantity, 0)
-  const dashboardApprovals = visibleApprovals.map((request) => ({ id: request.id, type: request.type as RequestType, entity: request.entity, action: request.action, current: request.currentStatus, requester: request.requester, location: request.location, reason: request.reason, status: request.status as RequestStatus, created: request.createdAt }))
-  const filteredVendors = scopedVendors.filter((v) => v.name.toLowerCase().includes(search.toLowerCase()))
+  const [configs, setConfigs] = useState<ConfigurationItem[]>(() =>
+    configurationService.snapshot(),
+  );
+  const [editingConfig, setEditingConfig] = useState<ConfigurationItem | null>(
+    null,
+  );
+  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [configError, setConfigError] = useState("");
+
+  const [masterDataItems, setMasterDataItems] = useState<MasterDataItem[]>(() =>
+    masterDataService.snapshot(),
+  );
+  const [masterDataTab, setMasterDataTab] = useState<MasterDataType>(
+    "service_engineer_skill",
+  );
+  const [masterDataSearch, setMasterDataSearch] = useState("");
+  const [editingMasterData, setEditingMasterData] =
+    useState<MasterDataItem | null>(null);
+  const [masterDataDrawerOpen, setMasterDataDrawerOpen] = useState(false);
+  const [masterDataSaving, setMasterDataSaving] = useState(false);
+  const [masterDataError, setMasterDataError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void restoreSession().then((restored) => {
+      if (active && restored) {
+        setUser(restored);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user || !isApiConfigured()) return;
+
+    if (user.role) {
+      void vendorService
+        .list(user.role)
+        .then((loadedVendors) => {
+          setVendors(loadedVendors);
+          setLoadErrors((prev) => ({ ...prev, vendors: undefined }));
+        })
+        .catch((err) => {
+          console.warn(
+            "[Page] Vendors API fetch failed (pending DB migration):",
+            err,
+          );
+          setVendors([]);
+          setLoadErrors((prev) => ({
+            ...prev,
+            vendors:
+              err instanceof Error
+                ? err.message
+                : "Failed to synchronize vendors with backend.",
+          }));
+        });
+      void engineerService
+        .list(user.role)
+        .then((loadedEngineers) => {
+          setEngineers(loadedEngineers);
+          setLoadErrors((prev) => ({ ...prev, engineers: undefined }));
+        })
+        .catch((err) => {
+          console.warn(
+            "[Page] Engineers API fetch failed (pending DB migration):",
+            err,
+          );
+          setEngineers([]);
+          setLoadErrors((prev) => ({
+            ...prev,
+            engineers:
+              err instanceof Error
+                ? err.message
+                : "Failed to synchronize service engineers with backend.",
+          }));
+        });
+      void requestService
+        .list(user.role)
+        .then((loadedRequests) => {
+          setCanonicalRequests(loadedRequests);
+          setStatusRequests(vendorStatusRequests());
+          setEngineerRequests(engineerService.requests());
+          setLoadErrors((prev) => ({ ...prev, requests: undefined }));
+        })
+        .catch((err) => {
+          console.warn("[Page] Status requests API fetch failed:", err);
+          setCanonicalRequests([]);
+          setStatusRequests([]);
+          setEngineerRequests([]);
+          setLoadErrors((prev) => ({
+            ...prev,
+            requests:
+              err instanceof Error
+                ? err.message
+                : "Failed to synchronize approval requests with backend.",
+          }));
+        });
+      void inventoryService
+        .list(user.role)
+        .then((loadedInventory) => {
+          setInventoryItems(loadedInventory);
+          setLoadErrors((prev) => ({ ...prev, inventory: undefined }));
+        })
+        .catch((err) => {
+          console.warn("[Page] Inventory API fetch failed:", err);
+          setInventoryItems([]);
+          setLoadErrors((prev) => ({
+            ...prev,
+            inventory:
+              err instanceof Error
+                ? err.message
+                : "Failed to synchronize inventory with backend.",
+          }));
+        });
+
+      if (user.role === "SUPER_ADMIN") {
+        void locationService
+          .list()
+          .then(() => {
+            void adminService
+              .list()
+              .then((loadedAdmins) => {
+                setAdmins(loadedAdmins);
+              })
+              .catch((err) => {
+                console.warn("[Page] Admins API fetch failed:", err);
+              });
+          })
+          .catch((err) => {
+            console.warn("[Page] Locations API fetch failed:", err);
+          });
+
+        void configurationService
+          .list()
+          .then((loadedConfigs) => {
+            setConfigs(loadedConfigs);
+            setLoadErrors((prev) => ({ ...prev, config: undefined }));
+          })
+          .catch((err) => {
+            console.warn("[Page] Configurations API fetch failed:", err);
+            setConfigs([]);
+            setLoadErrors((prev) => ({
+              ...prev,
+              config:
+                err instanceof Error
+                  ? err.message
+                  : "Failed to synchronize configurations with backend.",
+            }));
+          });
+
+        void masterDataService
+          .list("SUPER_ADMIN")
+          .then((loadedMasterData) => {
+            setMasterDataItems(loadedMasterData);
+            setLoadErrors((prev) => ({ ...prev, masterData: undefined }));
+          })
+          .catch((err) => {
+            console.warn("[Page] MasterData API fetch failed:", err);
+            setMasterDataItems([]);
+            setLoadErrors((prev) => ({
+              ...prev,
+              masterData:
+                err instanceof Error
+                  ? err.message
+                  : "Failed to synchronize master data with backend.",
+            }));
+          });
+      } else if (user.role === "ADMIN") {
+        void masterDataService
+          .list("ADMIN")
+          .then((loadedMasterData) => {
+            setMasterDataItems(loadedMasterData);
+          })
+          .catch((err) => {
+            console.warn("[Page] Admin master data API fetch failed:", err);
+          });
+      }
+    }
+  }, [user?.role, user?.id]);
+
+  const pending = canonicalRequests.filter((item) => item.status === "PENDING");
+  function decide(approval: Approval, outcome: "APPROVED" | "REJECTED") {
+    const record = canonicalRequests.find(
+      (item) =>
+        item.entity === approval.entity &&
+        item.type === approval.type &&
+        item.status === "PENDING",
+    );
+    if (!record) {
+      notify("Request is no longer pending.");
+      return;
+    }
+    const feedback =
+      outcome === "REJECTED" ? window.prompt("Rejection feedback") || "" : "";
+    void requestService
+      .decide(record.id, outcome, feedback)
+      .then((updated) => {
+        setCanonicalRequests(requestService.snapshot());
+        void applyCanonicalDecision(updated);
+        setSelectedApproval(null);
+        notify(
+          outcome === "APPROVED"
+            ? "Request approved successfully."
+            : "Request rejected. Entity status unchanged.",
+        );
+      })
+      .catch((cause) =>
+        notify(
+          cause instanceof Error ? cause.message : "Unable to decide request.",
+        ),
+      );
+  }
+  const nav = user?.role === "SUPER_ADMIN" ? navSuper : navAdmin;
+  const scopedVendors =
+    user?.role === "ADMIN"
+      ? vendors.filter((v) => vendorScopeAllows(user.location, v))
+      : vendors;
+  const visibleEngineers =
+    user?.role === "ADMIN" && user
+      ? engineers.filter((engineer) => engineerInAdminScope(engineer, user))
+      : engineers;
+  const visibleLocations =
+    user?.role === "ADMIN" && user
+      ? locationService
+          .snapshot()
+          .filter((location) => location.name === user.location)
+      : locationService.snapshot();
+  const visibleAdmins =
+    user?.role === "ADMIN" && user
+      ? admins.filter(
+          (admin) =>
+            admin.name === user.name || admin.location === user.location,
+        )
+      : admins;
+  const visibleApprovals =
+    user?.role === "ADMIN" && user
+      ? pending.filter((item) => item.requester === user.name)
+      : pending;
+  const inventoryCount = inventoryItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+  function openInventoryEditor(item?: InventoryItem) {
+    setEditingInventory(item || null);
+    setInventoryError("");
+    setInventoryDrawerOpen(true);
+  }
+  async function saveInventory(
+    input: CreateInventoryInput | UpdateInventoryInput,
+    isEdit: boolean,
+    editId?: string,
+  ) {
+    if (!user) return;
+    setInventorySaving(true);
+    setInventoryError("");
+    try {
+      if (isEdit && editId) {
+        const updated = await inventoryService.update(
+          editId,
+          input as UpdateInventoryInput,
+        );
+        setInventoryItems(inventoryService.snapshot());
+        setInventoryDrawerOpen(false);
+        setEditingInventory(null);
+        notify(`Inventory item "${updated.name}" updated successfully.`);
+      } else {
+        const created = await inventoryService.create(
+          user.role,
+          input as CreateInventoryInput,
+        );
+        setInventoryItems(inventoryService.snapshot());
+        setInventoryDrawerOpen(false);
+        setEditingInventory(null);
+        notify(`Inventory item "${created.name}" created successfully.`);
+      }
+    } catch (cause) {
+      setInventoryError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to save inventory item.",
+      );
+    } finally {
+      setInventorySaving(false);
+    }
+  }
+
+  function openConfigEditor(item: ConfigurationItem) {
+    setEditingConfig(item);
+    setConfigError("");
+    setConfigDrawerOpen(true);
+  }
+
+  async function saveConfig(key: string, value: string) {
+    setConfigSaving(true);
+    setConfigError("");
+    try {
+      const updated = await configurationService.update(key, value);
+      setConfigs(configurationService.snapshot());
+      setConfigDrawerOpen(false);
+      setEditingConfig(null);
+      notify(
+        `Configuration "${configKeyTitle(updated.key)}" updated successfully.`,
+      );
+    } catch (cause) {
+      setConfigError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to save configuration.",
+      );
+    } finally {
+      setConfigSaving(false);
+    }
+  }
+
+  function openMasterDataEditor(item?: MasterDataItem) {
+    setEditingMasterData(item || null);
+    setMasterDataError("");
+    setMasterDataDrawerOpen(true);
+  }
+
+  async function saveMasterData(
+    type: MasterDataType,
+    text: string,
+    isEdit: boolean,
+    editId?: string,
+  ) {
+    setMasterDataSaving(true);
+    setMasterDataError("");
+    try {
+      if (isEdit && editId) {
+        await masterDataService.update(editId, text);
+        setMasterDataItems(masterDataService.snapshot());
+        setMasterDataDrawerOpen(false);
+        setEditingMasterData(null);
+        notify("Master data entry updated successfully.");
+      } else {
+        await masterDataService.create({ type, text });
+        setMasterDataItems(masterDataService.snapshot());
+        setMasterDataDrawerOpen(false);
+        setEditingMasterData(null);
+        notify("Master data entry created successfully.");
+      }
+    } catch (cause) {
+      setMasterDataError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to save master data entry.",
+      );
+    } finally {
+      setMasterDataSaving(false);
+    }
+  }
+  const dashboardApprovals = visibleApprovals.map((request) => ({
+    id: request.id,
+    type: request.type as RequestType,
+    entity: request.entity,
+    action: request.action,
+    current: request.currentStatus,
+    requester: request.requester,
+    location: request.location,
+    reason: request.reason,
+    status: request.status as RequestStatus,
+    created: request.createdAt,
+  }));
+  const filteredVendors = scopedVendors.filter((v) =>
+    v.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (isSubmitting) return
-    const validationError = validateMockLogin(email, password)
+    event.preventDefault();
+    if (isSubmitting) return;
+    const validationError = validateMockLogin(email, password);
     if (validationError) {
-      setLoginError(validationError)
-      return
+      setLoginError(validationError);
+      return;
     }
-    setLoginError('')
-    setIsSubmitting(true)
-    const result = await loginWithMockCredentials(email, password)
-    setIsSubmitting(false)
-    if (result.ok) {
-      setUser(result.session.user)
-      setPage('Overview')
-      setPassword('')
-    } else {
-      setLoginError(result.error)
+    setLoginError("");
+    setIsSubmitting(true);
+    try {
+      if (isApiConfigured()) {
+        const result = await realLogin(email, password);
+        if (result.ok) {
+          setUser(result.user);
+          setPage("Overview");
+          setPassword("");
+          return;
+        }
+        setLoginError(result.error);
+        return;
+      }
+
+      const result = await loginWithMockCredentials(email, password);
+      if (result.ok) {
+        setUser(result.session.user);
+        setPage("Overview");
+        setPassword("");
+      } else {
+        setLoginError(result.error);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   }
-  function notify(message: string) { setToast(message); window.setTimeout(() => setToast(''), 2600) }
+
+  async function handleSignOut() {
+    await realLogout();
+    setUser(null);
+  }
+  function notify(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2600);
+  }
   async function applyCanonicalDecision(record: RequestRecord) {
-    if (record.type === 'VENDOR_ONBOARDING') { if (record.status === 'APPROVED') await vendorService.approveOnboarding(record.entityId); if (record.status === 'REJECTED') await vendorService.rejectOnboarding(record.entityId) }
-    if (record.status !== 'APPROVED') { setVendors(vendorService.snapshot()); setEngineers(engineerService.snapshot()); return }
-    if (record.type === 'VENDOR_ACTIVATION' || record.type === 'VENDOR_DEACTIVATION') await vendorService.applyStatus(record.entityId, record.type === 'VENDOR_DEACTIVATION' ? 'INACTIVE' : 'ACTIVE')
-    if (record.type === 'SERVICE_ENGINEER_ACTIVATION' || record.type === 'SERVICE_ENGINEER_DEACTIVATION') await engineerService.applyStatus(record.entityId, record.type === 'SERVICE_ENGINEER_ACTIVATION' ? 'ACTIVE' : 'INACTIVE')
-    setVendors(vendorService.snapshot()); setEngineers(engineerService.snapshot())
+    if (record.type === "VENDOR_ONBOARDING") {
+      if (record.status === "APPROVED")
+        await vendorService.approveOnboarding(record.entityId);
+      if (record.status === "REJECTED")
+        await vendorService.rejectOnboarding(record.entityId);
+    }
+    if (record.status !== "APPROVED") {
+      setVendors(vendorService.snapshot());
+      setEngineers(engineerService.snapshot());
+      return;
+    }
+    if (
+      record.type === "VENDOR_ACTIVATION" ||
+      record.type === "VENDOR_DEACTIVATION"
+    )
+      await vendorService.applyStatus(
+        record.entityId,
+        record.type === "VENDOR_DEACTIVATION" ? "INACTIVE" : "ACTIVE",
+      );
+    if (
+      record.type === "SERVICE_ENGINEER_ACTIVATION" ||
+      record.type === "SERVICE_ENGINEER_DEACTIVATION"
+    )
+      await engineerService.applyStatus(
+        record.entityId,
+        record.type === "SERVICE_ENGINEER_ACTIVATION" ? "ACTIVE" : "INACTIVE",
+      );
+    setVendors(vendorService.snapshot());
+    setEngineers(engineerService.snapshot());
   }
   function openAdminEditor(admin?: Admin) {
-    const next = admin || { id: '', name: '', email: '', location: locationService.snapshot()[0]?.name || '', status: 'ACTIVE' as AdminStatus, createdAt: '' }
-    setEditingAdmin(next)
-    setAdminForm({ name: next.name, email: next.email, location: next.location, status: next.status })
-    setAdminError('')
+    const defaultLocation = locationService.snapshot()[0]?.name || "";
+    const next = admin || {
+      id: "",
+      name: "",
+      email: "",
+      username: "",
+      phoneNumber: "",
+      address: "",
+      location: defaultLocation,
+      status: "ACTIVE" as AdminStatus,
+      createdAt: "",
+    };
+    setEditingAdmin(next);
+    setAdminForm({
+      name: next.name,
+      email: next.email,
+      username: next.username || "",
+      password: "",
+      phoneNumber: next.phoneNumber || "",
+      address: next.address || "",
+      location: next.location || defaultLocation,
+      status: next.status,
+    });
+    setAdminError("");
   }
   async function saveAdmin(event: React.FormEvent) {
-    event.preventDefault()
-    if (!editingAdmin || adminSaving) return
-    setAdminSaving(true)
-    setAdminError('')
+    event.preventDefault();
+    if (!editingAdmin || adminSaving) return;
+    setAdminSaving(true);
+    setAdminError("");
     try {
-      const saved = editingAdmin.id ? await adminService.update(editingAdmin.id, adminForm) : await adminService.create(adminForm)
-      setAdmins((items) => editingAdmin.id ? items.map((item) => item.id === saved.id ? saved : item) : [...items, saved])
-      setEditingAdmin(null)
-      notify(editingAdmin.id ? 'Admin updated successfully.' : 'Admin created successfully.')
+      const saved = editingAdmin.id
+        ? await adminService.update(editingAdmin.id, adminForm)
+        : await adminService.create(adminForm);
+      setAdmins((items) =>
+        editingAdmin.id
+          ? items.map((item) => (item.id === saved.id ? saved : item))
+          : [...items.filter((item) => item.id !== saved.id), saved],
+      );
+      setEditingAdmin(null);
+      notify(
+        editingAdmin.id
+          ? "Admin status updated successfully."
+          : "Admin created successfully.",
+      );
     } catch (cause) {
-      setAdminError(cause instanceof Error ? cause.message : 'Unable to save admin.')
-    } finally { setAdminSaving(false) }
+      setAdminError(
+        cause instanceof Error ? cause.message : "Unable to save admin.",
+      );
+    } finally {
+      setAdminSaving(false);
+    }
   }
-  async function submitEngineerRequest(engineer: EngineerRecord, action: 'ACTIVATE' | 'DEACTIVATE', reason: string) {
-    if (!user || user.role !== 'ADMIN') return
-    try { await requestService.create({ type: action === 'ACTIVATE' ? 'SERVICE_ENGINEER_ACTIVATION' : 'SERVICE_ENGINEER_DEACTIVATION', entityId: engineer.id, entity: engineer.name, action: action === 'ACTIVATE' ? 'Activate engineer' : 'Deactivate engineer', currentStatus: engineer.status, requestedStatus: action === 'ACTIVATE' ? 'Active' : 'Inactive', requester: user.name, requesterId: user.name, location: engineer.location, reason }); setCanonicalRequests(requestService.snapshot()); notify(`${action === 'ACTIVATE' ? 'Activation' : 'Deactivation'} request submitted.`) } catch (cause) { notify(cause instanceof Error ? cause.message : 'Unable to submit request.') }
+  async function submitEngineerRequest(
+    engineer: EngineerRecord,
+    action: "ACTIVATE" | "DEACTIVATE",
+    reason: string,
+  ) {
+    if (!user || user.role !== "ADMIN") return;
+    try {
+      await requestService.create({
+        type:
+          action === "ACTIVATE"
+            ? "SERVICE_ENGINEER_ACTIVATION"
+            : "SERVICE_ENGINEER_DEACTIVATION",
+        entityId: engineer.id,
+        entity: engineer.name,
+        action:
+          action === "ACTIVATE" ? "Activate engineer" : "Deactivate engineer",
+        currentStatus: engineer.status,
+        requestedStatus: action === "ACTIVATE" ? "Active" : "Inactive",
+        requester: user.name,
+        requesterId: user.name,
+        location: engineer.location,
+        reason,
+      });
+      setEngineerRequests(engineerService.requests());
+      setCanonicalRequests(requestService.snapshot());
+      notify(
+        `${action === "ACTIVATE" ? "Activation" : "Deactivation"} request submitted.`,
+      );
+    } catch (cause) {
+      notify(
+        cause instanceof Error ? cause.message : "Unable to submit request.",
+      );
+    }
   }
-  async function saveEngineer(input: { name: string; phone: string; email?: string; address?: string; skill?: string; category?: string; relationship: 'DIRECT' | 'VENDOR_BASED'; vendorId?: string; vendor?: string }) {
-    if (!editingEngineer || !user || user.role !== 'ADMIN') return
-    try { if (editingEngineer.id) await engineerService.update(editingEngineer.id, { name: input.name, phone: input.phone, email: input.email, address: input.address, skill: input.skill, category: input.category }); else await engineerService.create({ name: input.name, phone: input.phone, email: input.email, address: input.address, skill: input.skill, category: input.category, ownerAdminId: user.name, ownerAdmin: user.name, locationId: user.location, location: user.location, relationship: input.relationship, vendorId: input.vendorId, vendor: input.vendor }); setEngineers(engineerService.snapshot()); setEditingEngineer(null); notify('Service engineer saved successfully.') } catch (cause) { notify(cause instanceof Error ? cause.message : 'Unable to save engineer.') }
+  async function saveEngineer(input: {
+    name: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    skill?: string;
+    category?: string;
+    relationship: "DIRECT" | "VENDOR_BASED";
+    vendorId?: string;
+    vendor?: string;
+  }) {
+    if (!editingEngineer || !user || user.role !== "ADMIN") return;
+    try {
+      if (editingEngineer.id) {
+        await engineerService.update(editingEngineer.id, {
+          name: input.name,
+          phone: input.phone,
+          email: input.email,
+          address: input.address,
+          skill: input.skill,
+          category: input.category,
+        });
+      } else {
+        await engineerService.create({
+          name: input.name,
+          phone: input.phone,
+          email: input.email,
+          address: input.address,
+          skill: input.skill,
+          category: input.category,
+          ownerAdminId: user.name,
+          ownerAdmin: user.name,
+          locationId: user.location,
+          location: user.location,
+          relationship: input.relationship,
+          vendorId: input.vendorId,
+          vendor: input.vendor,
+        });
+      }
+      setEngineers(engineerService.snapshot());
+      setEditingEngineer(null);
+      notify("Service engineer saved successfully.");
+    } catch (cause) {
+      notify(
+        cause instanceof Error ? cause.message : "Unable to save engineer.",
+      );
+    }
+  }
+  async function submitVendorStatusRequest(
+    vendor: VendorRecord,
+    action: "ACTIVATE" | "DEACTIVATE",
+  ) {
+    if (!user || user.role !== "ADMIN") return;
+    try {
+      await requestService.create({
+        type:
+          action === "ACTIVATE" ? "VENDOR_ACTIVATION" : "VENDOR_DEACTIVATION",
+        entityId: vendor.id,
+        entity: vendor.name,
+        action: action === "ACTIVATE" ? "Activate vendor" : "Deactivate vendor",
+        currentStatus: vendor.operationalStatus,
+        requestedStatus: action === "ACTIVATE" ? "Active" : "Inactive",
+        requester: user.name,
+        requesterId: user.name,
+        location: user.location,
+        reason: `${action === "ACTIVATE" ? "Activation" : "Deactivation"} requested through vendor lifecycle workflow.`,
+      });
+      setCanonicalRequests(requestService.snapshot());
+      setStatusRequests(vendorStatusRequests());
+      setRequestTarget(null);
+      notify(
+        `${action === "ACTIVATE" ? "Activation" : "Deactivation"} request submitted for Super Admin approval.`,
+      );
+    } catch (cause) {
+      notify(
+        cause instanceof Error ? cause.message : "Unable to submit request.",
+      );
+    }
   }
   async function submitStatusRequest() {
-    if (!requestTarget || !user || user.role !== 'ADMIN') return
-    try {
-      await requestService.create({ type: requestTarget.action === 'ACTIVATE' ? 'VENDOR_ACTIVATION' : 'VENDOR_DEACTIVATION', entityId: requestTarget.vendor.id, entity: requestTarget.vendor.name, action: requestTarget.action === 'ACTIVATE' ? 'Activate vendor' : 'Deactivate vendor', currentStatus: requestTarget.vendor.operationalStatus, requestedStatus: requestTarget.action === 'ACTIVATE' ? 'Active' : 'Inactive', requester: user.name, requesterId: user.name, location: user.location, reason: `${requestTarget.action === 'ACTIVATE' ? 'Activation' : 'Deactivation'} requested through vendor lifecycle workflow.` })
-      setCanonicalRequests(requestService.snapshot()); setRequestTarget(null); notify(`${requestTarget.action === 'ACTIVATE' ? 'Activation' : 'Deactivation'} request submitted for Super Admin approval.`)
-    } catch (cause) { notify(cause instanceof Error ? cause.message : 'Unable to submit request.') }
+    if (!requestTarget || !user || user.role !== "ADMIN") return;
+    await submitVendorStatusRequest(requestTarget.vendor, requestTarget.action);
   }
   function openVendorEditor(vendor?: VendorRecord) {
-    if (!user || user.role !== 'ADMIN') { notify('Only location admins can create or edit vendors.'); return }
-    setEditingVendor(vendor || { id: '', name: '', owner: user.name, location: user.location, status: 'PENDING_APPROVAL', onboardingStatus: 'PENDING_APPROVAL', operationalStatus: 'INACTIVE', engineers: 0, contactEmail: '', phone: '', description: '' })
-    setVendorForm(vendor ? { name: vendor.name, contactEmail: vendor.contactEmail, phone: vendor.phone, description: vendor.description } : { ...emptyVendorForm })
-    setVendorError('')
+    if (!user || user.role !== "ADMIN") {
+      notify("Only location admins can create or edit vendors.");
+      return;
+    }
+    setEditingVendor(
+      vendor || {
+        id: "",
+        name: "",
+        owner: user.name,
+        location: user.location,
+        status: "PENDING_APPROVAL",
+        onboardingStatus: "PENDING_APPROVAL",
+        operationalStatus: "INACTIVE",
+        engineers: 0,
+        contactEmail: "",
+        phone: "",
+        description: "",
+      },
+    );
+    setVendorForm(
+      vendor
+        ? {
+            name: vendor.name,
+            contactEmail: vendor.contactEmail,
+            phone: vendor.phone,
+            description: vendor.description,
+          }
+        : { ...emptyVendorForm },
+    );
+    setVendorError("");
   }
   async function saveVendor(event: React.FormEvent) {
-    event.preventDefault()
-    if (!editingVendor || !user || user.role !== 'ADMIN' || vendorSaving) return
-    const validationError = validateVendorInput(vendorForm)
-    if (validationError) { setVendorError(validationError); return }
-    setVendorSaving(true); setVendorError('')
+    event.preventDefault();
+    if (!editingVendor || !user || user.role !== "ADMIN" || vendorSaving)
+      return;
+    const validationError = validateVendorInput(vendorForm);
+    if (validationError) {
+      setVendorError(validationError);
+      return;
+    }
+    setVendorSaving(true);
+    setVendorError("");
     try {
-      const saved = editingVendor.id ? await vendorService.update(editingVendor.id, vendorForm) : await vendorService.create({ ...vendorForm, owner: user.name, location: user.location })
-      if (!editingVendor.id) await requestService.create({ type: 'VENDOR_ONBOARDING', entityId: saved.id, entity: saved.name, action: 'Onboard vendor', currentStatus: 'Pending approval', requestedStatus: 'Active after approval', requester: user.name, requesterId: user.name, location: user.location, reason: 'New vendor submitted through the vendor onboarding workflow.' })
-      setVendors(vendorService.snapshot()); setCanonicalRequests(requestService.snapshot())
-      setEditingVendor(null)
-      notify(editingVendor.id ? 'Vendor details updated successfully.' : 'Vendor created and submitted for approval.')
-      void saved
-    } catch (cause) { setVendorError(cause instanceof Error ? cause.message : 'Unable to save vendor.') } finally { setVendorSaving(false) }
+      const saved = editingVendor.id
+        ? await vendorService.update(editingVendor.id, vendorForm)
+        : await vendorService.create({
+            ...vendorForm,
+            owner: user.name,
+            location: user.location,
+          });
+      if (!editingVendor.id) {
+        if (isApiConfigured()) {
+          try {
+            const freshRequests = await requestService.list(user.role);
+            setCanonicalRequests(freshRequests);
+          } catch {
+            // Handled via module sync
+          }
+        } else {
+          await requestService.create({
+            type: "VENDOR_ONBOARDING",
+            entityId: saved.id,
+            entity: saved.name,
+            action: "Onboard vendor",
+            currentStatus: "Pending approval",
+            requestedStatus: "Active after approval",
+            requester: user.name,
+            requesterId: user.name,
+            location: user.location,
+            reason:
+              "New vendor submitted through the vendor onboarding workflow.",
+          });
+        }
+      }
+      setVendors(vendorService.snapshot());
+      setCanonicalRequests(requestService.snapshot());
+      setStatusRequests(vendorStatusRequests());
+      setEditingVendor(null);
+      notify(
+        editingVendor.id
+          ? "Vendor details updated successfully."
+          : "Vendor created and submitted for approval.",
+      );
+      void saved;
+    } catch (cause) {
+      setVendorError(
+        cause instanceof Error ? cause.message : "Unable to save vendor.",
+      );
+    } finally {
+      setVendorSaving(false);
+    }
   }
 
-  if (!user) return <main className="login-page"><div className="login-panel"><Logo /><div className="login-copy"><p className="eyebrow">SECURE OPERATIONS PORTAL</p><h1>Welcome back</h1><p>Sign in to manage service operations, teams, and approvals from one calm workspace.</p></div><form onSubmit={signIn} className="login-form" noValidate><label htmlFor="email">Email address<input id="email" value={email} onChange={(e) => { setEmail(e.target.value); setLoginError('') }} onBlur={() => setLoginError(validateMockLogin(email, password) || '')} placeholder="you@company.com" type="email" autoComplete="email" aria-invalid={Boolean(loginError && (!email || !/^\S+@\S+\.\S+$/.test(email)))} /></label><label htmlFor="password">Password<div className="password-input"><input id="password" value={password} onChange={(e) => { setPassword(e.target.value); setLoginError('') }} placeholder="Enter your password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" aria-invalid={Boolean(loginError && !password)} /><button className="password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{loginError && <div className="form-error" role="alert"><CircleAlert size={16} />{loginError}</div>}<button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Sign in'} {!isSubmitting && <ArrowRight size={17} />}</button></form><div className={`demo-box ${demoBOpen ? 'open' : ''}`}><button className="demo-toggle" onClick={() => setDemoBOpen(!demoBOpen)}><span>Demo access</span><ChevronDown size={16} className="demo-chevron" /></button>{demoBOpen && <div className="demo-content"><p><strong>Super Admin</strong> superadmin@f1helpdesk.com</p><p><strong>Admin</strong> admin@f1helpdesk.com</p><small>Password: password</small></div>}</div></div><div className="login-art"><div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" /><div className="art-card"><ClipboardCheck size={20} /><strong>Approval center</strong><span>Review important requests with confidence.</span></div></div></main>
+  if (!user)
+    return (
+      <main className="login-page">
+        <div className="login-panel">
+          <Logo />
+          <div className="login-copy">
+            <p className="eyebrow">SECURE OPERATIONS PORTAL</p>
+            <h1>Welcome back</h1>
+            <p>
+              Sign in to manage service operations, teams, and approvals from
+              one calm workspace.
+            </p>
+          </div>
+          <form onSubmit={signIn} className="login-form" noValidate>
+            <label htmlFor="email">
+              Email address
+              <input
+                id="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setLoginError("");
+                }}
+                onBlur={() =>
+                  setLoginError(validateMockLogin(email, password) || "")
+                }
+                placeholder="you@company.com"
+                type="email"
+                autoComplete="email"
+                aria-invalid={Boolean(
+                  loginError && (!email || !/^\S+@\S+\.\S+$/.test(email)),
+                )}
+              />
+            </label>
+            <label htmlFor="password">
+              Password
+              <div className="password-input">
+                <input
+                  id="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setLoginError("");
+                  }}
+                  placeholder="Enter your password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(loginError && !password)}
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+            </label>
+            {loginError && (
+              <div className="form-error" role="alert">
+                <CircleAlert size={16} />
+                {loginError}
+              </div>
+            )}
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Signing in…" : "Sign in"}{" "}
+              {!isSubmitting && <ArrowRight size={17} />}
+            </button>
+          </form>
+          <div className={`demo-box ${demoBOpen ? "open" : ""}`}>
+            <button
+              className="demo-toggle"
+              onClick={() => setDemoBOpen(!demoBOpen)}
+            >
+              <span>Demo access</span>
+              <ChevronDown size={16} className="demo-chevron" />
+            </button>
+            {demoBOpen && (
+              <div className="demo-content">
+                <p>
+                  <strong>Super Admin</strong> superadmin@f1helpdesk.com
+                </p>
+                <p>
+                  <strong>Admin</strong> admin@f1helpdesk.com
+                </p>
+                <small>Password: password</small>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="login-art">
+          <div className="art-orbit orbit-one" />
+          <div className="art-orbit orbit-two" />
+          <div className="art-card">
+            <ClipboardCheck size={20} />
+            <strong>Approval center</strong>
+            <span>Review important requests with confidence.</span>
+          </div>
+        </div>
+      </main>
+    );
 
-  if (page === 'My Requests' || page === 'Approval Requests') return <WorkspaceFrame role={user.role} user={user} page={page} onNavigate={setPage}><RequestWorkspace role={user.role} user={user} records={canonicalRequests} search={requestSearch} setSearch={setRequestSearch} tab={requestTab} setTab={setRequestTab} onOpen={setRequestDetail} onDecide={(record, decision) => { const feedback = decision === 'REJECTED' ? window.prompt('Rejection feedback') || '' : ''; void requestService.decide(record.id, decision, feedback).then(async (updated) => { setCanonicalRequests(requestService.snapshot()); void applyCanonicalDecision(requestService.snapshot().find((item) => item.id === record.id)!); setRequestDetail(null); notify(`Request ${decision.toLowerCase()}.`) }).catch((cause) => notify(cause instanceof Error ? cause.message : 'Unable to decide request.')) }} />{requestDetail && <RequestDetailDrawer record={requestDetail} role={user.role} onClose={() => setRequestDetail(null)} onDecide={(decision) => { const feedback = decision === 'REJECTED' ? window.prompt('Rejection feedback') || '' : ''; void requestService.decide(requestDetail.id, decision, feedback).then(() => { setCanonicalRequests(requestService.snapshot()); void applyCanonicalDecision(requestService.snapshot().find((item) => item.id === requestDetail.id)!); setRequestDetail(null); notify(`Request ${decision.toLowerCase()}.`) }).catch((cause) => notify(cause instanceof Error ? cause.message : 'Unable to decide request.')) }} />}</WorkspaceFrame>
-  return <div className="app-shell"><aside className={`sidebar ${mobileNav ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}><div className="sidebar-top"><Logo /><button className="collapse-nav" aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}><Menu size={18} /></button><button className="close-nav" onClick={() => setMobileNav(false)}><X size={18} /></button></div><div className="role-pill"><span className="online-dot" />{user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}<ChevronDown size={14} /></div><nav>{nav.map(([label, Icon]) => <button key={label} className={page === label ? 'nav-item active' : 'nav-item'} onClick={() => { setPage(label); setMobileNav(false) }}><Icon size={17} />{label}{label === 'Approval Requests' && pending.length > 0 && <em>{pending.length}</em>}</button>)}</nav><div className="sidebar-bottom"><div className="sidebar-note"><ShieldCheck size={17} /><div><strong>Workspace secure</strong><span>Last synced just now</span></div></div><button className="nav-item logout" onClick={() => setUser(null)}><LogOut size={17} />Sign out</button></div></aside><section className="workspace"><header className="topbar"><button className="menu-button" onClick={() => setMobileNav(true)}><Menu size={20} /></button><div className="breadcrumbs"><span>Workspace</span><b>/</b><strong>{page}</strong></div><div className="top-actions"><div className="location-chip"><MapPin size={15} />{user.location}</div><button className="icon-button" aria-label="Notifications"><Bell size={18} />{pending.length > 0 && <i />}</button><button className="profile-button"><span className="avatar">{user.name.split(' ').map((n) => n[0]).join('')}</span><span className="profile-text"><strong>{user.name}</strong><small>{user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Operations Admin'}</small></span><ChevronDown size={15} /></button></div></header>{page === 'Service Engineers' && engineerDetail && <EngineerDetailDrawer engineer={engineerDetail} request={engineerRequests.find((request) => request.engineerId === engineerDetail.id && request.status === 'PENDING')} onClose={() => setEngineerDetail(null)} />}{page === 'Service Engineers' && editingEngineer && user.role === 'ADMIN' && <EngineerEditDrawer engineer={editingEngineer} vendors={vendors} onClose={() => setEditingEngineer(null)} onSave={(input) => void saveEngineer(input)} />}<main className="content"><div className="page-heading"><div><p className="eyebrow">{user.role === 'SUPER_ADMIN' ? 'CONTROL CENTER' : 'OPERATIONS HOME'}</p><h1>{page}</h1><p>{page === 'Overview' ? 'Keep your service operations moving with a clear view of what needs attention.' : `Manage ${page.toLowerCase()} across your workspace.`}</p></div>{page === 'Vendors' && user.role === 'ADMIN' && <button className="primary-button compact" onClick={() => notify('Vendor form ready to open.') }><Plus size={17} />Add vendor</button>}{page === 'Service Engineers' && user.role === 'ADMIN' && <button className="primary-button compact" onClick={() => notify('Engineer form ready to open.') }><Plus size={17} />Add engineer</button>}</div>{page === 'Locations' && user.role === 'SUPER_ADMIN' ? <Locations onNotify={notify} /> : page === 'Admins' && user.role === 'SUPER_ADMIN' ? <Admins items={admins} search={adminSearch} setSearch={setAdminSearch} statusFilter={adminStatusFilter} setStatusFilter={setAdminStatusFilter} onEdit={openAdminEditor} onCreate={() => openAdminEditor()} /> : page === 'Overview' ? <Overview role={user.role} pending={dashboardApprovals} onReview={setSelectedApproval} onNavigate={setPage} counts={{ locations: visibleLocations.length, admins: visibleAdmins.filter((admin) => admin.status === 'ACTIVE').length, vendors: scopedVendors.length, engineers: visibleEngineers.length, inventory: inventoryCount }} /> : page === 'Approval Requests' ? <Approvals items={approvals} search={search} setSearch={setSearch} onReview={setSelectedApproval} /> : page === 'Vendors' ? <Vendors items={filteredVendors} role={user.role} search={search} setSearch={setSearch} onCreate={() => openVendorEditor()} onEdit={openVendorEditor} onSaved={() => setVendors(vendorService.snapshot())} currentUser={user} onDetail={setVendorDetail} onRequest={(vendor, action) => setRequestTarget({ vendor, action })} statusRequests={statusRequests} /> : page === 'Service Engineers' ? <EngineerDirectory items={engineers} role={user.role} currentUser={user} requests={engineerRequests} search={engineerSearch} setSearch={setEngineerSearch} onDetail={setEngineerDetail} onEdit={setEditingEngineer} onRequest={(engineer, action) => { const reason = window.prompt(`Reason for ${action.toLowerCase()} request`); if (reason) void submitEngineerRequest(engineer, action, reason) }} /> : page === 'Inventory' ? <Inventory role={user.role} /> : page === 'Configuration' ? <Configuration /> : <GenericPage page={page} role={user.role} />}</main></section>{editingAdmin && <AdminDrawer admin={editingAdmin} form={adminForm} setForm={setAdminForm} error={adminError} saving={adminSaving} onClose={() => setEditingAdmin(null)} onSave={saveAdmin} />}{selectedApproval && <ApprovalDrawer approval={selectedApproval} onClose={() => setSelectedApproval(null)} onDecide={decide} />}{toast && <div className="toast"><Check size={17} />{toast}</div>}</div>
+  if (page === "My Requests" || page === "Approval Requests")
+    return (
+      <WorkspaceFrame
+        role={user.role}
+        user={user}
+        page={page}
+        onNavigate={setPage}
+      >
+        <RequestWorkspace
+          role={user.role}
+          user={user}
+          records={canonicalRequests}
+          search={requestSearch}
+          setSearch={setRequestSearch}
+          tab={requestTab}
+          setTab={setRequestTab}
+          onOpen={setRequestDetail}
+          onDecide={(record, decision) => {
+            const feedback =
+              decision === "REJECTED"
+                ? window.prompt("Rejection feedback") || ""
+                : "";
+            void requestService
+              .decide(record.id, decision, feedback)
+              .then(async (updated) => {
+                setCanonicalRequests(requestService.snapshot());
+                void applyCanonicalDecision(
+                  requestService
+                    .snapshot()
+                    .find((item) => item.id === record.id)!,
+                );
+                setRequestDetail(null);
+                notify(`Request ${decision.toLowerCase()}.`);
+              })
+              .catch((cause) =>
+                notify(
+                  cause instanceof Error
+                    ? cause.message
+                    : "Unable to decide request.",
+                ),
+              );
+          }}
+          loadError={loadErrors.requests}
+        />
+        {requestDetail && (
+          <RequestDetailDrawer
+            record={requestDetail}
+            role={user.role}
+            onClose={() => setRequestDetail(null)}
+            onDecide={(decision) => {
+              const feedback =
+                decision === "REJECTED"
+                  ? window.prompt("Rejection feedback") || ""
+                  : "";
+              void requestService
+                .decide(requestDetail.id, decision, feedback)
+                .then(() => {
+                  setCanonicalRequests(requestService.snapshot());
+                  void applyCanonicalDecision(
+                    requestService
+                      .snapshot()
+                      .find((item) => item.id === requestDetail.id)!,
+                  );
+                  setRequestDetail(null);
+                  notify(`Request ${decision.toLowerCase()}.`);
+                })
+                .catch((cause) =>
+                  notify(
+                    cause instanceof Error
+                      ? cause.message
+                      : "Unable to decide request.",
+                  ),
+                );
+            }}
+          />
+        )}
+      </WorkspaceFrame>
+    );
+  return (
+    <div className="app-shell">
+      <aside
+        className={`sidebar ${mobileNav ? "open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}
+      >
+        <div className="sidebar-top">
+          <Logo />
+          <button
+            className="collapse-nav"
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          >
+            <Menu size={18} />
+          </button>
+          <button className="close-nav" onClick={() => setMobileNav(false)}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="role-pill">
+          <span className="online-dot" />
+          {user.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"}
+          <ChevronDown size={14} />
+        </div>
+        <nav>
+          {nav.map(([label, Icon]) => (
+            <button
+              key={label}
+              className={page === label ? "nav-item active" : "nav-item"}
+              onClick={() => {
+                setPage(label);
+                setMobileNav(false);
+              }}
+            >
+              <Icon size={17} />
+              {label}
+              {label === "Approval Requests" && pending.length > 0 && (
+                <em>{pending.length}</em>
+              )}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-bottom">
+          <div className="sidebar-note">
+            <ShieldCheck size={17} />
+            <div>
+              <strong>Workspace secure</strong>
+              <span>Last synced just now</span>
+            </div>
+          </div>
+          <button
+            className="nav-item logout"
+            onClick={() => void handleSignOut()}
+          >
+            <LogOut size={17} />
+            Sign out
+          </button>
+        </div>
+      </aside>
+      <section className="workspace">
+        <header className="topbar">
+          <button className="menu-button" onClick={() => setMobileNav(true)}>
+            <Menu size={20} />
+          </button>
+          <div className="breadcrumbs">
+            <span>Workspace</span>
+            <b>/</b>
+            <strong>{page}</strong>
+          </div>
+          <div className="top-actions">
+            <div className="location-chip">
+              <MapPin size={15} />
+              {user.location}
+            </div>
+            <button className="icon-button" aria-label="Notifications">
+              <Bell size={18} />
+              {pending.length > 0 && <i />}
+            </button>
+            <button className="profile-button">
+              <span className="avatar">
+                {user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </span>
+              <span className="profile-text">
+                <strong>{user.name}</strong>
+                <small>
+                  {user.role === "SUPER_ADMIN"
+                    ? "Super Admin"
+                    : "Operations Admin"}
+                </small>
+              </span>
+              <ChevronDown size={15} />
+            </button>
+          </div>
+        </header>
+        {page === "Service Engineers" && engineerDetail && (
+          <EngineerDetailDrawer
+            engineer={engineerDetail}
+            request={engineerRequests.find(
+              (request) =>
+                request.engineerId === engineerDetail.id &&
+                request.status === "PENDING",
+            )}
+            onClose={() => setEngineerDetail(null)}
+          />
+        )}
+        {page === "Service Engineers" &&
+          editingEngineer &&
+          user.role === "ADMIN" && (
+            <EngineerEditDrawer
+              engineer={editingEngineer}
+              vendors={vendors}
+              skills={masterDataItems
+                .filter(
+                  (i) => i.type === "service_engineer_skill" && i.isActive,
+                )
+                .map((i) => i.text)}
+              categories={masterDataItems
+                .filter(
+                  (i) => i.type === "service_engineer_category" && i.isActive,
+                )
+                .map((i) => i.text)}
+              onClose={() => setEditingEngineer(null)}
+              onSave={(input) => void saveEngineer(input)}
+            />
+          )}
+        <main className="content">
+          <div className="page-heading">
+            {/* <div>
+              <p className="eyebrow">
+                {user.role === "SUPER_ADMIN"
+                  ? "CONTROL CENTER"
+                  : "OPERATIONS HOME"}
+              </p>
+              <h1>{page}</h1>
+              <p>
+                {page === "Overview"
+                  ? "Keep your service operations moving with a clear view of what needs attention."
+                  : `Manage ${page.toLowerCase()} across your workspace.`}
+              </p>
+            </div> */}
+            {/* {page === "Vendors" && user.role === "ADMIN" && (
+              <button
+                className="primary-button compact"
+                onClick={() => notify("Vendor form ready to open.")}
+              >
+                <Plus size={17} />
+                Add vendor
+              </button>
+            )} */}
+            {page === "Service Engineers" && user.role === "ADMIN" && (
+              <button
+                className="primary-button compact"
+                onClick={() => notify("Engineer form ready to open.")}
+              >
+                <Plus size={17} />
+                Add engineer
+              </button>
+            )}
+            {page === "Inventory" && (
+              <button
+                className="primary-button compact"
+                onClick={() => openInventoryEditor()}
+              >
+                <Plus size={17} />
+                Add item
+              </button>
+            )}
+            {page === "Master Data" && user.role === "SUPER_ADMIN" && (
+              <button
+                className="primary-button compact"
+                onClick={() => openMasterDataEditor()}
+              >
+                <Plus size={17} />
+                Add entry
+              </button>
+            )}
+          </div>
+          {page === "Locations" && user.role === "SUPER_ADMIN" ? (
+            <Locations onNotify={notify} admins={admins} />
+          ) : page === "Admins" && user.role === "SUPER_ADMIN" ? (
+            <Admins
+              items={admins}
+              search={adminSearch}
+              setSearch={setAdminSearch}
+              statusFilter={adminStatusFilter}
+              setStatusFilter={setAdminStatusFilter}
+              onEdit={openAdminEditor}
+              onCreate={() => openAdminEditor()}
+            />
+          ) : page === "Overview" ? (
+            <Overview
+              role={user.role}
+              pending={dashboardApprovals}
+              onReview={setSelectedApproval}
+              onNavigate={setPage}
+              counts={{
+                locations: visibleLocations.length,
+                admins: visibleAdmins.filter(
+                  (admin) => admin.status === "ACTIVE",
+                ).length,
+                vendors: scopedVendors.length,
+                engineers: visibleEngineers.length,
+                inventory: inventoryCount,
+              }}
+            />
+          ) : page === "Approval Requests" ? (
+            <Approvals
+              items={approvals}
+              search={search}
+              setSearch={setSearch}
+              onReview={setSelectedApproval}
+            />
+          ) : page === "Vendors" ? (
+            <Vendors
+              items={filteredVendors}
+              role={user.role}
+              search={search}
+              setSearch={setSearch}
+              onCreate={() => openVendorEditor()}
+              onEdit={openVendorEditor}
+              onSaved={() => setVendors(vendorService.snapshot())}
+              currentUser={user}
+              onDetail={setVendorDetail}
+              onRequest={(vendor, action) =>
+                void submitVendorStatusRequest(vendor, action)
+              }
+              statusRequests={statusRequests}
+              loadError={loadErrors.vendors}
+            />
+          ) : page === "Service Engineers" ? (
+            <EngineerDirectory
+              items={engineers}
+              role={user.role}
+              currentUser={user}
+              requests={engineerRequests}
+              search={engineerSearch}
+              setSearch={setEngineerSearch}
+              onDetail={setEngineerDetail}
+              onEdit={setEditingEngineer}
+              onRequest={(engineer, action) => {
+                const reason = window.prompt(
+                  `Reason for ${action.toLowerCase()} request`,
+                );
+                if (reason)
+                  void submitEngineerRequest(engineer, action, reason);
+              }}
+              loadError={loadErrors.engineers}
+            />
+          ) : page === "Inventory" ? (
+            <Inventory
+              items={inventoryItems}
+              role={user.role}
+              currentUser={user}
+              locations={locationService.snapshot()}
+              onOpen={openInventoryEditor}
+              loadError={loadErrors.inventory}
+            />
+          ) : page === "Configuration" && user.role === "SUPER_ADMIN" ? (
+            <Configuration
+              configs={configs}
+              onEdit={openConfigEditor}
+              loadError={loadErrors.config}
+            />
+          ) : page === "Master Data" && user.role === "SUPER_ADMIN" ? (
+            <MasterDataWorkspace
+              items={masterDataItems}
+              activeTab={masterDataTab}
+              onTabChange={setMasterDataTab}
+              search={masterDataSearch}
+              onSearchChange={setMasterDataSearch}
+              onCreate={() => openMasterDataEditor()}
+              onEdit={openMasterDataEditor}
+              loadError={loadErrors.masterData}
+            />
+          ) : (
+            <GenericPage page={page} role={user.role} />
+          )}
+        </main>
+      </section>
+      {inventoryDrawerOpen && (
+        <InventoryDrawer
+          item={editingInventory}
+          role={user.role}
+          currentUser={user}
+          locations={locationService.snapshot()}
+          saving={inventorySaving}
+          error={inventoryError}
+          onClose={() => {
+            setInventoryDrawerOpen(false);
+            setEditingInventory(null);
+          }}
+          onSave={saveInventory}
+        />
+      )}
+      {configDrawerOpen && (
+        <ConfigDrawer
+          item={editingConfig}
+          saving={configSaving}
+          error={configError}
+          onClose={() => {
+            setConfigDrawerOpen(false);
+            setEditingConfig(null);
+          }}
+          onSave={saveConfig}
+        />
+      )}
+      {masterDataDrawerOpen && (
+        <MasterDataDrawer
+          item={editingMasterData}
+          defaultType={masterDataTab}
+          saving={masterDataSaving}
+          error={masterDataError}
+          onClose={() => {
+            setMasterDataDrawerOpen(false);
+            setEditingMasterData(null);
+          }}
+          onSave={saveMasterData}
+        />
+      )}
+      {editingAdmin && (
+        <AdminDrawer
+          admin={editingAdmin}
+          form={adminForm}
+          setForm={setAdminForm}
+          error={adminError}
+          saving={adminSaving}
+          onClose={() => setEditingAdmin(null)}
+          onSave={saveAdmin}
+        />
+      )}
+      {selectedApproval && (
+        <ApprovalDrawer
+          approval={selectedApproval}
+          onClose={() => setSelectedApproval(null)}
+          onDecide={decide}
+        />
+      )}
+      {toast && (
+        <div className="toast">
+          <Check size={17} />
+          {toast}
+        </div>
+      )}
+    </div>
+  );
 }
 
-function Admins({ items, search, setSearch, statusFilter, setStatusFilter, onEdit, onCreate }: { items: Admin[]; search: string; setSearch: (value: string) => void; statusFilter: 'ALL' | AdminStatus; setStatusFilter: (value: 'ALL' | AdminStatus) => void; onEdit: (admin: Admin) => void; onCreate: () => void }) {
-  const visible = items.filter((admin) => (statusFilter === 'ALL' || admin.status === statusFilter) && `${admin.name} ${admin.email} ${admin.location}`.toLowerCase().includes(search.toLowerCase()))
-  const activeCount = items.filter((admin) => admin.status === 'ACTIVE').length
-  const pendingCount = items.filter((admin) => admin.status === 'PENDING_ACTIVATION').length
-  return <section className="locations-module admins-module"><div className="locations-heading"><div><p className="eyebrow">ADMINISTRATION / ADMINS</p><h2>Admin Management <span className="prototype-badge">Directory</span></h2><p>Manage operational administrators and their assigned locations.</p></div><button className="primary-button compact" onClick={onCreate}><Plus size={17} />Create admin</button></div><div className="location-metrics"><Metric label="Total admins" value={items.length} icon={Users} tone="blue" /><Metric label="Active admins" value={activeCount} icon={Check} tone="teal" /><Metric label="Pending activation" value={pendingCount} icon={Clock3} tone="amber" /><Metric label="Assigned locations" value={new Set(items.map((admin) => admin.location)).size} icon={MapPin} tone="purple" /></div><div className="locations-toolbar"><div className="search-box"><Search size={17} /><input aria-label="Search admins" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name, email, or location" /></div><select className="location-filter" aria-label="Filter admins by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'ALL' | AdminStatus)}><option value="ALL">All statuses ({items.length})</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option><option value="PENDING_ACTIVATION">Pending activation</option></select><span className="result-count">Showing {visible.length} admins</span></div><div className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Admin</th><th>Email</th><th>Assigned location</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>{visible.map((admin) => <tr key={admin.id}><td><div className="entity-cell"><span className="entity-avatar"><Users size={16} /></span><strong>{admin.name}</strong></div></td><td>{admin.email}</td><td>{admin.location}</td><td><StatusBadge status={admin.status} /></td><td>{admin.createdAt}</td><td><button className="secondary-button table-action" onClick={() => onEdit(admin)}>View / Edit</button></td></tr>)}</tbody></table>{visible.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={20} /></div><strong>No admins found</strong><span>Try adjusting your search or filters.</span></div>}</div><div className="table-footer">Showing {visible.length} of {items.length} admins <span>Super Admin managed</span></div></div></section>
+function Admins({
+  items,
+  search,
+  setSearch,
+  statusFilter,
+  setStatusFilter,
+  onEdit,
+  onCreate,
+}: {
+  items: Admin[];
+  search: string;
+  setSearch: (value: string) => void;
+  statusFilter: "ALL" | AdminStatus;
+  setStatusFilter: (value: "ALL" | AdminStatus) => void;
+  onEdit: (admin: Admin) => void;
+  onCreate: () => void;
+}) {
+  const visible = items.filter(
+    (admin) =>
+      (statusFilter === "ALL" || admin.status === statusFilter) &&
+      `${admin.name} ${admin.email} ${admin.location}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const activeCount = items.filter((admin) => admin.status === "ACTIVE").length;
+  const pendingCount = items.filter(
+    (admin) => admin.status === "PENDING_ACTIVATION",
+  ).length;
+  return (
+    <section className="locations-module admins-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">ADMINISTRATION / ADMINS</p>
+          <h2>
+            Admin Management <span className="prototype-badge">Directory</span>
+          </h2>
+          <p>Manage operational administrators and their assigned locations.</p>
+        </div>
+        <button className="primary-button compact" onClick={onCreate}>
+          <Plus size={17} />
+          Create admin
+        </button>
+      </div>
+      <div className="location-metrics">
+        <Metric
+          label="Total admins"
+          value={items.length}
+          icon={Users}
+          tone="blue"
+        />
+        <Metric
+          label="Active admins"
+          value={activeCount}
+          icon={Check}
+          tone="teal"
+        />
+        <Metric
+          label="Pending activation"
+          value={pendingCount}
+          icon={Clock3}
+          tone="amber"
+        />
+        <Metric
+          label="Assigned locations"
+          value={new Set(items.map((admin) => admin.location)).size}
+          icon={MapPin}
+          tone="purple"
+        />
+      </div>
+      <div className="locations-toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search admins"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by name, email, or location"
+          />
+        </div>
+        <select
+          className="location-filter"
+          aria-label="Filter admins by status"
+          value={statusFilter}
+          onChange={(event) =>
+            setStatusFilter(event.target.value as "ALL" | AdminStatus)
+          }
+        >
+          <option value="ALL">All statuses ({items.length})</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="PENDING_ACTIVATION">Pending activation</option>
+        </select>
+        <span className="result-count">Showing {visible.length} admins</span>
+      </div>
+      <div className="panel table-panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Email</th>
+                <th>Assigned location</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((admin) => (
+                <tr key={admin.id}>
+                  <td>
+                    <div className="entity-cell">
+                      <span className="entity-avatar">
+                        <Users size={16} />
+                      </span>
+                      <strong>{admin.name}</strong>
+                    </div>
+                  </td>
+                  <td>{admin.email}</td>
+                  <td>{admin.location}</td>
+                  <td>
+                    <StatusBadge status={admin.status} />
+                  </td>
+                  <td>{admin.createdAt}</td>
+                  <td>
+                    <button
+                      className="review-button table-action"
+                      onClick={() => onEdit(admin)}
+                    >
+                      View / Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <Search size={20} />
+              </div>
+              <strong>No admins found</strong>
+              <span>Try adjusting your search or filters.</span>
+            </div>
+          )}
+        </div>
+        <div className="table-footer">
+          Showing {visible.length} of {items.length} admins{" "}
+          <span>Super Admin managed</span>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function Locations({ onNotify }: { onNotify: (message: string) => void }) {
-  const [items, setItems] = useState<Location[]>(() => locationService.snapshot())
-  const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'ALL' | LocationStatus>('ALL')
-  const [editing, setEditing] = useState<Location | null>(null)
-  const [statusTarget, setStatusTarget] = useState<Location | null>(null)
-  const [form, setForm] = useState({ name: '', status: 'ACTIVE' as LocationStatus })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+function Locations({
+  onNotify,
+  admins,
+}: {
+  onNotify: (message: string) => void;
+  admins?: Admin[];
+}) {
+  const [items, setItems] = useState<Location[]>(() =>
+    locationService.snapshot(),
+  );
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | LocationStatus>(
+    "ALL",
+  );
+  const [editing, setEditing] = useState<Location | null>(null);
+  const [statusTarget, setStatusTarget] = useState<Location | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    status: "ACTIVE" as LocationStatus,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   async function refresh(nextQuery = query, nextStatus = statusFilter) {
-    const records = await locationService.list(nextQuery)
-    setItems(nextStatus === 'ALL' ? records : records.filter((location) => location.status === nextStatus))
+    try {
+      const records = await locationService.list(nextQuery);
+      setItems(
+        nextStatus === "ALL"
+          ? records
+          : records.filter((location) => location.status === nextStatus),
+      );
+      setError("");
+    } catch (cause) {
+      console.warn("[Locations] Failed to refresh locations:", cause);
+      setError(
+        cause instanceof Error ? cause.message : "Unable to refresh locations.",
+      );
+    }
   }
-  const allLocations = locationService.snapshot()
-  const activeCount = allLocations.filter((location) => location.status === 'ACTIVE').length
-  const inactiveCount = allLocations.length - activeCount
-  const assignedAdminCount = new Set(allLocations.flatMap((location) => Array.from({ length: location.assignedAdminCount }, (_, index) => `${location.id}-admin-${index}`))).size
-  function clearFilters() { setQuery(''); setStatusFilter('ALL'); void refresh('', 'ALL') }
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  const allLocations = locationService.snapshot();
+  const activeCount = allLocations.filter(
+    (location) => location.status === "ACTIVE",
+  ).length;
+  const inactiveCount = allLocations.length - activeCount;
+  const currentAdmins = admins || adminService.snapshot();
+  const getAdminCount = (loc: Location) =>
+    currentAdmins.filter(
+      (a) =>
+        a.location === loc.name || String(a.location_id) === String(loc.id),
+    ).length;
+  const totalAssignedAdmins = currentAdmins.filter(
+    (a) => a.location && a.location !== "Unassigned",
+  ).length;
+  function clearFilters() {
+    setQuery("");
+    setStatusFilter("ALL");
+    void refresh("", "ALL");
+  }
   async function toggleStatus() {
-    if (!statusTarget) return
-    const nextStatus = statusTarget.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-    await locationService.update(statusTarget.id, { name: statusTarget.name, status: nextStatus })
-    setStatusTarget(null)
-    await refresh()
-    onNotify(`${statusTarget.name} ${nextStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully.`)
+    if (!statusTarget) return;
+    const nextStatus = statusTarget.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    await locationService.update(statusTarget.id, {
+      name: statusTarget.name,
+      status: nextStatus,
+    });
+    setStatusTarget(null);
+    await refresh();
+    onNotify(
+      `${statusTarget.name} ${nextStatus === "ACTIVE" ? "activated" : "deactivated"} successfully.`,
+    );
   }
   async function openEditor(location?: Location) {
-    const next = location || { id: '', name: '', status: 'ACTIVE' as LocationStatus, assignedAdminCount: 0, createdAt: '' }
-    setEditing(next)
-    setForm({ name: next.name, status: next.status })
-    setError('')
+    const next = location || {
+      id: "",
+      name: "",
+      status: "ACTIVE" as LocationStatus,
+      assignedAdminCount: 0,
+      createdAt: "",
+    };
+    setEditing(next);
+    setForm({ name: next.name, status: next.status });
+    setError("");
   }
   async function save(event: React.FormEvent) {
-    event.preventDefault()
-    if (saving) return
-    setSaving(true)
-    setError('')
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError("");
     try {
-      if (editing?.id) await locationService.update(editing.id, form)
-      else await locationService.create(form)
-      await refresh()
-      setEditing(null)
-      onNotify(editing?.id ? 'Location updated successfully.' : 'Location created successfully.')
+      if (editing?.id) await locationService.update(editing.id, form);
+      else await locationService.create(form);
+      await refresh();
+      setEditing(null);
+      onNotify(
+        editing?.id
+          ? "Location updated successfully."
+          : "Location created successfully.",
+      );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to save location.')
-    } finally { setSaving(false) }
+      setError(
+        cause instanceof Error ? cause.message : "Unable to save location.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
-  return <section className="locations-module"><div className="locations-heading"><div><p className="eyebrow">ADMINISTRATION / LOCATIONS</p><h2>Locations <span className="prototype-badge">Location directory</span></h2><p>Global physical facilities and operational hubs governing Admin assignment and scoped inventory.</p></div><button className="primary-button compact" onClick={() => void openEditor()}><Plus size={17} />Create location</button></div><div className="location-metrics"><Metric label="Total locations" value={allLocations.length} icon={Building2} tone="blue" /><Metric label="Active locations" value={activeCount} icon={Check} tone="teal" /><Metric label="Inactive locations" value={inactiveCount} icon={CircleAlert} tone="purple" /><Metric label="Total assigned admins" value={assignedAdminCount} icon={Users} tone="amber" /></div><div className="locations-toolbar"><div className="search-box"><Search size={17} /><input aria-label="Search locations" value={query} onChange={(event) => { setQuery(event.target.value); void refresh(event.target.value, statusFilter) }} placeholder="Search by facility name or code" /></div><select className="location-filter" aria-label="Filter locations by status" value={statusFilter} onChange={(event) => { const next = event.target.value as 'ALL' | LocationStatus; setStatusFilter(next); void refresh(query, next) }}><option value="ALL">All statuses ({allLocations.length})</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select>{(query || statusFilter !== 'ALL') && <button className="clear-filter" onClick={clearFilters}><X size={15} />Clear</button>}<span className="result-count">Showing {items.length} facilities</span></div><div className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Facility / location name</th><th>Status</th><th>Assigned admins</th><th>Metadata / created</th><th>Actions</th></tr></thead><tbody>{items.map((location) => <tr key={location.id}><td><div className="entity-cell"><span className="entity-avatar location"><MapPin size={16} /></span><strong>{location.name}</strong><small>{location.id.toUpperCase()}</small></div></td><td><StatusBadge status={location.status} /></td><td>{location.assignedAdminCount} Admins assigned</td><td>{location.createdAt}</td><td><div className="row-actions"><button className="review-button" onClick={() => void openEditor(location)}><Eye size={14} />View / Edit</button><button className={`status-action ${location.status === 'ACTIVE' ? 'deactivate' : 'activate'}`} onClick={() => setStatusTarget(location)}>{location.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button></div></td></tr>)}</tbody></table>{items.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={20} /></div><strong>No locations found</strong><span>Try a different search or add a new location.</span></div>}</div><div className="table-footer">Showing {items.length} facilities <span>Managed by Super Admin</span></div></div><div className="governance-panel"><ShieldCheck size={20} /><div><strong>Direct Location governance</strong><span>Super Admin manages activation and deactivation directly. Deactivated locations preserve existing records and are unavailable for new Admin assignments.</span></div></div>{editing && <><button className="drawer-scrim" aria-label="Close location form" onClick={() => setEditing(null)} /><aside className="drawer location-drawer"><div className="drawer-header"><div><p className="eyebrow">LOCATIONS</p><h2>{editing.id ? 'Edit location' : 'Add location'}</h2></div><button className="icon-button" onClick={() => setEditing(null)}><X size={18} /></button></div><form className="drawer-body location-form" onSubmit={save}><label htmlFor="location-name">Location name <span className="required">*</span><input id="location-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} aria-invalid={Boolean(error && !form.name.trim())} autoFocus /></label><label htmlFor="location-status">Status<select id="location-status" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LocationStatus })}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></label>{error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}<div className="drawer-footer"><button type="button" className="secondary-button" onClick={() => setEditing(null)}>Cancel</button><button type="submit" className="primary-button" disabled={saving}>{saving ? 'Saving…' : 'Save location'}</button></div></form></aside></>}{statusTarget && <div className="confirm-backdrop" role="presentation"><div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="status-confirm-title"><h2 id="status-confirm-title">{statusTarget.status === 'ACTIVE' ? 'Deactivate' : 'Activate'} location?</h2><p>{statusTarget.status === 'ACTIVE' ? 'This prevents new Admin assignments while preserving existing records.' : 'This makes the location available for new Admin assignments again.'}</p><div className="drawer-footer"><button className="secondary-button" onClick={() => setStatusTarget(null)}>Cancel</button><button className="primary-button" onClick={() => void toggleStatus()}>{statusTarget.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button></div></div></div>}</section>
+  return (
+    <section className="locations-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">ADMINISTRATION / LOCATIONS</p>
+          <h2>
+            Locations{" "}
+            <span className="prototype-badge">Location directory</span>
+          </h2>
+          <p>
+            Global physical facilities and operational hubs governing Admin
+            assignment and scoped inventory.
+          </p>
+        </div>
+        <button
+          className="primary-button compact"
+          onClick={() => void openEditor()}
+        >
+          <Plus size={17} />
+          Create location
+        </button>
+      </div>
+      <div className="location-metrics">
+        <Metric
+          label="Total locations"
+          value={allLocations.length}
+          icon={Building2}
+          tone="blue"
+        />
+        <Metric
+          label="Active locations"
+          value={activeCount}
+          icon={Check}
+          tone="teal"
+        />
+        <Metric
+          label="Inactive locations"
+          value={inactiveCount}
+          icon={CircleAlert}
+          tone="purple"
+        />
+        <Metric
+          label="Total assigned admins"
+          value={totalAssignedAdmins}
+          icon={Users}
+          tone="amber"
+        />
+      </div>
+      <div className="locations-toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search locations"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              void refresh(event.target.value, statusFilter);
+            }}
+            placeholder="Search by facility name or code"
+          />
+        </div>
+        <select
+          className="location-filter"
+          aria-label="Filter locations by status"
+          value={statusFilter}
+          onChange={(event) => {
+            const next = event.target.value as "ALL" | LocationStatus;
+            setStatusFilter(next);
+            void refresh(query, next);
+          }}
+        >
+          <option value="ALL">All statuses ({allLocations.length})</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+        {(query || statusFilter !== "ALL") && (
+          <button className="clear-filter" onClick={clearFilters}>
+            <X size={15} />
+            Clear
+          </button>
+        )}
+        <span className="result-count">Showing {items.length} facilities</span>
+      </div>
+      <div className="panel table-panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Facility / location name</th>
+                <th>Status</th>
+                <th>Assigned admins</th>
+                <th>Metadata / created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((location) => (
+                <tr key={location.id}>
+                  <td>
+                    <div className="entity-cell">
+                      <span className="entity-avatar location">
+                        <MapPin size={16} />
+                      </span>
+                      <strong>{location.name}</strong>
+                      <small>{location.id.toUpperCase()}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <StatusBadge status={location.status} />
+                  </td>
+                  <td>{getAdminCount(location)} Admins assigned</td>
+                  <td>{location.createdAt}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button
+                        className="review-button w-20"
+                        onClick={() => void openEditor(location)}
+                      >
+                        {/* <Eye size={14} /> */}
+                        View / Edit
+                      </button>
+                      {/* <button
+                        className={`status-action ${location.status === "ACTIVE" ? "deactivate" : "activate"}`}
+                        onClick={() => setStatusTarget(location)}
+                      >
+                        {location.status === "ACTIVE"
+                          ? "Deactivate"
+                          : "Activate"}
+                      </button> */}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {items.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <Search size={20} />
+              </div>
+              <strong>No locations found</strong>
+              <span>Try a different search or add a new location.</span>
+            </div>
+          )}
+        </div>
+        <div className="table-footer">
+          Showing {items.length} facilities <span>Managed by Super Admin</span>
+        </div>
+      </div>
+      <div className="governance-panel">
+        <ShieldCheck size={20} />
+        <div>
+          <strong>Direct Location governance</strong>
+          <span>
+            Super Admin manages activation and deactivation directly.
+            Deactivated locations preserve existing records and are unavailable
+            for new Admin assignments.
+          </span>
+        </div>
+      </div>
+      {editing && (
+        <>
+          <button
+            className="drawer-scrim"
+            aria-label="Close location form"
+            onClick={() => setEditing(null)}
+          />
+          <aside className="drawer location-drawer">
+            <div className="drawer-header">
+              <div>
+                <p className="eyebrow">LOCATIONS</p>
+                <h2>{editing.id ? "Edit location" : "Add location"}</h2>
+              </div>
+              <button className="icon-button" onClick={() => setEditing(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form className="drawer-body location-form" onSubmit={save}>
+              <label htmlFor="location-name">
+                Location name <span className="required">*</span>
+                <input
+                  id="location-name"
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm({ ...form, name: event.target.value })
+                  }
+                  aria-invalid={Boolean(error && !form.name.trim())}
+                  autoFocus
+                />
+              </label>
+              <label htmlFor="location-status">
+                Status
+                <select
+                  id="location-status"
+                  value={form.status}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      status: event.target.value as LocationStatus,
+                    })
+                  }
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+              </label>
+              {error && (
+                <div className="form-error" role="alert">
+                  <CircleAlert size={16} />
+                  {error}
+                </div>
+              )}
+              <div className="drawer-footer">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setEditing(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : "Save location"}
+                </button>
+              </div>
+            </form>
+          </aside>
+        </>
+      )}
+      {statusTarget && (
+        <div className="confirm-backdrop" role="presentation">
+          <div
+            className="confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="status-confirm-title"
+          >
+            <h2 id="status-confirm-title">
+              {statusTarget.status === "ACTIVE" ? "Deactivate" : "Activate"}{" "}
+              location?
+            </h2>
+            <p>
+              {statusTarget.status === "ACTIVE"
+                ? "This prevents new Admin assignments while preserving existing records."
+                : "This makes the location available for new Admin assignments again."}
+            </p>
+            <div className="drawer-footer">
+              <button
+                className="secondary-button"
+                onClick={() => setStatusTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => void toggleStatus()}
+              >
+                {statusTarget.status === "ACTIVE" ? "Deactivate" : "Activate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
-function Overview({ role, pending, onReview, onNavigate, counts }: { role: Role; pending: Approval[]; onReview: (a: Approval) => void; onNavigate: (p: string) => void; counts: { locations: number; admins: number; vendors: number; engineers: number; inventory: number } }) {
-  return <><div className="metrics-grid"><Metric label="Locations" value={counts.locations} icon={MapPin} tone="blue" /><Metric label="Active admins" value={counts.admins} icon={Users} tone="teal" /><Metric label="Vendors" value={counts.vendors} icon={Building2} tone="purple" /><Metric label="Service engineers" value={counts.engineers} icon={ShieldCheck} tone="amber" /><Metric label="Inventory units" value={counts.inventory} icon={Package} tone="amber" /><Metric label="Pending requests" value={pending.length} icon={Clock3} tone="rose" /></div><div className="overview-grid"><section className="panel approvals-panel"><div className="panel-heading"><div><h2>Needs your attention</h2><p>Requests waiting for a decision</p></div><button className="text-button" onClick={() => onNavigate(role === 'SUPER_ADMIN' ? 'Approval Requests' : 'My Requests')}>View all <ArrowRight size={15} /></button></div>{pending.length ? pending.slice(0, 3).map((item) => <button className="approval-row" key={item.id} onClick={() => role === 'SUPER_ADMIN' && onReview(item)}><div className="request-icon"><ClipboardCheck size={17} /></div><div className="approval-info"><strong>{item.entity}</strong><span>{item.type.replaceAll('_', ' ')} · {item.requester}</span></div><div className="approval-meta"><StatusBadge status={item.status} /><small>{item.created}</small></div><ArrowRight size={16} className="row-arrow" /></button>) : <div className="empty-state"><div className="empty-icon"><Check size={20} /></div><strong>You&apos;re all caught up</strong><span>No pending requests need your attention.</span></div>}</section><section className="panel quick-panel"><div className="panel-heading"><div><h2>Quick access</h2><p>Jump back into your workspace</p></div></div><div className="quick-links">{(role === 'SUPER_ADMIN' ? ['Locations', 'Admins', 'Vendors', 'Service Engineers', 'Approval Requests', 'Inventory'] : ['Vendors', 'Service Engineers', 'My Requests', 'Inventory']).map((item, i) => <button key={item} onClick={() => onNavigate(item)}><span className={`quick-icon q-${i}`}><SlidersHorizontal size={16} /></span><span>{item}</span><ArrowRight size={15} /></button>)}</div></section></div><section className="info-banner"><div className="banner-icon"><ShieldCheck size={19} /></div><div><strong>Built for focused operations</strong><p>F1 keeps entity status and approval status separate, so every decision is clear and traceable.</p></div></section></>
+function Overview({
+  role,
+  pending,
+  onReview,
+  onNavigate,
+  counts,
+}: {
+  role: Role;
+  pending: Approval[];
+  onReview: (a: Approval) => void;
+  onNavigate: (p: string) => void;
+  counts: {
+    locations: number;
+    admins: number;
+    vendors: number;
+    engineers: number;
+    inventory: number;
+  };
+}) {
+  return (
+    <>
+      <div className="metrics-grid">
+        <Metric
+          label="Locations"
+          value={counts.locations}
+          icon={MapPin}
+          tone="blue"
+        />
+        <Metric
+          label="Active admins"
+          value={counts.admins}
+          icon={Users}
+          tone="teal"
+        />
+        <Metric
+          label="Vendors"
+          value={counts.vendors}
+          icon={Building2}
+          tone="purple"
+        />
+        <Metric
+          label="Service engineers"
+          value={counts.engineers}
+          icon={ShieldCheck}
+          tone="amber"
+        />
+        <Metric
+          label="Inventory units"
+          value={counts.inventory}
+          icon={Package}
+          tone="amber"
+        />
+        <Metric
+          label="Pending requests"
+          value={pending.length}
+          icon={Clock3}
+          tone="rose"
+        />
+      </div>
+      <div className="overview-grid">
+        <section className="panel approvals-panel">
+          <div className="panel-heading">
+            <div>
+              <h2>Needs your attention</h2>
+              <p>Requests waiting for a decision</p>
+            </div>
+            <button
+              className="text-button"
+              onClick={() =>
+                onNavigate(
+                  role === "SUPER_ADMIN" ? "Approval Requests" : "My Requests",
+                )
+              }
+            >
+              View all <ArrowRight size={15} />
+            </button>
+          </div>
+          {pending.length ? (
+            pending.slice(0, 3).map((item) => (
+              <button
+                className="approval-row"
+                key={item.id}
+                onClick={() => role === "SUPER_ADMIN" && onReview(item)}
+              >
+                <div className="request-icon">
+                  <ClipboardCheck size={17} />
+                </div>
+                <div className="approval-info">
+                  <strong>{item.entity}</strong>
+                  <span>
+                    {item.type.replaceAll("_", " ")} · {item.requester}
+                  </span>
+                </div>
+                <div className="approval-meta">
+                  <StatusBadge status={item.status} />
+                  <small>{item.created}</small>
+                </div>
+                <ArrowRight size={16} className="row-arrow" />
+              </button>
+            ))
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <Check size={20} />
+              </div>
+              <strong>You&apos;re all caught up</strong>
+              <span>No pending requests need your attention.</span>
+            </div>
+          )}
+        </section>
+        {/* <section className="panel quick-panel"><div className="panel-heading"><div><h2>Quick access</h2><p>Jump back into your workspace</p></div></div><div className="quick-links">{(role === 'SUPER_ADMIN' ? ['Locations', 'Admins', 'Vendors', 'Service Engineers', 'Approval Requests', 'Inventory'] : ['Vendors', 'Service Engineers', 'My Requests', 'Inventory']).map((item, i) => <button key={item} onClick={() => onNavigate(item)}><span className={`quick-icon q-${i}`}><SlidersHorizontal size={16} /></span><span>{item}</span><ArrowRight size={15} /></button>)}</div></section> */}
+      </div>
+      <section className="info-banner">
+        <div className="banner-icon">
+          <ShieldCheck size={19} />
+        </div>
+        <div>
+          <strong>Built for focused operations</strong>
+          <p>
+            F1 keeps entity status and approval status separate, so every
+            decision is clear and traceable.
+          </p>
+        </div>
+      </section>
+    </>
+  );
 }
-function Toolbar({ search, setSearch, filter = true }: { search: string; setSearch: (v: string) => void; filter?: boolean }) { return <div className="toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or requester" /></div>{filter && <button className="filter-button"><SlidersHorizontal size={16} />Filters</button>}</div> }
-function Approvals({ items, search, setSearch, onReview }: { items: Approval[]; search: string; setSearch: (s: string) => void; onReview: (a: Approval) => void }) { const visible = items.filter((i) => i.status === 'PENDING' && `${i.entity} ${i.requester}`.toLowerCase().includes(search.toLowerCase())); return <section className="panel table-panel"><Toolbar search={search} setSearch={setSearch} /><div className="table-wrap"><table><thead><tr><th>Request</th><th>Entity</th><th>Current status</th><th>Requested by</th><th>Location</th><th>Submitted</th><th /></tr></thead><tbody>{visible.map((item) => <tr key={item.id}><td><strong>{item.type.replaceAll('_', ' ')}</strong><small>{item.id}</small></td><td><strong>{item.entity}</strong><small>{item.action}</small></td><td><StatusBadge status={item.current.replaceAll(' ', '_').toUpperCase()} /></td><td>{item.requester}</td><td>{item.location}</td><td>{item.created}</td><td><button className="review-button" onClick={() => onReview(item)}>Review <ArrowRight size={14} /></button></td></tr>)}</tbody></table>{visible.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={20} /></div><strong>No pending requests found</strong><span>Try adjusting your search or filters.</span></div>}</div></section> }
-function Vendors({ items, role, search, setSearch, onCreate, onEdit, onSaved, currentUser, onDetail, onRequest, statusRequests }: { items: Vendor[]; role: Role; search: string; setSearch: (s: string) => void; onCreate: () => void; onEdit: (vendor: Vendor) => void; onSaved: () => void; currentUser: MockUser; onDetail: (vendor: VendorRecord) => void; onRequest: (vendor: VendorRecord, action: 'ACTIVATE' | 'DEACTIVATE') => void; statusRequests: VendorStatusRequest[] }) { const [localVendor, setLocalVendor] = useState<VendorRecord | null>(null); const [localDetail, setLocalDetail] = useState<VendorRecord | null>(null); const [localRequest, setLocalRequest] = useState<{ vendor: VendorRecord; action: 'ACTIVATE' | 'DEACTIVATE' } | null>(null); const [localPending, setLocalPending] = useState<string[]>([]); const [localForm, setLocalForm] = useState<VendorForm>(emptyVendorForm); const [localError, setLocalError] = useState(''); const [localSaving, setLocalSaving] = useState(false); async function submitLocalRequest() { if (!localRequest) return; try { onRequest(localRequest.vendor, localRequest.action); onSaved(); setLocalPending((items) => [...items, `${localRequest.vendor.id}:${localRequest.action}`]); setLocalRequest(null) } catch (cause) { setLocalError(cause instanceof Error ? cause.message : 'Unable to submit request.') } } async function submitLocal(event: React.FormEvent) { event.preventDefault(); if (!localVendor) return; const error = validateVendorInput(localForm); if (error) { setLocalError(error); return } setLocalSaving(true); try { if (localVendor.id) await vendorService.update(localVendor.id, localForm); else await vendorService.create({ ...localForm, owner: currentUser.name, location: currentUser.location }); onSaved(); if (localVendor.id) setSearch(''); setLocalVendor(null) } catch (cause) { setLocalError(cause instanceof Error ? cause.message : 'Unable to save vendor.') } finally { setLocalSaving(false) } } const [statusTab, setStatusTab] = useState<'ALL' | Status>('ALL'); const visible = items.filter((vendor) => (statusTab === 'ALL' || vendor.status === statusTab) && `${vendor.name} ${vendor.owner} ${vendor.location}`.toLowerCase().includes(search.toLowerCase())); const active = items.filter((vendor) => vendor.status === 'ACTIVE').length; const pending = items.filter((vendor) => vendor.status === 'PENDING_APPROVAL').length; const inactive = items.filter((vendor) => vendor.status === 'INACTIVE' || vendor.status === 'REJECTED').length; return <>{localRequest && <VendorRequestDialog target={localRequest} onClose={() => setLocalRequest(null)} onConfirm={() => void submitLocalRequest()} />}{localDetail && <VendorDetailDrawer vendor={localDetail} onClose={() => setLocalDetail(null)} />}{localVendor && <VendorDrawer vendor={localVendor} form={localForm} setForm={setLocalForm} error={localError} saving={localSaving} onClose={() => setLocalVendor(null)} onSave={submitLocal} />}<section className="vendors-module locations-module"><div className="locations-heading"><div><p className="eyebrow">ADMINISTRATION / VENDORS</p><h2>Vendors <span className="prototype-badge">Directory</span></h2><p>Global directory of third-party vendor organizations across all operating locations.</p></div><button className="primary-button compact" onClick={() => { onCreate(); setLocalError(''); setLocalForm({ ...emptyVendorForm }); setLocalVendor({ id: '', name: '', owner: currentUser.name, location: currentUser.location, status: 'PENDING_APPROVAL', onboardingStatus: 'PENDING_APPROVAL', operationalStatus: 'INACTIVE', engineers: 0, contactEmail: '', phone: '', description: '' }) }} disabled={role !== 'ADMIN'}><Plus size={17} />Create vendor</button></div>{role === 'SUPER_ADMIN' && <div className="location-metrics"><Metric label="Total vendors" value={items.length} icon={Building2} tone="blue" /><Metric label="Active operational" value={active} icon={Check} tone="teal" /><Metric label="Pending onboarding" value={pending} icon={Clock3} tone="amber" /><Metric label="Inactive / suspended" value={inactive} icon={CircleAlert} tone="rose" /></div>}<div className="panel vendor-controls"><Toolbar search={search} setSearch={setSearch} filter={false} /><div className="vendor-tabs" role="tablist" aria-label="Vendor status"><button className={statusTab === 'ALL' ? 'active' : ''} onClick={() => setStatusTab('ALL')}>All vendors ({items.length})</button><button className={statusTab === 'PENDING_APPROVAL' ? 'active' : ''} onClick={() => setStatusTab('PENDING_APPROVAL')}>Pending approval ({pending})</button><button className={statusTab === 'ACTIVE' ? 'active' : ''} onClick={() => setStatusTab('ACTIVE')}>Active ({active})</button><button className={statusTab === 'INACTIVE' || statusTab === 'REJECTED' ? 'active' : ''} onClick={() => setStatusTab('INACTIVE')}>Inactive / suspended ({inactive})</button></div></div><section className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Vendor organization</th><th>Owner admin</th><th>Location</th><th>Onboarding</th><th>Operational</th><th>Service engineers</th><th>Actions</th></tr></thead><tbody>{visible.map((v) => <tr key={v.id}><td><div className="entity-cell"><span className="entity-avatar"><Building2 size={16} /></span><div><strong>{v.name}</strong><small>{v.id.toUpperCase()}</small></div></div></td><td>{v.owner}<small>{v.owner.toLowerCase().replace(' ', '.')}@f1helpdesk.internal</small></td><td>{v.location}</td><td><StatusBadge status={v.status === 'PENDING_APPROVAL' ? v.status : v.status === 'REJECTED' ? v.status : 'ACTIVE'} /></td><td><StatusBadge status={v.status === 'ACTIVE' ? 'ACTIVE' : v.status === 'INACTIVE' ? 'INACTIVE' : 'PENDING_APPROVAL'} /></td><td>{v.engineers ? `${v.engineers} Engineers` : '0 (Ineligible)'}</td><td><div className="vendor-actions"><button className="secondary-button compact" onClick={() => { setLocalDetail(v); onDetail(v) }}><Eye size={15} />View details</button>{role === 'ADMIN' && <button className="secondary-button compact" onClick={() => { onEdit(v); setLocalError(''); setLocalForm({ name: v.name, contactEmail: v.contactEmail, phone: v.phone, description: v.description }); setLocalVendor(v) }}>Edit</button>}{role === 'ADMIN' && v.status === 'ACTIVE' && <button className="secondary-button compact" disabled={Boolean((statusRequests.find((request) => request.vendorId === v.id && request.action === 'DEACTIVATE' && request.status === 'PENDING') || localPending.includes(`${v.id}:DEACTIVATE`)))} onClick={() => { setLocalRequest({ vendor: v, action: 'DEACTIVATE' }); onRequest(v, 'DEACTIVATE') }}>{(statusRequests.find((request) => request.vendorId === v.id && request.action === 'DEACTIVATE' && request.status === 'PENDING') || localPending.includes(`${v.id}:DEACTIVATE`)) ? 'Deactivation pending' : 'Request deactivation'}</button>}{role === 'ADMIN' && v.status === 'INACTIVE' && <button className="secondary-button compact" disabled={Boolean((statusRequests.find((request) => request.vendorId === v.id && request.action === 'ACTIVATE' && request.status === 'PENDING') || localPending.includes(`${v.id}:ACTIVATE`)))} onClick={() => { setLocalRequest({ vendor: v, action: 'ACTIVATE' }); onRequest(v, 'ACTIVATE') }}>{(statusRequests.find((request) => request.vendorId === v.id && request.action === 'ACTIVATE' && request.status === 'PENDING') || localPending.includes(`${v.id}:ACTIVATE`)) ? 'Activation pending' : 'Request activation'}</button>}</div></td></tr>)}</tbody></table>{visible.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={20} /></div><strong>No vendors found</strong><span>Try adjusting your search or status filter.</span></div>}</div><div className="table-footer">Showing {visible.length} of {items.length} vendors <span>{role === 'ADMIN' ? 'Scoped to your workspace' : 'Centralized read-only replication'}</span></div></section>{role === 'SUPER_ADMIN' && <div className="governance-note"><ShieldCheck size={20} /><div><strong>Super Admin Vendor Governance Protocol</strong><span>Global visibility is enabled across all facilities. Vendor onboarding and lifecycle changes are governed through centralized approval requests.</span></div></div>}</section></> }
-function Engineers({ items, role }: { items: Engineer[]; role: Role }) { return <section className="panel table-panel"><Toolbar search="" setSearch={() => {}} /><div className="table-wrap"><table><thead><tr><th>Engineer</th><th>Relationship</th><th>Vendor</th><th>Location</th><th>Status</th><th /></tr></thead><tbody>{items.map((e) => <tr key={e.id}><td><div className="entity-cell"><span className="entity-avatar engineer"><ShieldCheck size={16} /></span><strong>{e.name}</strong></div></td><td><span className="relationship">{e.relationship === 'DIRECT' ? 'Direct' : 'Vendor-based'}</span></td><td>{e.vendor || '—'}</td><td>{e.location}</td><td><StatusBadge status={e.status} /></td><td><button className="kebab">•••</button></td></tr>)}</tbody></table></div><div className="table-footer">Showing {items.length} service engineers <span>{role === 'ADMIN' ? 'Your engineers only' : 'All locations'}</span></div></section> }
-function EngineerDirectory({ items, role, currentUser, requests, search, setSearch, onDetail, onEdit, onRequest }: { items: EngineerRecord[]; role: Role; currentUser: MockUser; requests: EngineerStatusRequest[]; search: string; setSearch: (value: string) => void; onDetail: (engineer: EngineerRecord) => void; onEdit: (engineer: EngineerRecord) => void; onRequest: (engineer: EngineerRecord, action: 'ACTIVATE' | 'DEACTIVATE') => void }) {
-  const visible = items.filter((engineer) => (role === 'SUPER_ADMIN' || engineerInAdminScope(engineer, currentUser)) && `${engineer.name} ${engineer.id}`.toLowerCase().includes(search.toLowerCase()))
-  const active = visible.filter((engineer) => engineer.status === 'ACTIVE').length
-  const inactive = visible.length - active
-  const pending = visible.filter((engineer) => pendingEngineerRequest(engineer.id)).length
-  return <section className="locations-module engineer-module"><div className="locations-heading"><div><p className="eyebrow">{role === 'SUPER_ADMIN' ? 'INFRASTRUCTURE DIRECTORY' : `MY LOCATION / SERVICE ENGINEERS / ${currentUser.location}`}</p><h2>Service Engineers <span className="prototype-badge">{role === 'SUPER_ADMIN' ? 'Global oversight' : 'Location roster'}</span></h2><p>{role === 'SUPER_ADMIN' ? 'Global directory and lifecycle governance across operational locations.' : `Manage engineers assigned to ${currentUser.location}. Creation is immediate; status changes require approval.`}</p></div>{role === 'ADMIN' && <button className="primary-button compact" onClick={() => onEdit({ id: '', name: '', phone: '', email: '', address: '', skill: '', category: '', ownerAdminId: currentUser.name, ownerAdmin: currentUser.name, locationId: currentUser.location, location: currentUser.location, relationship: 'DIRECT', status: 'ACTIVE' })}><Plus size={17} />Add Service Engineer</button>}</div><div className="location-metrics"><Metric label={role === 'SUPER_ADMIN' ? 'Total engineers' : 'Engineers in scope'} value={visible.length} icon={Users} tone="blue" /><Metric label="Active operational" value={active} icon={Check} tone="teal" /><Metric label="Pending requests" value={pending} icon={Clock3} tone="amber" /><Metric label="Inactive" value={inactive} icon={CircleAlert} tone="purple" /></div><div className="locations-toolbar"><div className="search-box"><Search size={17} /><input aria-label="Search service engineers" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or engineer ID" /></div><span className="result-count">Showing {visible.length} engineers</span></div><div className="panel table-panel"><div className="table-wrap"><table><thead><tr><th>Engineer</th><th>Owner Admin</th><th>Location</th><th>Relationship</th><th>Vendor</th><th>Status</th><th>Request</th><th>Actions</th></tr></thead><tbody>{visible.map((engineer) => { const request = pendingEngineerRequest(engineer.id); return <tr key={engineer.id}><td><div className="entity-cell"><span className="entity-avatar engineer"><ShieldCheck size={16} /></span><div><strong>{engineer.name}</strong><small>{engineer.id.toUpperCase()}</small></div></div></td><td>{engineer.ownerAdmin}</td><td>{engineer.location}</td><td><span className="relationship">{engineer.relationship === 'DIRECT' ? 'Direct' : 'Vendor-based'}</span></td><td>{engineer.vendor || '—'}</td><td><StatusBadge status={engineer.status} /></td><td>{request ? <span className={`request-chip ${request.action.toLowerCase()}`}>{request.action === 'ACTIVATE' ? 'Activation' : 'Deactivation'} pending<br /><small>{request.id}</small></span> : '—'}</td><td><div className="row-actions"><button className="secondary-button compact" onClick={() => role === 'SUPER_ADMIN' ? onDetail(engineer) : onEdit(engineer)}>{role === 'SUPER_ADMIN' ? 'View details' : 'Edit details'}</button>{role === 'ADMIN' && !request && <button className={`status-action ${engineer.status === 'ACTIVE' ? 'deactivate' : 'activate'}`} onClick={() => onRequest(engineer, engineer.status === 'ACTIVE' ? 'DEACTIVATE' : 'ACTIVATE')}>{engineer.status === 'ACTIVE' ? 'Request deactivation' : 'Request activation'}</button>}</div></td></tr> })}</tbody></table>{visible.length === 0 && <div className="empty-state"><strong>No service engineers found</strong><span>Try adjusting your search or filters.</span></div>}</div><div className="table-footer">Showing {visible.length} service engineers <span>{role === 'ADMIN' ? 'Your engineers only' : 'All locations'}</span></div></div></section>
+function Toolbar({
+  search,
+  setSearch,
+  filter = true,
+}: {
+  search: string;
+  setSearch: (v: string) => void;
+  filter?: boolean;
+}) {
+  return (
+    <div className="toolbar">
+      <div className="search-box">
+        <Search size={17} />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name or requester"
+        />
+      </div>
+      {filter && (
+        <button className="filter-button">
+          <SlidersHorizontal size={16} />
+          Filters
+        </button>
+      )}
+    </div>
+  );
+}
+function Approvals({
+  items,
+  search,
+  setSearch,
+  onReview,
+}: {
+  items: Approval[];
+  search: string;
+  setSearch: (s: string) => void;
+  onReview: (a: Approval) => void;
+}) {
+  const visible = items.filter(
+    (i) =>
+      i.status === "PENDING" &&
+      `${i.entity} ${i.requester}`.toLowerCase().includes(search.toLowerCase()),
+  );
+  return (
+    <section className="panel table-panel">
+      <Toolbar search={search} setSearch={setSearch} />
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Request</th>
+              <th>Entity</th>
+              <th>Current status</th>
+              <th>Requested by</th>
+              <th>Location</th>
+              <th>Submitted</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  <strong>{item.type.replaceAll("_", " ")}</strong>
+                  <small>{item.id}</small>
+                </td>
+                <td>
+                  <strong>{item.entity}</strong>
+                  <small>{item.action}</small>
+                </td>
+                <td>
+                  <StatusBadge
+                    status={item.current.replaceAll(" ", "_").toUpperCase()}
+                  />
+                </td>
+                <td>{item.requester}</td>
+                <td>{item.location}</td>
+                <td>{item.created}</td>
+                <td>
+                  <button
+                    className="review-button"
+                    onClick={() => onReview(item)}
+                  >
+                    Review <ArrowRight size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {visible.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <Search size={20} />
+            </div>
+            <strong>No pending requests found</strong>
+            <span>Try adjusting your search or filters.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+function Vendors({
+  items,
+  role,
+  search,
+  setSearch,
+  onCreate,
+  onEdit,
+  onSaved,
+  currentUser,
+  onDetail,
+  onRequest,
+  statusRequests,
+  loadError,
+}: {
+  items: Vendor[];
+  role: Role;
+  search: string;
+  setSearch: (s: string) => void;
+  onCreate: () => void;
+  onEdit: (vendor: Vendor) => void;
+  onSaved: () => void;
+  currentUser: MockUser;
+  onDetail: (vendor: VendorRecord) => void;
+  onRequest: (vendor: VendorRecord, action: "ACTIVATE" | "DEACTIVATE") => void;
+  statusRequests: VendorStatusRequest[];
+  loadError?: string;
+}) {
+  const [localVendor, setLocalVendor] = useState<VendorRecord | null>(null);
+  const [localDetail, setLocalDetail] = useState<VendorRecord | null>(null);
+  const [localRequest, setLocalRequest] = useState<{
+    vendor: VendorRecord;
+    action: "ACTIVATE" | "DEACTIVATE";
+  } | null>(null);
+  const [localPending, setLocalPending] = useState<string[]>([]);
+  const [localForm, setLocalForm] = useState<VendorForm>(emptyVendorForm);
+  const [localError, setLocalError] = useState("");
+  const [localSaving, setLocalSaving] = useState(false);
+  async function submitLocalRequest() {
+    if (!localRequest) return;
+    try {
+      onRequest(localRequest.vendor, localRequest.action);
+      onSaved();
+      setLocalPending((items) => [
+        ...items,
+        `${localRequest.vendor.id}:${localRequest.action}`,
+      ]);
+      setLocalRequest(null);
+    } catch (cause) {
+      setLocalError(
+        cause instanceof Error ? cause.message : "Unable to submit request.",
+      );
+    }
+  }
+  async function submitLocal(event: React.FormEvent) {
+    event.preventDefault();
+    if (!localVendor) return;
+    const error = validateVendorInput(localForm);
+    if (error) {
+      setLocalError(error);
+      return;
+    }
+    setLocalSaving(true);
+    try {
+      if (localVendor.id) await vendorService.update(localVendor.id, localForm);
+      else
+        await vendorService.create({
+          ...localForm,
+          owner: currentUser.name,
+          location: currentUser.location,
+        });
+      onSaved();
+      if (localVendor.id) setSearch("");
+      setLocalVendor(null);
+    } catch (cause) {
+      setLocalError(
+        cause instanceof Error ? cause.message : "Unable to save vendor.",
+      );
+    } finally {
+      setLocalSaving(false);
+    }
+  }
+  const [statusTab, setStatusTab] = useState<"ALL" | Status>("ALL");
+  const visible = items.filter(
+    (vendor) =>
+      (statusTab === "ALL" || vendor.status === statusTab) &&
+      `${vendor.name} ${vendor.owner} ${vendor.location}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const active = items.filter((vendor) => vendor.status === "ACTIVE").length;
+  const pending = items.filter(
+    (vendor) => vendor.status === "PENDING_APPROVAL",
+  ).length;
+  const inactive = items.filter(
+    (vendor) => vendor.status === "INACTIVE" || vendor.status === "REJECTED",
+  ).length;
+  return (
+    <>
+      {localRequest && (
+        <VendorRequestDialog
+          target={localRequest}
+          onClose={() => setLocalRequest(null)}
+          onConfirm={() => void submitLocalRequest()}
+        />
+      )}
+      {localDetail && (
+        <VendorDetailDrawer
+          vendor={localDetail}
+          onClose={() => setLocalDetail(null)}
+        />
+      )}
+      {localVendor && (
+        <VendorDrawer
+          vendor={localVendor}
+          form={localForm}
+          setForm={setLocalForm}
+          error={localError}
+          saving={localSaving}
+          onClose={() => setLocalVendor(null)}
+          onSave={submitLocal}
+        />
+      )}
+      <section className="vendors-module locations-module">
+        <div className="locations-heading">
+          <div>
+            <p className="eyebrow">ADMINISTRATION / VENDORS</p>
+            <h2>
+              Vendors <span className="prototype-badge">Directory</span>
+            </h2>
+            <p>
+              Global directory of third-party vendor organizations across all
+              operating locations.
+            </p>
+          </div>
+          <button
+            className="primary-button compact"
+            onClick={() => {
+              onCreate();
+              setLocalError("");
+              setLocalForm({ ...emptyVendorForm });
+              setLocalVendor({
+                id: "",
+                name: "",
+                owner: currentUser.name,
+                location: currentUser.location,
+                status: "PENDING_APPROVAL",
+                onboardingStatus: "PENDING_APPROVAL",
+                operationalStatus: "INACTIVE",
+                engineers: 0,
+                contactEmail: "",
+                phone: "",
+                description: "",
+              });
+            }}
+            disabled={role !== "ADMIN"}
+          >
+            <Plus size={17} />
+            Create vendor
+          </button>
+        </div>
+        {role === "SUPER_ADMIN" && (
+          <div className="location-metrics">
+            <Metric
+              label="Total vendors"
+              value={items.length}
+              icon={Building2}
+              tone="blue"
+            />
+            <Metric
+              label="Active operational"
+              value={active}
+              icon={Check}
+              tone="teal"
+            />
+            <Metric
+              label="Pending onboarding"
+              value={pending}
+              icon={Clock3}
+              tone="amber"
+            />
+            <Metric
+              label="Inactive / suspended"
+              value={inactive}
+              icon={CircleAlert}
+              tone="rose"
+            />
+          </div>
+        )}
+        <div className="panel vendor-controls">
+          <Toolbar search={search} setSearch={setSearch} filter={false} />
+          <div
+            className="vendor-tabs"
+            role="tablist"
+            aria-label="Vendor status"
+          >
+            <button
+              className={statusTab === "ALL" ? "active" : ""}
+              onClick={() => setStatusTab("ALL")}
+            >
+              All vendors ({items.length})
+            </button>
+            <button
+              className={statusTab === "PENDING_APPROVAL" ? "active" : ""}
+              onClick={() => setStatusTab("PENDING_APPROVAL")}
+            >
+              Pending approval ({pending})
+            </button>
+            <button
+              className={statusTab === "ACTIVE" ? "active" : ""}
+              onClick={() => setStatusTab("ACTIVE")}
+            >
+              Active ({active})
+            </button>
+            <button
+              className={
+                statusTab === "INACTIVE" || statusTab === "REJECTED"
+                  ? "active"
+                  : ""
+              }
+              onClick={() => setStatusTab("INACTIVE")}
+            >
+              Inactive / suspended ({inactive})
+            </button>
+          </div>
+        </div>
+        <section className="panel table-panel">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Vendor organization</th>
+                  <th>Owner admin</th>
+                  <th>Location</th>
+                  <th>Onboarding</th>
+                  <th>Operational</th>
+                  <th>Service engineers</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((v) => (
+                  <tr key={v.id}>
+                    <td>
+                      <div className="entity-cell">
+                        <span className="entity-avatar">
+                          <Building2 size={16} />
+                        </span>
+                        <div>
+                          <strong>{v.name}</strong>
+                          <small>{v.id.toUpperCase()}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {v.owner}
+                      <small>
+                        {v.owner.toLowerCase().replace(" ", ".")}
+                        @f1helpdesk.internal
+                      </small>
+                    </td>
+                    <td>{v.location}</td>
+                    <td>
+                      <StatusBadge
+                        status={
+                          v.status === "PENDING_APPROVAL"
+                            ? v.status
+                            : v.status === "REJECTED"
+                              ? v.status
+                              : "ACTIVE"
+                        }
+                      />
+                    </td>
+                    <td>
+                      <StatusBadge
+                        status={
+                          v.status === "ACTIVE"
+                            ? "ACTIVE"
+                            : v.status === "INACTIVE"
+                              ? "INACTIVE"
+                              : "PENDING_APPROVAL"
+                        }
+                      />
+                    </td>
+                    <td>
+                      {v.engineers
+                        ? `${v.engineers} Engineers`
+                        : "0 (Ineligible)"}
+                    </td>
+                    <td>
+                      <div className="vendor-actions">
+                        <button
+                          className="secondary-button compact"
+                          onClick={() => {
+                            setLocalDetail(v);
+                            onDetail(v);
+                          }}
+                        >
+                          <Eye size={15} />
+                          View details
+                        </button>
+                        {role === "ADMIN" && (
+                          <button
+                            className="secondary-button compact"
+                            onClick={() => {
+                              onEdit(v);
+                              setLocalError("");
+                              setLocalForm({
+                                name: v.name,
+                                contactEmail: v.contactEmail,
+                                phone: v.phone,
+                                description: v.description,
+                              });
+                              setLocalVendor(v);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {role === "ADMIN" && v.status === "ACTIVE" && (
+                          <button
+                            className="secondary-button compact"
+                            disabled={Boolean(
+                              statusRequests.find(
+                                (request) =>
+                                  request.vendorId === v.id &&
+                                  request.action === "DEACTIVATE" &&
+                                  request.status === "PENDING",
+                              ) || localPending.includes(`${v.id}:DEACTIVATE`),
+                            )}
+                            onClick={() => {
+                              setLocalRequest({
+                                vendor: v,
+                                action: "DEACTIVATE",
+                              });
+                              onRequest(v, "DEACTIVATE");
+                            }}
+                          >
+                            {statusRequests.find(
+                              (request) =>
+                                request.vendorId === v.id &&
+                                request.action === "DEACTIVATE" &&
+                                request.status === "PENDING",
+                            ) || localPending.includes(`${v.id}:DEACTIVATE`)
+                              ? "Deactivation pending"
+                              : "Request deactivation"}
+                          </button>
+                        )}
+                        {role === "ADMIN" && v.status === "INACTIVE" && (
+                          <button
+                            className="secondary-button compact"
+                            disabled={Boolean(
+                              statusRequests.find(
+                                (request) =>
+                                  request.vendorId === v.id &&
+                                  request.action === "ACTIVATE" &&
+                                  request.status === "PENDING",
+                              ) || localPending.includes(`${v.id}:ACTIVATE`),
+                            )}
+                            onClick={() => {
+                              setLocalRequest({
+                                vendor: v,
+                                action: "ACTIVATE",
+                              });
+                              onRequest(v, "ACTIVATE");
+                            }}
+                          >
+                            {statusRequests.find(
+                              (request) =>
+                                request.vendorId === v.id &&
+                                request.action === "ACTIVATE" &&
+                                request.status === "PENDING",
+                            ) || localPending.includes(`${v.id}:ACTIVATE`)
+                              ? "Activation pending"
+                              : "Request activation"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {visible.length === 0 &&
+              (loadError ? (
+                <div className="empty-state" role="alert">
+                  <div
+                    className="empty-icon"
+                    style={{
+                      color: "var(--danger)",
+                      background: "var(--danger-bg)",
+                    }}
+                  >
+                    <CircleAlert size={20} />
+                  </div>
+                  <strong>Unable to load vendors</strong>
+                  <span>{loadError}</span>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">
+                    <Search size={20} />
+                  </div>
+                  <strong>No vendors found</strong>
+                  <span>Try adjusting your search or status filter.</span>
+                </div>
+              ))}
+          </div>
+          <div className="table-footer">
+            Showing {visible.length} of {items.length} vendors{" "}
+            <span>
+              {role === "ADMIN"
+                ? "Scoped to your workspace"
+                : "Centralized read-only replication"}
+            </span>
+          </div>
+        </section>
+        {role === "SUPER_ADMIN" && (
+          <div className="governance-note">
+            <ShieldCheck size={20} />
+            <div>
+              <strong>Super Admin Vendor Governance Protocol</strong>
+              <span>
+                Global visibility is enabled across all facilities. Vendor
+                onboarding and lifecycle changes are governed through
+                centralized approval requests.
+              </span>
+            </div>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+function Engineers({ items, role }: { items: Engineer[]; role: Role }) {
+  return (
+    <section className="panel table-panel">
+      <Toolbar search="" setSearch={() => {}} />
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Engineer</th>
+              <th>Relationship</th>
+              <th>Vendor</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((e) => (
+              <tr key={e.id}>
+                <td>
+                  <div className="entity-cell">
+                    <span className="entity-avatar engineer">
+                      <ShieldCheck size={16} />
+                    </span>
+                    <strong>{e.name}</strong>
+                  </div>
+                </td>
+                <td>
+                  <span className="relationship">
+                    {e.relationship === "DIRECT" ? "Direct" : "Vendor-based"}
+                  </span>
+                </td>
+                <td>{e.vendor || "—"}</td>
+                <td>{e.location}</td>
+                <td>
+                  <StatusBadge status={e.status} />
+                </td>
+                <td>
+                  <button className="kebab">•••</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="table-footer">
+        Showing {items.length} service engineers{" "}
+        <span>
+          {role === "ADMIN" ? "Your engineers only" : "All locations"}
+        </span>
+      </div>
+    </section>
+  );
+}
+function EngineerDirectory({
+  items,
+  role,
+  currentUser,
+  requests,
+  search,
+  setSearch,
+  onDetail,
+  onEdit,
+  onRequest,
+  loadError,
+}: {
+  items: EngineerRecord[];
+  role: Role;
+  currentUser: MockUser;
+  requests: EngineerStatusRequest[];
+  search: string;
+  setSearch: (value: string) => void;
+  onDetail: (engineer: EngineerRecord) => void;
+  onEdit: (engineer: EngineerRecord) => void;
+  onRequest: (
+    engineer: EngineerRecord,
+    action: "ACTIVATE" | "DEACTIVATE",
+  ) => void;
+  loadError?: string;
+}) {
+  const visible = items.filter(
+    (engineer) =>
+      (role === "SUPER_ADMIN" || engineerInAdminScope(engineer, currentUser)) &&
+      `${engineer.name} ${engineer.id}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const active = visible.filter(
+    (engineer) => engineer.status === "ACTIVE",
+  ).length;
+  const inactive = visible.length - active;
+  const pending = visible.filter((engineer) =>
+    pendingEngineerRequest(engineer.id),
+  ).length;
+  return (
+    <section className="locations-module engineer-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">
+            {role === "SUPER_ADMIN"
+              ? "INFRASTRUCTURE DIRECTORY"
+              : `MY LOCATION / SERVICE ENGINEERS / ${currentUser.location}`}
+          </p>
+          <h2>
+            Service Engineers{" "}
+            <span className="prototype-badge">
+              {role === "SUPER_ADMIN" ? "Global oversight" : "Location roster"}
+            </span>
+          </h2>
+          <p>
+            {role === "SUPER_ADMIN"
+              ? "Global directory and lifecycle governance across operational locations."
+              : `Manage engineers assigned to ${currentUser.location}. Creation is immediate; status changes require approval.`}
+          </p>
+        </div>
+        {role === "ADMIN" && (
+          <button
+            className="primary-button compact"
+            onClick={() =>
+              onEdit({
+                id: "",
+                name: "",
+                phone: "",
+                email: "",
+                address: "",
+                skill: "",
+                category: "",
+                ownerAdminId: currentUser.name,
+                ownerAdmin: currentUser.name,
+                locationId: currentUser.location,
+                location: currentUser.location,
+                relationship: "DIRECT",
+                status: "ACTIVE",
+              })
+            }
+          >
+            <Plus size={17} />
+            Add Service Engineer
+          </button>
+        )}
+      </div>
+      <div className="location-metrics">
+        <Metric
+          label={
+            role === "SUPER_ADMIN" ? "Total engineers" : "Engineers in scope"
+          }
+          value={visible.length}
+          icon={Users}
+          tone="blue"
+        />
+        <Metric
+          label="Active operational"
+          value={active}
+          icon={Check}
+          tone="teal"
+        />
+        <Metric
+          label="Pending requests"
+          value={pending}
+          icon={Clock3}
+          tone="amber"
+        />
+        <Metric
+          label="Inactive"
+          value={inactive}
+          icon={CircleAlert}
+          tone="purple"
+        />
+      </div>
+      <div className="locations-toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search service engineers"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by name or engineer ID"
+          />
+        </div>
+        <span className="result-count">Showing {visible.length} engineers</span>
+      </div>
+      <div className="panel table-panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Engineer</th>
+                <th>Owner Admin</th>
+                <th>Location</th>
+                <th>Relationship</th>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Request</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((engineer) => {
+                const request = pendingEngineerRequest(engineer.id);
+                return (
+                  <tr key={engineer.id}>
+                    <td>
+                      <div className="entity-cell">
+                        <span className="entity-avatar engineer">
+                          <ShieldCheck size={16} />
+                        </span>
+                        <div>
+                          <strong>{engineer.name}</strong>
+                          <small>{engineer.id.toUpperCase()}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{engineer.ownerAdmin}</td>
+                    <td>{engineer.location}</td>
+                    <td>
+                      <span className="relationship">
+                        {engineer.relationship === "DIRECT"
+                          ? "Direct"
+                          : "Vendor-based"}
+                      </span>
+                    </td>
+                    <td>{engineer.vendor || "—"}</td>
+                    <td>
+                      <StatusBadge status={engineer.status} />
+                    </td>
+                    <td>
+                      {request ? (
+                        <span
+                          className={`request-chip ${request.action.toLowerCase()}`}
+                        >
+                          {request.action === "ACTIVATE"
+                            ? "Activation"
+                            : "Deactivation"}{" "}
+                          pending
+                          <br />
+                          <small>{request.id}</small>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="secondary-button compact"
+                          onClick={() =>
+                            role === "SUPER_ADMIN"
+                              ? onDetail(engineer)
+                              : onEdit(engineer)
+                          }
+                        >
+                          {role === "SUPER_ADMIN"
+                            ? "View details"
+                            : "Edit details"}
+                        </button>
+                        {role === "ADMIN" && !request && (
+                          <button
+                            className={`status-action ${engineer.status === "ACTIVE" ? "deactivate" : "activate"}`}
+                            onClick={() =>
+                              onRequest(
+                                engineer,
+                                engineer.status === "ACTIVE"
+                                  ? "DEACTIVATE"
+                                  : "ACTIVATE",
+                              )
+                            }
+                          >
+                            {engineer.status === "ACTIVE"
+                              ? "Request deactivation"
+                              : "Request activation"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {visible.length === 0 &&
+            (loadError ? (
+              <div className="empty-state" role="alert">
+                <div
+                  className="empty-icon"
+                  style={{
+                    color: "var(--danger)",
+                    background: "var(--danger-bg)",
+                  }}
+                >
+                  <CircleAlert size={20} />
+                </div>
+                <strong>Unable to load service engineers</strong>
+                <span>{loadError}</span>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <strong>No service engineers found</strong>
+                <span>Try adjusting your search or filters.</span>
+              </div>
+            ))}
+        </div>
+        <div className="table-footer">
+          Showing {visible.length} service engineers{" "}
+          <span>
+            {role === "ADMIN" ? "Your engineers only" : "All locations"}
+          </span>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function EngineerDetailDrawer({ engineer, request, onClose }: { engineer: EngineerRecord; request?: EngineerStatusRequest; onClose: () => void }) { return <><button className="drawer-scrim" aria-label="Close engineer details" onClick={onClose} /><aside className="drawer"><div className="drawer-header"><div><p className="eyebrow">ADMINISTRATION / SERVICE ENGINEERS / DETAIL VIEW</p><h2>{engineer.name}</h2><small>ID #{engineer.id.toUpperCase()}</small></div><button className="icon-button" aria-label="Close engineer details" onClick={onClose}><X size={18} /></button></div><div className="drawer-body"><div className="drawer-status"><StatusBadge status={engineer.status} /><span>Read-only oversight view</span></div>{request ? <div className="governance-panel"><ShieldCheck size={20} /><div><strong>Pending {request.action === 'ACTIVATE' ? 'activation' : 'deactivation'} request</strong><span>{request.id} · Requested by {request.requester}</span><span>{request.reason}</span><span>Operational status remains {engineer.status.toLowerCase()} until approval.</span></div></div> : <div className="reason-box"><span>No pending governance request</span><p>Status changes, when needed, are submitted by the assigned Admin for Super Admin review.</p></div>}<div className="detail-block"><span>Governance & assignment</span><strong>{engineer.location}</strong><small>Owner Admin: {engineer.ownerAdmin}</small></div><div className="detail-block"><span>Relationship</span><strong>{engineer.relationship === 'DIRECT' ? 'Direct facility engineer' : 'Vendor-based engineer'}</strong>{engineer.vendor && <small>Vendor: {engineer.vendor}</small>}</div><div className="reason-box"><span>Profile access</span><p>Super Admin detail view is read-only. Vendor association, owner, location, and operational status cannot be changed here.</p></div></div><div className="drawer-footer"><button className="secondary-button" onClick={onClose}>Close drawer</button></div></aside></> }
+function EngineerDetailDrawer({
+  engineer,
+  request,
+  onClose,
+}: {
+  engineer: EngineerRecord;
+  request?: EngineerStatusRequest;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close engineer details"
+        onClick={onClose}
+      />
+      <aside className="drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">
+              ADMINISTRATION / SERVICE ENGINEERS / DETAIL VIEW
+            </p>
+            <h2>{engineer.name}</h2>
+            <small>ID #{engineer.id.toUpperCase()}</small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close engineer details"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          <div className="drawer-status">
+            <StatusBadge status={engineer.status} />
+            <span>Read-only oversight view</span>
+          </div>
+          {request ? (
+            <div className="governance-panel">
+              <ShieldCheck size={20} />
+              <div>
+                <strong>
+                  Pending{" "}
+                  {request.action === "ACTIVATE"
+                    ? "activation"
+                    : "deactivation"}{" "}
+                  request
+                </strong>
+                <span>
+                  {request.id} · Requested by {request.requester}
+                </span>
+                <span>{request.reason}</span>
+                <span>
+                  Operational status remains {engineer.status.toLowerCase()}{" "}
+                  until approval.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="reason-box">
+              <span>No pending governance request</span>
+              <p>
+                Status changes, when needed, are submitted by the assigned Admin
+                for Super Admin review.
+              </p>
+            </div>
+          )}
+          <div className="detail-block">
+            <span>Governance & assignment</span>
+            <strong>{engineer.location}</strong>
+            <small>Owner Admin: {engineer.ownerAdmin}</small>
+          </div>
+          <div className="detail-block">
+            <span>Relationship</span>
+            <strong>
+              {engineer.relationship === "DIRECT"
+                ? "Direct facility engineer"
+                : "Vendor-based engineer"}
+            </strong>
+            {engineer.vendor && <small>Vendor: {engineer.vendor}</small>}
+          </div>
+          <div className="reason-box">
+            <span>Profile access</span>
+            <p>
+              Super Admin detail view is read-only. Vendor association, owner,
+              location, and operational status cannot be changed here.
+            </p>
+          </div>
+        </div>
+        <div className="drawer-footer">
+          <button className="secondary-button" onClick={onClose}>
+            Close drawer
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
 
-function EngineerEditDrawer({ engineer, vendors, onClose, onSave }: { engineer: EngineerRecord; vendors: VendorRecord[]; onClose: () => void; onSave: (input: { name: string; phone: string; email?: string; address?: string; skill?: string; category?: string; relationship: 'DIRECT' | 'VENDOR_BASED'; vendorId?: string; vendor?: string }) => void }) { const [name, setName] = useState(engineer.name); const [phone, setPhone] = useState(engineer.phone || ''); const [email, setEmail] = useState(engineer.email || ''); const [address, setAddress] = useState(engineer.address || ''); const [skill, setSkill] = useState(engineer.skill || ''); const [category, setCategory] = useState(engineer.category || ''); const [relationship, setRelationship] = useState(engineer.relationship); const [vendorId, setVendorId] = useState(engineer.vendorId || ''); const [error, setError] = useState(''); const eligible = vendors.filter((vendor) => vendor.status === 'ACTIVE' && vendorScopeAllows(engineer.location, vendor)); function save(event: React.FormEvent) { event.preventDefault(); if (!name.trim()) { setError('Engineer name is required.'); return } if (!phone.trim()) { setError('Phone number is required.'); return } if (relationship === 'VENDOR_BASED' && !vendorId) { setError('Select an approved vendor.'); return } onSave({ name, phone, email, address, skill, category, relationship, vendorId: relationship === 'VENDOR_BASED' ? vendorId : undefined, vendor: relationship === 'VENDOR_BASED' ? eligible.find((vendor) => vendor.id === vendorId)?.name : undefined }) } return <><button className="drawer-scrim" aria-label="Close engineer editor" onClick={onClose} /><aside className="drawer"><div className="drawer-header"><div><p className="eyebrow">VENDOR MANAGEMENT / SERVICE ENGINEERS</p><h2>{engineer.id ? 'Edit Service Engineer' : 'Add Service Engineer'}</h2><small>{engineer.location} · {engineer.ownerAdmin}</small></div><button className="icon-button" aria-label="Close engineer editor" onClick={onClose}><X size={18} /></button></div><form className="drawer-body admin-form" onSubmit={save}><div className="governance-panel"><ShieldCheck size={19} /><div><strong>Creation and lifecycle governance</strong><span>New engineers are created immediately. Activation and deactivation require a separate approval request.</span></div></div><div className="form-section-label">Personal and contact information</div><label className="detail-block">Engineer name <b>*</b><input value={name} onChange={(event) => setName(event.target.value)} required /></label><label className="detail-block">Phone number <b>*</b><input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} required /></label><label className="detail-block">Email ID<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@company.com" /></label><label className="detail-block">Address<textarea value={address} onChange={(event) => setAddress(event.target.value)} rows={3} placeholder="Enter address" /></label><div className="form-section-label">Professional information</div><label className="detail-block">Skill<select value={skill} onChange={(event) => setSkill(event.target.value)}><option value="">Unavailable — MasterData options pending</option></select></label><label className="detail-block">Category<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Unavailable — MasterData options pending</option></select></label>{engineer.id ? <><div className="detail-block"><span>Relationship type</span><strong>{relationship === 'DIRECT' ? 'Direct' : 'Vendor-based'} · immutable</strong></div>{engineer.vendor && <div className="detail-block"><span>Vendor association</span><strong>{engineer.vendor} · immutable</strong></div>}</> : <><label className="detail-block">Relationship type<select value={relationship} onChange={(event) => { const value = event.target.value as EngineerRecord['relationship']; setRelationship(value); if (value === 'DIRECT') setVendorId('') }}><option value="DIRECT">Direct</option><option value="VENDOR_BASED">Under vendor</option></select></label>{relationship === 'VENDOR_BASED' && <label className="detail-block">Approved vendor<select value={vendorId} onChange={(event) => setVendorId(event.target.value)}><option value="">Select eligible vendor</option>{eligible.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}</select>{eligible.length === 0 && <small className="empty-help">No approved eligible vendors are available in your permitted location scope.</small>}</label>}</>}<div className="detail-block"><span>Assigned scope</span><strong>{engineer.location}</strong><small>Owner and location are assigned from the signed-in Admin and cannot be changed.</small></div>{error && <div className="form-error" role="alert">{error}</div>}<div className="drawer-footer"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="primary-button">Save engineer</button></div></form></aside></> }
+function EngineerEditDrawer({
+  engineer,
+  vendors,
+  onClose,
+  onSave,
+  skills = [],
+  categories = [],
+}: {
+  engineer: EngineerRecord;
+  vendors: VendorRecord[];
+  onClose: () => void;
+  onSave: (input: {
+    name: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    skill?: string;
+    category?: string;
+    relationship: "DIRECT" | "VENDOR_BASED";
+    vendorId?: string;
+    vendor?: string;
+  }) => void;
+  skills?: string[];
+  categories?: string[];
+}) {
+  const [name, setName] = useState(engineer.name);
+  const [phone, setPhone] = useState(engineer.phone || "");
+  const [email, setEmail] = useState(engineer.email || "");
+  const [address, setAddress] = useState(engineer.address || "");
+  const [skill, setSkill] = useState(engineer.skill || "");
+  const [category, setCategory] = useState(engineer.category || "");
+  const [relationship, setRelationship] = useState(engineer.relationship);
+  const [vendorId, setVendorId] = useState(engineer.vendorId || "");
+  const [error, setError] = useState("");
+  const eligible = vendors.filter(
+    (vendor) =>
+      vendor.status === "ACTIVE" &&
+      vendorScopeAllows(engineer.location, vendor),
+  );
+  function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (!name.trim()) {
+      setError("Engineer name is required.");
+      return;
+    }
+    if (!phone.trim()) {
+      setError("Phone number is required.");
+      return;
+    }
+    if (relationship === "VENDOR_BASED" && !vendorId) {
+      setError("Select an approved vendor.");
+      return;
+    }
+    onSave({
+      name,
+      phone,
+      email,
+      address,
+      skill,
+      category,
+      relationship,
+      vendorId: relationship === "VENDOR_BASED" ? vendorId : undefined,
+      vendor:
+        relationship === "VENDOR_BASED"
+          ? eligible.find((vendor) => vendor.id === vendorId)?.name
+          : undefined,
+    });
+  }
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close engineer editor"
+        onClick={onClose}
+      />
+      <aside className="drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">VENDOR MANAGEMENT / SERVICE ENGINEERS</p>
+            <h2>
+              {engineer.id ? "Edit Service Engineer" : "Add Service Engineer"}
+            </h2>
+            <small>
+              {engineer.location} · {engineer.ownerAdmin}
+            </small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close engineer editor"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <form className="drawer-body admin-form" onSubmit={save}>
+          <div className="governance-panel">
+            <ShieldCheck size={19} />
+            <div>
+              <strong>Creation and lifecycle governance</strong>
+              <span>
+                New engineers are created immediately. Activation and
+                deactivation require a separate approval request.
+              </span>
+            </div>
+          </div>
+          <div className="form-section-label">
+            Personal and contact information
+          </div>
+          <label className="detail-block">
+            Engineer name <b>*</b>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </label>
+          <label className="detail-block">
+            Phone number <b>*</b>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              required
+            />
+          </label>
+          <label className="detail-block">
+            Email ID
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@company.com"
+            />
+          </label>
+          <label className="detail-block">
+            Address
+            <textarea
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+              rows={3}
+              placeholder="Enter address"
+            />
+          </label>
+          <div className="form-section-label">Professional information</div>
+          <label className="detail-block">
+            Skill
+            <select
+              value={skill}
+              onChange={(event) => setSkill(event.target.value)}
+            >
+              <option value="">Select skill (Optional)</option>
+              {skills.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="detail-block">
+            Category
+            <select
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+            >
+              <option value="">Select category (Optional)</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          {engineer.id ? (
+            <>
+              <div className="detail-block">
+                <span>Relationship type</span>
+                <strong>
+                  {relationship === "DIRECT" ? "Direct" : "Vendor-based"} ·
+                  immutable
+                </strong>
+              </div>
+              {engineer.vendor && (
+                <div className="detail-block">
+                  <span>Vendor association</span>
+                  <strong>{engineer.vendor} · immutable</strong>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <label className="detail-block">
+                Relationship type
+                <select
+                  value={relationship}
+                  onChange={(event) => {
+                    const value = event.target
+                      .value as EngineerRecord["relationship"];
+                    setRelationship(value);
+                    if (value === "DIRECT") setVendorId("");
+                  }}
+                >
+                  <option value="DIRECT">Direct</option>
+                  <option value="VENDOR_BASED">Under vendor</option>
+                </select>
+              </label>
+              {relationship === "VENDOR_BASED" && (
+                <label className="detail-block">
+                  Approved vendor
+                  <select
+                    value={vendorId}
+                    onChange={(event) => setVendorId(event.target.value)}
+                  >
+                    <option value="">Select eligible vendor</option>
+                    {eligible.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                      </option>
+                    ))}
+                  </select>
+                  {eligible.length === 0 && (
+                    <small className="empty-help">
+                      No approved eligible vendors are available in your
+                      permitted location scope.
+                    </small>
+                  )}
+                </label>
+              )}
+            </>
+          )}
+          <div className="detail-block">
+            <span>Assigned scope</span>
+            <strong>{engineer.location}</strong>
+            <small>
+              Owner and location are assigned from the signed-in Admin and
+              cannot be changed.
+            </small>
+          </div>
+          {error && (
+            <div className="form-error" role="alert">
+              {error}
+            </div>
+          )}
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button">
+              Save engineer
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
 
-function Inventory({ role }: { role: Role }) { const rows = inventoryRecords.map((item) => [item.name, item.category, String(item.quantity), item.value, item.location, item.status]); return <section className="panel table-panel"><div className="inventory-toolbar"><div className="search-box"><Search size={17} /><input placeholder="Search inventory" /></div><button className="filter-button"><SlidersHorizontal size={16} />{role === 'SUPER_ADMIN' ? 'All locations' : 'Your location'}</button>{role === 'SUPER_ADMIN' && <button className="primary-button compact"><Plus size={17} />Add item</button>}</div><div className="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit price</th><th>Location</th><th>Status</th></tr></thead><tbody>{rows.filter((r) => role === 'SUPER_ADMIN' || r[4] === 'Downtown HQ').map((r) => <tr key={r[0]}><td><strong>{r[0]}</strong></td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td><td><StatusBadge status={r[5].toUpperCase()} /></td></tr>)}</tbody></table></div></section> }
-function Configuration() { return <section className="config-grid">{[['Session idle timeout', 'session_idle_timeout_minutes', '30 minutes'], ['Max vendor attachment size', 'max_vendor_attachment_mb', '10 MB'], ['Default timezone', 'default_timezone', 'UTC']].map(([title, key, value]) => <div className="panel config-card" key={key}><div className="config-icon"><Settings size={18} /></div><div><span>{key}</span><h3>{title}</h3><strong>{value}</strong></div><button className="text-button">Edit</button></div>)}</section> }
-function WorkspaceFrame({ role, user, page, onNavigate, children }: { role: Role; user: MockUser; page: string; onNavigate: (page: string) => void; children: React.ReactNode }) { const items = role === 'SUPER_ADMIN' ? navSuper : navAdmin; return <div className="app-shell"><aside className="sidebar"><div className="sidebar-top"><Logo /></div><div className="role-pill"><span className="online-dot" />{role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}<ChevronDown size={14} /></div><nav>{items.map(([label, Icon]) => <button key={label} className={page === label ? 'nav-item active' : 'nav-item'} onClick={() => onNavigate(label)}><Icon size={17} />{label}</button>)}</nav><div className="sidebar-bottom"><div className="sidebar-note"><ShieldCheck size={17} /><div><strong>Workspace secure</strong><span>Last synced just now</span></div></div></div></aside><section className="workspace"><header className="topbar"><div className="breadcrumbs"><span>Workspace</span><b>/</b><strong>{page}</strong></div><div className="top-actions"><div className="location-chip"><MapPin size={15} />{user.location}</div><button className="profile-button"><span className="avatar">{user.name.split(' ').map((name) => name[0]).join('')}</span><span className="profile-text"><strong>{user.name}</strong><small>{role === 'SUPER_ADMIN' ? 'Super Admin' : 'Operations Admin'}</small></span></button></div></header><main className="content">{children}</main></section></div> }
+function Inventory({
+  items,
+  role,
+  currentUser,
+  locations,
+  onOpen,
+  loadError,
+}: {
+  items: InventoryItem[];
+  role: Role;
+  currentUser: MockUser | AppUser;
+  locations: Location[];
+  onOpen: (item?: InventoryItem) => void;
+  loadError?: string;
+}) {
+  const [search, setSearch] = useState("");
+  const [locationFilter, setLocationFilter] = useState<"ALL" | string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ALL");
 
-function RequestWorkspace({ role, user, records, search, setSearch, tab, setTab, onOpen, onDecide }: { role: Role; user: MockUser; records: RequestRecord[]; search: string; setSearch: (value: string) => void; tab: 'PENDING' | 'ALL' | 'APPROVED' | 'REJECTED'; setTab: (value: 'PENDING' | 'ALL' | 'APPROVED' | 'REJECTED') => void; onOpen: (record: RequestRecord) => void; onDecide: (record: RequestRecord, decision: 'APPROVED' | 'REJECTED') => void }) { const scoped = role === 'ADMIN' ? records.filter((record) => record.requester === user.name) : records; const visible = scoped.filter((record) => (tab === 'ALL' || record.status === tab) && `${record.id} ${record.entity} ${record.requester} ${record.location} ${record.type}`.toLowerCase().includes(search.toLowerCase())); const counts = { PENDING: scoped.filter((record) => record.status === 'PENDING').length, ALL: scoped.length, APPROVED: scoped.filter((record) => record.status === 'APPROVED').length, REJECTED: scoped.filter((record) => record.status === 'REJECTED').length }; return <section className="panel table-panel request-workspace"><div className="locations-heading"><div><p className="eyebrow">{role === 'SUPER_ADMIN' ? 'GOVERNANCE / APPROVAL REQUESTS' : 'WORKSPACE / MY REQUESTS'}</p><h2>{role === 'SUPER_ADMIN' ? 'Approval Requests' : 'My Requests'} <span className="prototype-badge">Canonical request history</span></h2><p>{role === 'SUPER_ADMIN' ? 'Review governance requests without changing operational status until a decision is recorded.' : 'Track requests submitted by your account and their decision history.'}</p></div></div><div className="request-tabs">{(['PENDING', 'ALL', 'APPROVED', 'REJECTED'] as const).map((value) => <button key={value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{value === 'ALL' ? 'All Requests' : value[0] + value.slice(1).toLowerCase()} <b>{counts[value]}</b></button>)}</div><div className="toolbar"><div className="search-box"><Search size={17} /><input aria-label="Search requests" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search requests, entities, or requesters" /></div></div><div className="table-wrap"><table><thead><tr><th>Request</th><th>Target entity</th><th>Current status</th><th>Requester</th><th>Location</th><th>Submitted</th><th>Status</th><th /></tr></thead><tbody>{visible.map((record) => <tr key={record.id}><td><strong>{requestTypeLabel(record.type)}</strong><small>{record.id}</small></td><td><strong>{record.entity}</strong><small>{record.action}</small></td><td><StatusBadge status={record.currentStatus.replaceAll(' ', '_').toUpperCase()} /><small>Requested: {record.requestedStatus}</small></td><td>{record.requester}</td><td>{record.location}</td><td>{new Date(record.createdAt).toLocaleDateString()}</td><td><StatusBadge status={record.status} /></td><td><button className="review-button" onClick={() => onOpen(record)}>{role === 'SUPER_ADMIN' && record.status === 'PENDING' ? 'Review' : 'View'} <ArrowRight size={14} /></button></td></tr>)}</tbody></table>{visible.length === 0 && <div className="empty-state"><div className="empty-icon"><Search size={20} /></div><strong>No requests found</strong><span>{tab === 'PENDING' ? 'No pending requests are waiting for review.' : 'There are no requests in this view.'}</span></div>}</div></section> }
-function RequestDetailDrawer({ record, role, onClose, onDecide }: { record: RequestRecord; role: Role; onClose: () => void; onDecide: (decision: 'APPROVED' | 'REJECTED') => void }) { const [feedback, setFeedback] = useState(record.decisionFeedback || ''); const pending = record.status === 'PENDING'; return <><button className="drawer-scrim" aria-label="Close request details" onClick={onClose} /><aside className="drawer"><div className="drawer-header"><div><p className="eyebrow">REQUEST DETAIL / {record.id}</p><h2>{record.entity}</h2><small>{requestTypeLabel(record.type)}</small></div><button className="icon-button" aria-label="Close request details" onClick={onClose}><X size={18} /></button></div><div className="drawer-body"><div className="drawer-status"><StatusBadge status={record.status} /><span>Current operational status: {record.currentStatus}</span></div><div className="governance-panel"><ClipboardCheck size={20} /><div><strong>{record.action}</strong><span>Requested by {record.requester} · {record.location}</span><span>Submitted {new Date(record.createdAt).toLocaleString()}</span><span>Requested operational status: {record.requestedStatus}</span></div></div><div className="detail-block"><span>Submission reason</span><p>{record.reason || 'No reason provided.'}</p></div>{record.decisionFeedback && <div className="reason-box"><span>Decision feedback</span><p>{record.decisionFeedback}</p></div>}{role === 'SUPER_ADMIN' && pending && <label className="detail-block">Decision feedback<textarea value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Required when rejecting" rows={4} /></label>}<div className="reason-box"><span>Status separation</span><p>Submitting or rejecting a request does not change the entity&apos;s operational status. Approval applies only the established transition.</p></div></div><div className="drawer-footer">{role === 'SUPER_ADMIN' && pending ? <><button className="secondary-button" onClick={() => onDecide('REJECTED')}>Reject</button><button className="primary-button" onClick={() => onDecide('APPROVED')}>Approve</button></> : <button className="secondary-button" onClick={onClose}>Close drawer</button>}</div></aside></> }
+  const visible = items.filter((item) => {
+    if (statusFilter !== "ALL" && item.status !== statusFilter) return false;
+    if (role === "SUPER_ADMIN" && locationFilter !== "ALL") {
+      if (
+        String(item.locationId) !== locationFilter &&
+        item.location !== locationFilter
+      )
+        return false;
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const match =
+        `${item.name} ${item.category} ${item.location} ${item.pricePerUnit} ${item.id}`
+          .toLowerCase()
+          .includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
 
-function GenericPage({ page }: { page: string; role: Role }) { return <section className="panel generic"><div className="generic-icon"><Database size={25} /></div><p className="eyebrow">MILESTONE 1 FOUNDATION</p><h2>{page}</h2><p>This navigation entry is a placeholder for a future workflow. Business records and actions will be added in a later milestone.</p></section> }
-function AdminDrawer({ admin, form, setForm, error, saving, onClose, onSave }: { admin: Admin; form: { name: string; email: string; location: string; status: AdminStatus }; setForm: (form: { name: string; email: string; location: string; status: AdminStatus }) => void; error: string; saving: boolean; onClose: () => void; onSave: (event: React.FormEvent) => void }) { const locations = locationService.snapshot(); return <><button className="drawer-scrim" aria-label="Close admin drawer" onClick={onClose} /><aside className="drawer admin-drawer"><div className="drawer-header"><div><p className="eyebrow">ADMINISTRATION / ADMINS</p><h2>{admin.id ? 'Edit Admin' : 'Create Admin'}</h2></div><button className="icon-button" aria-label="Close admin drawer" onClick={onClose}><X size={18} /></button></div><form className="drawer-body admin-form" onSubmit={onSave}><div className="detail-block"><label htmlFor="admin-name">Full name <b>*</b></label><input id="admin-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Enter full name" required /></div><div className="detail-block"><label htmlFor="admin-email">Email address <b>*</b></label><input id="admin-email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="name@company.com" required /></div><div className="detail-block"><label htmlFor="admin-location">Assigned location <b>*</b></label><select id="admin-location" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} required><option value="" disabled>Select a location</option>{locations.map((location) => <option key={location.id} value={location.name}>{location.name}</option>)}</select></div><div className="detail-block"><label htmlFor="admin-status">Operational status</label><select id="admin-status" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as AdminStatus })}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option><option value="PENDING_ACTIVATION">Pending activation</option></select></div>{error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}<div className="drawer-footer"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="primary-button" disabled={saving}>{saving ? 'Saving…' : admin.id ? 'Save changes' : 'Create admin'}</button></div></form></aside></> }
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
+  const activeCount = items.filter((item) => item.status === "ACTIVE").length;
+  const uniqueLocationsCount = new Set(items.map((item) => item.location)).size;
 
-function VendorDetailDrawer({ vendor, onClose }: { vendor: VendorRecord; onClose: () => void }) { return <><button className="drawer-scrim" aria-label="Close vendor details" onClick={onClose} /><aside className="drawer vendor-drawer"><div className="drawer-header"><div><p className="eyebrow">ADMINISTRATION / VENDORS / DETAIL VIEW</p><h2>{vendor.name}</h2><small>#{vendor.id.toUpperCase()}</small></div><button className="icon-button" aria-label="Close vendor details" onClick={onClose}><X size={18} /></button></div><div className="drawer-body"><div className="drawer-status"><StatusBadge status={vendor.status === 'PENDING_APPROVAL' ? vendor.status : 'ACTIVE'} /><span>{vendor.status === 'ACTIVE' ? 'Operational: Active' : `Operational: ${vendor.status.toLowerCase()}`}</span></div><div className="detail-block"><span>Assigned location</span><strong>{vendor.location}</strong></div><div className="detail-block"><span>Owner Admin</span><strong>{vendor.owner}</strong></div><div className="detail-block"><span>Vendor identity & contact</span><strong>{vendor.description || 'No description provided.'}</strong><small>{vendor.contactEmail}</small><small>{vendor.phone || 'Phone not available'}</small></div><div className="detail-block"><span>Service engineer roster</span><strong>{vendor.engineers ? `${vendor.engineers} engineers bound` : 'No engineers bound'}</strong><small>{vendor.engineers ? 'Roster details are not available in the current canonical mock data.' : 'Eligible engineers will appear after approval.'}</small></div><div className="reason-box"><span>Governance</span><p>Profile details are read-only here. Status changes must use the approval request workflow.</p></div></div><div className="drawer-footer"><button className="secondary-button" onClick={onClose}>Close</button></div></aside></> }
-function VendorRequestDialog({ target, onClose, onConfirm }: { target: { vendor: VendorRecord; action: 'ACTIVATE' | 'DEACTIVATE' }; onClose: () => void; onConfirm: () => void }) { return <><button className="drawer-scrim" aria-label="Close request confirmation" onClick={onClose} /><div className="confirm-dialog" role="dialog" aria-modal="true"><div className="drawer-header"><div><p className="eyebrow">STATUS REQUEST</p><h2>Request {target.action === 'ACTIVATE' ? 'activation' : 'deactivation'}</h2></div><button className="icon-button" aria-label="Close request confirmation" onClick={onClose}><X size={18} /></button></div><div className="drawer-body"><p>Submit a request to {target.action === 'ACTIVATE' ? 'activate' : 'deactivate'} <strong>{target.vendor.name}</strong>?</p><p className="muted-copy">The vendor status will not change until a Super Admin reviews and approves this request.</p></div><div className="drawer-footer"><button className="secondary-button" onClick={onClose}>Cancel</button><button className="primary-button" onClick={onConfirm}>Confirm request</button></div></div></> }
+  function clearFilters() {
+    setSearch("");
+    setLocationFilter("ALL");
+    setStatusFilter("ALL");
+  }
 
-function VendorDrawer({ vendor, form, setForm, error, saving, onClose, onSave }: { vendor: VendorRecord; form: VendorForm; setForm: (form: VendorForm) => void; error: string; saving: boolean; onClose: () => void; onSave: (event: React.FormEvent) => void }) { return <><button className="drawer-scrim" aria-label="Close vendor drawer" onClick={onClose} /><aside className="drawer vendor-drawer"><div className="drawer-header"><div><p className="eyebrow">ADMINISTRATION / VENDORS</p><h2>{vendor.id ? 'Edit Vendor' : 'Create Vendor'}</h2><small>{vendor.id ? `${vendor.name} · ${vendor.location}` : 'New vendors are submitted as Pending approval.'}</small></div><button className="icon-button" aria-label="Close vendor drawer" onClick={onClose}><X size={18} /></button></div><form className="drawer-body admin-form" onSubmit={onSave}><div className="detail-block"><label htmlFor="vendor-name">Vendor name <b>*</b></label><input id="vendor-name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></div><div className="detail-block"><label htmlFor="vendor-email">Contact email <b>*</b></label><input id="vendor-email" type="email" value={form.contactEmail} onChange={(event) => setForm({ ...form, contactEmail: event.target.value })} required /></div><div className="detail-block"><label htmlFor="vendor-phone">Business phone</label><input id="vendor-phone" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></div><div className="detail-block"><label htmlFor="vendor-description">Description</label><textarea id="vendor-description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={4} /></div><div className="reason-box"><span>Governance</span><p>{vendor.id ? `Assigned to ${vendor.location}. Status remains ${vendor.status === 'PENDING_APPROVAL' ? 'Pending approval' : vendor.status.toLowerCase()}.` : `Assigned to ${vendor.location}. Central approval is required before activation.`}</p></div>{error && <div className="form-error" role="alert"><CircleAlert size={16} />{error}</div>}<div className="drawer-footer"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="primary-button" disabled={saving}>{saving ? 'Saving…' : vendor.id ? 'Save changes' : 'Create vendor'}</button></div></form></aside></> }
+  return (
+    <section className="locations-module inventory-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">
+            {role === "SUPER_ADMIN"
+              ? "ASSET MANAGEMENT / INVENTORY"
+              : `MY LOCATION / INVENTORY / ${currentUser.location}`}
+          </p>
+          <h2>
+            Inventory{" "}
+            <span className="prototype-badge">
+              {role === "SUPER_ADMIN" ? "Global catalog" : "Location catalog"}
+            </span>
+          </h2>
+          <p>
+            {role === "SUPER_ADMIN"
+              ? "Manage equipment, spare parts, and supplies across all operating locations."
+              : `Manage inventory stocked at ${currentUser.location}. Items are scoped to your facility.`}
+          </p>
+        </div>
+        <button className="primary-button compact" onClick={() => onOpen()}>
+          <Plus size={17} />
+          Add item
+        </button>
+      </div>
 
-function ApprovalDrawer({ approval, onClose, onDecide }: { approval: Approval; onClose: () => void; onDecide: (a: Approval, outcome: 'APPROVED' | 'REJECTED') => void }) { return <><button className="drawer-scrim" aria-label="Close drawer" onClick={onClose} /><aside className="drawer"><div className="drawer-header"><div><p className="eyebrow">{approval.id}</p><h2>Review request</h2></div><button className="icon-button" onClick={onClose}><X size={18} /></button></div><div className="drawer-body"><div className="drawer-status"><StatusBadge status={approval.status} /><span>{approval.created}</span></div><div className="detail-block"><span>Request type</span><strong>{approval.type.replaceAll('_', ' ')}</strong></div><div className="detail-block"><span>Entity</span><strong>{approval.entity}</strong><small>Current status: {approval.current}</small></div><div className="detail-grid"><div className="detail-block"><span>Requested by</span><strong>{approval.requester}</strong></div><div className="detail-block"><span>Location</span><strong>{approval.location}</strong></div></div><div className="reason-box"><span>Reason supplied</span><p>{approval.reason}</p></div></div><div className="drawer-footer"><button className="secondary-button" onClick={() => onDecide(approval, 'REJECTED')}><X size={16} />Reject</button><button className="primary-button" onClick={() => onDecide(approval, 'APPROVED')}><Check size={16} />Approve request</button></div></aside></> }
+      <div className="location-metrics">
+        <Metric
+          label="Total items"
+          value={items.length}
+          icon={Package}
+          tone="blue"
+        />
+        <Metric
+          label="Total units"
+          value={totalUnits}
+          icon={Package}
+          tone="teal"
+        />
+        <Metric
+          label="Active items"
+          value={activeCount}
+          icon={Check}
+          tone="purple"
+        />
+        {role === "SUPER_ADMIN" ? (
+          <Metric
+            label="Operating locations"
+            value={uniqueLocationsCount}
+            icon={MapPin}
+            tone="amber"
+          />
+        ) : (
+          <Metric
+            label="Assigned facility"
+            value={currentUser.location}
+            icon={MapPin}
+            tone="amber"
+          />
+        )}
+      </div>
 
+      <div className="locations-toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search inventory"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, category, or location"
+          />
+        </div>
+        {role === "SUPER_ADMIN" ? (
+          <select
+            className="location-filter"
+            aria-label="Filter inventory by location"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          >
+            <option value="ALL">All locations ({items.length})</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={String(loc.id)}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="location-chip">
+            <MapPin size={15} />
+            {currentUser.location}
+          </div>
+        )}
+        <select
+          className="location-filter"
+          aria-label="Filter inventory by status"
+          value={statusFilter}
+          onChange={(e) =>
+            setStatusFilter(e.target.value as "ALL" | "ACTIVE" | "INACTIVE")
+          }
+        >
+          <option value="ALL">All statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+        {(search || locationFilter !== "ALL" || statusFilter !== "ALL") && (
+          <button className="clear-filter" onClick={clearFilters}>
+            <X size={15} />
+            Clear
+          </button>
+        )}
+        <span className="result-count">Showing {visible.length} items</span>
+      </div>
 
+      <div className="panel table-panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>In stock</th>
+                <th>Unit price</th>
+                <th>Tax</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="entity-cell">
+                      <span className="entity-avatar">
+                        <Package size={16} />
+                      </span>
+                      <div>
+                        <strong>{item.name}</strong>
+                        <small>
+                          {item.id.startsWith("inv-")
+                            ? item.id
+                            : `ID #${item.id}`}
+                        </small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{item.category}</td>
+                  <td>
+                    <strong>{item.quantity}</strong> units
+                  </td>
+                  <td>{item.value || `$${item.pricePerUnit}`}</td>
+                  <td>
+                    {item.taxApplicable
+                      ? `${item.taxPercentage || "0.00"}%`
+                      : "Exempt"}
+                  </td>
+                  <td>{item.location}</td>
+                  <td>
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td>
+                    {role === "SUPER_ADMIN" ? (
+                      <button
+                        className="secondary-button compact"
+                        onClick={() => onOpen(item)}
+                      >
+                        <Eye size={14} />
+                        Edit
+                      </button>
+                    ) : (
+                      <span
+                        style={{ fontSize: "0.82rem", color: "var(--muted)" }}
+                      >
+                        Read-only
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 &&
+            (loadError ? (
+              <div className="empty-state" role="alert">
+                <div
+                  className="empty-icon"
+                  style={{
+                    color: "var(--danger)",
+                    background: "var(--danger-bg)",
+                  }}
+                >
+                  <CircleAlert size={20} />
+                </div>
+                <strong>Unable to load inventory</strong>
+                <span>{loadError}</span>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Search size={20} />
+                </div>
+                <strong>No inventory items found</strong>
+                <span>Try adjusting your search or filters.</span>
+              </div>
+            ))}
+        </div>
+        <div className="table-footer">
+          Showing {visible.length} of {items.length} inventory items{" "}
+          <span>
+            {role === "ADMIN"
+              ? "Scoped to your workspace"
+              : "Super Admin managed"}
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InventoryDrawer({
+  item,
+  role,
+  currentUser,
+  locations,
+  saving,
+  error,
+  onClose,
+  onSave,
+}: {
+  item: InventoryItem | null;
+  role: Role;
+  currentUser: MockUser | AppUser;
+  locations: Location[];
+  saving: boolean;
+  error: string;
+  onClose: () => void;
+  onSave: (
+    input: CreateInventoryInput | UpdateInventoryInput,
+    isEdit: boolean,
+    editId?: string,
+  ) => Promise<void>;
+}) {
+  const isEdit = Boolean(item);
+  const [name, setName] = useState(item?.name || "");
+  const [category, setCategory] = useState(
+    item?.category && !item.category.startsWith("Category #")
+      ? item.category
+      : "",
+  );
+  const [units, setUnits] = useState(
+    item !== null && item !== undefined ? String(item.quantity) : "0",
+  );
+  const [pricePerUnit, setPricePerUnit] = useState(item?.pricePerUnit || "");
+  const [taxApplicable, setTaxApplicable] = useState(
+    item ? item.taxApplicable : false,
+  );
+  const [taxPercentage, setTaxPercentage] = useState(item?.taxPercentage || "");
+  const [locationId, setLocationId] = useState(
+    item?.locationId
+      ? String(item.locationId)
+      : role === "SUPER_ADMIN"
+        ? locations.find((l) => l.status === "ACTIVE")?.id
+          ? String(locations.find((l) => l.status === "ACTIVE")!.id)
+          : ""
+        : "",
+  );
+  const [isActive, setIsActive] = useState(
+    item ? item.status === "ACTIVE" : true,
+  );
+  const [localError, setLocalError] = useState("");
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setLocalError("");
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setLocalError("Item name is required.");
+      return;
+    }
+
+    const trimmedPrice = pricePerUnit.trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(trimmedPrice)) {
+      setLocalError("Unit price must be a decimal string like 12.50");
+      return;
+    }
+
+    const parsedUnits = parseInt(units.trim() || "0", 10);
+    if (isNaN(parsedUnits) || parsedUnits < 0) {
+      setLocalError("Units must be a non-negative integer.");
+      return;
+    }
+
+    if (taxApplicable && taxPercentage.trim()) {
+      if (!/^\d+(\.\d{1,2})?$/.test(taxPercentage.trim())) {
+        setLocalError("Tax percentage must be a decimal string like 5.00");
+        return;
+      }
+    }
+
+    if (role === "SUPER_ADMIN" && !isEdit) {
+      if (!locationId) {
+        setLocalError("Please select a location.");
+        return;
+      }
+    }
+
+    if (isEdit && item) {
+      const payload: UpdateInventoryInput = {
+        name: trimmedName,
+        units: parsedUnits,
+        price_per_unit: trimmedPrice,
+        tax_applicable: taxApplicable,
+        tax_percentage:
+          taxApplicable && taxPercentage.trim()
+            ? taxPercentage.trim()
+            : undefined,
+        is_active: isActive,
+        category: category.trim() || undefined,
+      };
+      if (role === "SUPER_ADMIN" && locationId) {
+        payload.location_id = parseInt(locationId, 10);
+      }
+      await onSave(payload, true, item.id);
+    } else {
+      const payload: CreateInventoryInput = {
+        name: trimmedName,
+        units: parsedUnits,
+        price_per_unit: trimmedPrice,
+        tax_applicable: taxApplicable,
+        tax_percentage:
+          taxApplicable && taxPercentage.trim()
+            ? taxPercentage.trim()
+            : undefined,
+        category: category.trim() || undefined,
+      };
+      if (role === "SUPER_ADMIN" && locationId) {
+        payload.location_id = parseInt(locationId, 10);
+      }
+      await onSave(payload, false);
+    }
+  }
+
+  const activeLocations = locations.filter((loc) => loc.status === "ACTIVE");
+
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close inventory editor"
+        onClick={onClose}
+      />
+      <aside className="drawer admin-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">
+              ASSET MANAGEMENT / {isEdit ? "EDIT INVENTORY" : "NEW INVENTORY"}
+            </p>
+            <h2>{isEdit ? "Edit Inventory Item" : "Add Inventory Item"}</h2>
+            {isEdit && item && <small>ID #{item.id}</small>}
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close inventory editor"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className="drawer-body admin-form" onSubmit={handleSubmit}>
+          <div className="governance-panel">
+            <Package size={19} />
+            <div>
+              <strong>
+                {isEdit
+                  ? "Update inventory item"
+                  : "Direct catalog registration"}
+              </strong>
+              <span>
+                {role === "SUPER_ADMIN"
+                  ? "Super Admins can assign items to any operating facility and update existing records."
+                  : `Admin items are automatically associated with your assigned location (${currentUser.location}).`}
+              </span>
+            </div>
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="inventory-name">
+              Item name <b>*</b>
+            </label>
+            <input
+              id="inventory-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. CCTV Camera"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="inventory-category">Category</label>
+            <input
+              id="inventory-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g. Security, Hardware, Networking"
+            />
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="inventory-units">Units in stock</label>
+            <input
+              id="inventory-units"
+              type="number"
+              min="0"
+              step="1"
+              value={units}
+              onChange={(e) => setUnits(e.target.value)}
+              placeholder="0"
+            />
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="inventory-price">
+              Unit price ($) <b>*</b>
+            </label>
+            <input
+              id="inventory-price"
+              value={pricePerUnit}
+              onChange={(e) => setPricePerUnit(e.target.value)}
+              placeholder="12.50"
+              required
+            />
+          </div>
+
+          <div
+            className="detail-block"
+            style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                cursor: "pointer",
+                fontWeight: 500,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={taxApplicable}
+                onChange={(e) => setTaxApplicable(e.target.checked)}
+              />
+              <span>Tax applicable</span>
+            </label>
+            {taxApplicable && (
+              <label htmlFor="inventory-tax">
+                Tax percentage (%)
+                <input
+                  id="inventory-tax"
+                  value={taxPercentage}
+                  onChange={(e) => setTaxPercentage(e.target.value)}
+                  placeholder="5.00"
+                />
+              </label>
+            )}
+          </div>
+
+          {role === "SUPER_ADMIN" ? (
+            <div className="detail-block">
+              <label htmlFor="inventory-location">
+                Location <b>*</b>
+              </label>
+              <select
+                id="inventory-location"
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                required={!isEdit}
+              >
+                <option value="">Select location</option>
+                {(isEdit ? locations : activeLocations).map((loc) => (
+                  <option key={loc.id} value={String(loc.id)}>
+                    {loc.name} (#{loc.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="detail-block">
+              <span>Assigned location</span>
+              <strong>{currentUser.location}</strong>
+              <small>Derived automatically from your signed-in account.</small>
+            </div>
+          )}
+
+          {isEdit && role === "SUPER_ADMIN" && (
+            <div className="detail-block">
+              <label htmlFor="inventory-status">Status</label>
+              <select
+                id="inventory-status"
+                value={isActive ? "ACTIVE" : "INACTIVE"}
+                onChange={(e) => setIsActive(e.target.value === "ACTIVE")}
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+            </div>
+          )}
+
+          {(error || localError) && (
+            <div className="form-error" role="alert">
+              <CircleAlert size={16} />
+              {error || localError}
+            </div>
+          )}
+
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button" disabled={saving}>
+              {saving ? "Saving…" : isEdit ? "Save changes" : "Add item"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
+function Configuration({
+  configs,
+  onEdit,
+  loadError,
+}: {
+  configs: ConfigurationItem[];
+  onEdit: (item: ConfigurationItem) => void;
+  loadError?: string;
+}) {
+  return (
+    <section className="locations-module config-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">SYSTEM GOVERNANCE / CONFIGURATION</p>
+          <h2>
+            System Configuration{" "}
+            <span className="prototype-badge">Global settings</span>
+          </h2>
+          <p>
+            System-wide operational parameters governing session security,
+            attachments, and facility timezones.
+          </p>
+        </div>
+      </div>
+
+      {loadError && (
+        <div
+          className="empty-state"
+          role="alert"
+          style={{ marginBottom: "1.5rem" }}
+        >
+          <div
+            className="empty-icon"
+            style={{ color: "var(--danger)", background: "var(--danger-bg)" }}
+          >
+            <CircleAlert size={20} />
+          </div>
+          <strong>Unable to load configurations</strong>
+          <span>{loadError}</span>
+        </div>
+      )}
+
+      <div className="config-grid">
+        {configs.map((item) => (
+          <div className="panel config-card" key={item.key}>
+            <div className="config-icon">
+              <Settings size={18} />
+            </div>
+            <div>
+              <span>{item.key}</span>
+              <h3>{configKeyTitle(item.key)}</h3>
+              <strong>{configDisplayValue(item.key, item.value)}</strong>
+              {item.description && (
+                <small
+                  style={{
+                    display: "block",
+                    color: "var(--muted)",
+                    marginTop: "4px",
+                  }}
+                >
+                  {item.description}
+                </small>
+              )}
+            </div>
+            <button className="text-button" onClick={() => onEdit(item)}>
+              Edit
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="governance-panel" style={{ marginTop: "2rem" }}>
+        <ShieldCheck size={20} />
+        <div>
+          <strong>Super Admin Configuration Governance</strong>
+          <span>
+            Configuration keys are restricted to supported operational settings.
+            Updates take effect immediately across all sessions.
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ConfigDrawer({
+  item,
+  saving,
+  error,
+  onClose,
+  onSave,
+}: {
+  item: ConfigurationItem | null;
+  saving: boolean;
+  error: string;
+  onClose: () => void;
+  onSave: (key: string, value: string) => Promise<void>;
+}) {
+  const [value, setValue] = useState(item?.value || "");
+  const [localError, setLocalError] = useState("");
+
+  if (!item) return null;
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setLocalError("");
+    if (!value.trim()) {
+      setLocalError("Configuration value is required.");
+      return;
+    }
+    if (!item) return;
+    await onSave(item.key, value.trim());
+  }
+
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close configuration drawer"
+        onClick={onClose}
+      />
+      <aside className="drawer admin-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">SYSTEM GOVERNANCE / EDIT CONFIGURATION</p>
+            <h2>{configKeyTitle(item.key)}</h2>
+            <small>{item.key}</small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close configuration drawer"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className="drawer-body admin-form" onSubmit={handleSubmit}>
+          <div className="governance-panel">
+            <Settings size={19} />
+            <div>
+              <strong>Global Configuration Parameter</strong>
+              <span>
+                {item.description ||
+                  "Applies system-wide to all operational hubs."}
+              </span>
+            </div>
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="config-value">
+              Configuration value <b>*</b>
+            </label>
+            <input
+              id="config-value"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="Enter value"
+              required
+              autoFocus
+            />
+            {item.key === "session_idle_timeout_minutes" && (
+              <small style={{ color: "var(--muted)" }}>
+                Enter number of minutes (e.g. 30)
+              </small>
+            )}
+            {item.key === "max_vendor_attachment_mb" && (
+              <small style={{ color: "var(--muted)" }}>
+                Enter max size in megabytes (e.g. 10)
+              </small>
+            )}
+            {item.key === "default_timezone" && (
+              <small style={{ color: "var(--muted)" }}>
+                Enter standard timezone (e.g. UTC, America/New_York)
+              </small>
+            )}
+          </div>
+
+          {(error || localError) && (
+            <div className="form-error" role="alert">
+              <CircleAlert size={16} />
+              {error || localError}
+            </div>
+          )}
+
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button" disabled={saving}>
+              {saving ? "Saving…" : "Save configuration"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
+
+function MasterDataWorkspace({
+  items,
+  activeTab,
+  onTabChange,
+  search,
+  onSearchChange,
+  onCreate,
+  onEdit,
+  loadError,
+}: {
+  items: MasterDataItem[];
+  activeTab: MasterDataType;
+  onTabChange: (tab: MasterDataType) => void;
+  search: string;
+  onSearchChange: (search: string) => void;
+  onCreate: () => void;
+  onEdit: (item: MasterDataItem) => void;
+  loadError?: string;
+}) {
+  const currentTabItems = items.filter((item) => item.type === activeTab);
+  const visible = currentTabItems.filter((item) =>
+    item.text.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+  const activeCount = currentTabItems.filter((i) => i.isActive).length;
+
+  return (
+    <section className="locations-module master-data-module">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">CENTRALIZED CATALOG / MASTER DATA</p>
+          <h2>
+            Master Data{" "}
+            <span className="prototype-badge">Lookup Reference</span>
+          </h2>
+          <p>
+            Standardized enumeration values governing skills, categories,
+            partner classifications, and references.
+          </p>
+        </div>
+        <button className="primary-button compact" onClick={onCreate}>
+          <Plus size={17} />
+          Add entry
+        </button>
+      </div>
+
+      <div className="location-metrics">
+        <Metric
+          label="Total entries in category"
+          value={currentTabItems.length}
+          icon={Database}
+          tone="blue"
+        />
+        <Metric
+          label="Active entries"
+          value={activeCount}
+          icon={Check}
+          tone="teal"
+        />
+        <Metric
+          label="Defined lookup types"
+          value={MASTER_DATA_TYPES.length}
+          icon={SlidersHorizontal}
+          tone="purple"
+        />
+      </div>
+
+      <div className="request-tabs" style={{ marginBottom: "1.25rem" }}>
+        {MASTER_DATA_TYPES.map((type) => {
+          const count = items.filter((i) => i.type === type).length;
+          return (
+            <button
+              key={type}
+              className={activeTab === type ? "active" : ""}
+              onClick={() => onTabChange(type)}
+            >
+              {masterDataTypeLabel(type)} <b>{count}</b>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="locations-toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search master data"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder={`Search ${masterDataTypeLabel(activeTab).toLowerCase()}…`}
+          />
+        </div>
+        <span className="result-count">Showing {visible.length} entries</span>
+      </div>
+
+      <div className="panel table-panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Entry text</th>
+                <th>Lookup type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <strong>{item.text}</strong>
+                    <small>
+                      {item.id.startsWith("md-") ? item.id : `ID #${item.id}`}
+                    </small>
+                  </td>
+                  <td>
+                    <code>{item.type}</code>
+                  </td>
+                  <td>
+                    <StatusBadge
+                      status={item.isActive ? "ACTIVE" : "INACTIVE"}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      className="secondary-button compact"
+                      onClick={() => onEdit(item)}
+                    >
+                      <Eye size={14} />
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 &&
+            (loadError ? (
+              <div className="empty-state" role="alert">
+                <div
+                  className="empty-icon"
+                  style={{
+                    color: "var(--danger)",
+                    background: "var(--danger-bg)",
+                  }}
+                >
+                  <CircleAlert size={20} />
+                </div>
+                <strong>Unable to load master data</strong>
+                <span>{loadError}</span>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Search size={20} />
+                </div>
+                <strong>No master data entries found</strong>
+                <span>
+                  Add an entry to configure options for this lookup type.
+                </span>
+              </div>
+            ))}
+        </div>
+        <div className="table-footer">
+          Showing {visible.length} of {currentTabItems.length} entries in{" "}
+          {masterDataTypeLabel(activeTab)} <span>Centralized lookup table</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MasterDataDrawer({
+  item,
+  defaultType,
+  saving,
+  error,
+  onClose,
+  onSave,
+}: {
+  item: MasterDataItem | null;
+  defaultType: MasterDataType;
+  saving: boolean;
+  error: string;
+  onClose: () => void;
+  onSave: (
+    type: MasterDataType,
+    text: string,
+    isEdit: boolean,
+    editId?: string,
+  ) => Promise<void>;
+}) {
+  const isEdit = Boolean(item);
+  const [type, setType] = useState<MasterDataType>(item?.type || defaultType);
+  const [text, setText] = useState(item?.text || "");
+  const [localError, setLocalError] = useState("");
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setLocalError("");
+    const trimmed = text.trim();
+    if (!trimmed) {
+      setLocalError("Entry text is required.");
+      return;
+    }
+    await onSave(type, trimmed, isEdit, item?.id);
+  }
+
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close master data editor"
+        onClick={onClose}
+      />
+      <aside className="drawer admin-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">
+              CENTRALIZED CATALOG /{" "}
+              {isEdit ? "EDIT MASTER DATA" : "NEW MASTER DATA"}
+            </p>
+            <h2>
+              {isEdit ? "Edit Master Data Entry" : "Add Master Data Entry"}
+            </h2>
+            {isEdit && item && <small>ID #{item.id}</small>}
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close master data editor"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className="drawer-body admin-form" onSubmit={handleSubmit}>
+          <div className="governance-panel">
+            <Database size={19} />
+            <div>
+              <strong>Standardized Reference Value</strong>
+              <span>
+                {isEdit
+                  ? "Updates apply to future selections and preserve existing entity relationships."
+                  : "New entry becomes immediately selectable across operational workflows."}
+              </span>
+            </div>
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="masterdata-type">
+              Lookup type <b>*</b>
+            </label>
+            {isEdit ? (
+              <div>
+                <strong>{masterDataTypeLabel(type)}</strong>
+                <small style={{ display: "block", color: "var(--muted)" }}>
+                  Type is immutable after creation.
+                </small>
+              </div>
+            ) : (
+              <select
+                id="masterdata-type"
+                value={type}
+                onChange={(e) => setType(e.target.value as MasterDataType)}
+                required
+              >
+                {MASTER_DATA_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {masterDataTypeLabel(t)} ({t})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div className="detail-block">
+            <label htmlFor="masterdata-text">
+              Entry text <b>*</b>
+            </label>
+            <input
+              id="masterdata-text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="e.g. CCTV & Surveillance"
+              required
+              autoFocus
+            />
+          </div>
+
+          {(error || localError) && (
+            <div className="form-error" role="alert">
+              <CircleAlert size={16} />
+              {error || localError}
+            </div>
+          )}
+
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button" disabled={saving}>
+              {saving ? "Saving…" : isEdit ? "Save changes" : "Add entry"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
+function WorkspaceFrame({
+  role,
+  user,
+  page,
+  onNavigate,
+  children,
+}: {
+  role: Role;
+  user: MockUser;
+  page: string;
+  onNavigate: (page: string) => void;
+  children: React.ReactNode;
+}) {
+  const items = role === "SUPER_ADMIN" ? navSuper : navAdmin;
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="sidebar-top">
+          <Logo />
+        </div>
+        <div className="role-pill">
+          <span className="online-dot" />
+          {role === "SUPER_ADMIN" ? "Super Admin" : "Admin"}
+          <ChevronDown size={14} />
+        </div>
+        <nav>
+          {items.map(([label, Icon]) => (
+            <button
+              key={label}
+              className={page === label ? "nav-item active" : "nav-item"}
+              onClick={() => onNavigate(label)}
+            >
+              <Icon size={17} />
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-bottom">
+          <div className="sidebar-note">
+            <ShieldCheck size={17} />
+            <div>
+              <strong>Workspace secure</strong>
+              <span>Last synced just now</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <section className="workspace">
+        <header className="topbar">
+          <div className="breadcrumbs">
+            <span>Workspace</span>
+            <b>/</b>
+            <strong>{page}</strong>
+          </div>
+          <div className="top-actions">
+            <div className="location-chip">
+              <MapPin size={15} />
+              {user.location}
+            </div>
+            <button className="profile-button">
+              <span className="avatar">
+                {user.name
+                  .split(" ")
+                  .map((name) => name[0])
+                  .join("")}
+              </span>
+              <span className="profile-text">
+                <strong>{user.name}</strong>
+                <small>
+                  {role === "SUPER_ADMIN" ? "Super Admin" : "Operations Admin"}
+                </small>
+              </span>
+            </button>
+          </div>
+        </header>
+        <main className="content">{children}</main>
+      </section>
+    </div>
+  );
+}
+
+function RequestWorkspace({
+  role,
+  user,
+  records,
+  search,
+  setSearch,
+  tab,
+  setTab,
+  onOpen,
+  onDecide,
+  loadError,
+}: {
+  role: Role;
+  user: MockUser;
+  records: RequestRecord[];
+  search: string;
+  setSearch: (value: string) => void;
+  tab: "PENDING" | "ALL" | "APPROVED" | "REJECTED";
+  setTab: (value: "PENDING" | "ALL" | "APPROVED" | "REJECTED") => void;
+  onOpen: (record: RequestRecord) => void;
+  onDecide: (record: RequestRecord, decision: "APPROVED" | "REJECTED") => void;
+  loadError?: string;
+}) {
+  const scoped =
+    role === "ADMIN"
+      ? records.filter((record) => record.requester === user.name)
+      : records;
+  const visible = scoped.filter(
+    (record) =>
+      (tab === "ALL" || record.status === tab) &&
+      `${record.id} ${record.entity} ${record.requester} ${record.location} ${record.type}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const counts = {
+    PENDING: scoped.filter((record) => record.status === "PENDING").length,
+    ALL: scoped.length,
+    APPROVED: scoped.filter((record) => record.status === "APPROVED").length,
+    REJECTED: scoped.filter((record) => record.status === "REJECTED").length,
+  };
+  return (
+    <section className="panel table-panel request-workspace">
+      <div className="locations-heading">
+        <div>
+          <p className="eyebrow">
+            {role === "SUPER_ADMIN"
+              ? "GOVERNANCE / APPROVAL REQUESTS"
+              : "WORKSPACE / MY REQUESTS"}
+          </p>
+          <h2>
+            {role === "SUPER_ADMIN" ? "Approval Requests" : "My Requests"}{" "}
+            <span className="prototype-badge">Canonical request history</span>
+          </h2>
+          <p>
+            {role === "SUPER_ADMIN"
+              ? "Review governance requests without changing operational status until a decision is recorded."
+              : "Track requests submitted by your account and their decision history."}
+          </p>
+        </div>
+      </div>
+      <div className="request-tabs">
+        {(["PENDING", "ALL", "APPROVED", "REJECTED"] as const).map((value) => (
+          <button
+            key={value}
+            className={tab === value ? "active" : ""}
+            onClick={() => setTab(value)}
+          >
+            {value === "ALL"
+              ? "All Requests"
+              : value[0] + value.slice(1).toLowerCase()}{" "}
+            <b>{counts[value]}</b>
+          </button>
+        ))}
+      </div>
+      <div className="toolbar">
+        <div className="search-box">
+          <Search size={17} />
+          <input
+            aria-label="Search requests"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search requests, entities, or requesters"
+          />
+        </div>
+      </div>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Request</th>
+              <th>Target entity</th>
+              <th>Current status</th>
+              <th>Requester</th>
+              <th>Location</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((record) => (
+              <tr key={record.id}>
+                <td>
+                  <strong>{requestTypeLabel(record.type)}</strong>
+                  <small>{record.id}</small>
+                </td>
+                <td>
+                  <strong>{record.entity}</strong>
+                  <small>{record.action}</small>
+                </td>
+                <td>
+                  <StatusBadge
+                    status={record.currentStatus
+                      .replaceAll(" ", "_")
+                      .toUpperCase()}
+                  />
+                  <small>Requested: {record.requestedStatus}</small>
+                </td>
+                <td>{record.requester}</td>
+                <td>{record.location}</td>
+                <td>{new Date(record.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <StatusBadge status={record.status} />
+                </td>
+                <td>
+                  <button
+                    className="review-button"
+                    onClick={() => onOpen(record)}
+                  >
+                    {role === "SUPER_ADMIN" && record.status === "PENDING"
+                      ? "Review"
+                      : "View"}{" "}
+                    <ArrowRight size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {visible.length === 0 &&
+          (loadError ? (
+            <div className="empty-state" role="alert">
+              <div
+                className="empty-icon"
+                style={{
+                  color: "var(--danger)",
+                  background: "var(--danger-bg)",
+                }}
+              >
+                <CircleAlert size={20} />
+              </div>
+              <strong>Unable to load approval requests</strong>
+              <span>{loadError}</span>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <Search size={20} />
+              </div>
+              <strong>No requests found</strong>
+              <span>
+                {tab === "PENDING"
+                  ? "No pending requests are waiting for review."
+                  : "There are no requests in this view."}
+              </span>
+            </div>
+          ))}
+      </div>
+    </section>
+  );
+}
+function RequestDetailDrawer({
+  record,
+  role,
+  onClose,
+  onDecide,
+}: {
+  record: RequestRecord;
+  role: Role;
+  onClose: () => void;
+  onDecide: (decision: "APPROVED" | "REJECTED") => void;
+}) {
+  const [feedback, setFeedback] = useState(record.decisionFeedback || "");
+  const pending = record.status === "PENDING";
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close request details"
+        onClick={onClose}
+      />
+      <aside className="drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">REQUEST DETAIL / {record.id}</p>
+            <h2>{record.entity}</h2>
+            <small>{requestTypeLabel(record.type)}</small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close request details"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          <div className="drawer-status">
+            <StatusBadge status={record.status} />
+            <span>Current operational status: {record.currentStatus}</span>
+          </div>
+          <div className="governance-panel">
+            <ClipboardCheck size={20} />
+            <div>
+              <strong>{record.action}</strong>
+              <span>
+                Requested by {record.requester} · {record.location}
+              </span>
+              <span>
+                Submitted {new Date(record.createdAt).toLocaleString()}
+              </span>
+              <span>
+                Requested operational status: {record.requestedStatus}
+              </span>
+            </div>
+          </div>
+          <div className="detail-block">
+            <span>Submission reason</span>
+            <p>{record.reason || "No reason provided."}</p>
+          </div>
+          {record.decisionFeedback && (
+            <div className="reason-box">
+              <span>Decision feedback</span>
+              <p>{record.decisionFeedback}</p>
+            </div>
+          )}
+          {role === "SUPER_ADMIN" && pending && (
+            <label className="detail-block">
+              Decision feedback
+              <textarea
+                value={feedback}
+                onChange={(event) => setFeedback(event.target.value)}
+                placeholder="Required when rejecting"
+                rows={4}
+              />
+            </label>
+          )}
+          <div className="reason-box">
+            <span>Status separation</span>
+            <p>
+              Submitting or rejecting a request does not change the
+              entity&apos;s operational status. Approval applies only the
+              established transition.
+            </p>
+          </div>
+        </div>
+        <div className="drawer-footer">
+          {role === "SUPER_ADMIN" && pending ? (
+            <>
+              <button
+                className="secondary-button"
+                onClick={() => onDecide("REJECTED")}
+              >
+                Reject
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => onDecide("APPROVED")}
+              >
+                Approve
+              </button>
+            </>
+          ) : (
+            <button className="secondary-button" onClick={onClose}>
+              Close drawer
+            </button>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function GenericPage({ page }: { page: string; role: Role }) {
+  return (
+    <section className="panel generic">
+      <div className="generic-icon">
+        <Database size={25} />
+      </div>
+      <p className="eyebrow">MILESTONE 1 FOUNDATION</p>
+      <h2>{page}</h2>
+      <p>
+        This navigation entry is a placeholder for a future workflow. Business
+        records and actions will be added in a later milestone.
+      </p>
+    </section>
+  );
+}
+function AdminDrawer({
+  admin,
+  form,
+  setForm,
+  error,
+  saving,
+  onClose,
+  onSave,
+}: {
+  admin: Admin;
+  form: {
+    name: string;
+    email: string;
+    username?: string;
+    password?: string;
+    phoneNumber?: string;
+    address?: string;
+    location: string;
+    status: AdminStatus;
+  };
+  setForm: (form: {
+    name: string;
+    email: string;
+    username?: string;
+    password?: string;
+    phoneNumber?: string;
+    address?: string;
+    location: string;
+    status: AdminStatus;
+  }) => void;
+  error: string;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (event: React.FormEvent) => void;
+}) {
+  const locations = locationService.snapshot();
+  const isEdit = Boolean(admin.id);
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close admin drawer"
+        onClick={onClose}
+      />
+      <aside className="drawer admin-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">ADMINISTRATION / ADMINS</p>
+            <h2>{isEdit ? "Admin Details" : "Create Admin"}</h2>
+            {isEdit && (
+              <small>
+                ID #{admin.id} · Created {admin.createdAt}
+              </small>
+            )}
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close admin drawer"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <form className="drawer-body admin-form" onSubmit={onSave}>
+          <div className="detail-block">
+            <label htmlFor="admin-name">
+              Full name <b>*</b>
+            </label>
+            <input
+              id="admin-name"
+              value={form.name}
+              onChange={(event) =>
+                setForm({ ...form, name: event.target.value })
+              }
+              placeholder="Enter full name"
+              required
+              readOnly={isEdit}
+            />
+          </div>
+          <div className="detail-block">
+            <label htmlFor="admin-email">
+              Email address <b>*</b>
+            </label>
+            <input
+              id="admin-email"
+              type="email"
+              value={form.email}
+              onChange={(event) =>
+                setForm({ ...form, email: event.target.value })
+              }
+              placeholder="name@company.com"
+              required
+              readOnly={isEdit}
+            />
+          </div>
+          {!isEdit && (
+            <>
+              <div className="detail-block">
+                <label htmlFor="admin-username">Username</label>
+                <input
+                  id="admin-username"
+                  value={form.username || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, username: event.target.value })
+                  }
+                  placeholder="e.g. jlee (defaults to email prefix)"
+                />
+              </div>
+              <div className="detail-block">
+                <label htmlFor="admin-password">Initial password</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={form.password || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, password: event.target.value })
+                  }
+                  placeholder="Defaults to TemporaryPass123!"
+                />
+              </div>
+              <div className="detail-block">
+                <label htmlFor="admin-phone">Phone number</label>
+                <input
+                  id="admin-phone"
+                  value={form.phoneNumber || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, phoneNumber: event.target.value })
+                  }
+                  placeholder="e.g. (555) 012-3456"
+                />
+              </div>
+              <div className="detail-block">
+                <label htmlFor="admin-address">Office address</label>
+                <input
+                  id="admin-address"
+                  value={form.address || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, address: event.target.value })
+                  }
+                  placeholder="e.g. 100 Main St, Suite 200"
+                />
+              </div>
+            </>
+          )}
+          <div className="detail-block">
+            <label htmlFor="admin-location">
+              Assigned location <b>*</b>
+            </label>
+            {isEdit ? (
+              <input id="admin-location" value={form.location} readOnly />
+            ) : (
+              <select
+                id="admin-location"
+                value={form.location}
+                onChange={(event) =>
+                  setForm({ ...form, location: event.target.value })
+                }
+                required
+              >
+                <option value="" disabled>
+                  Select a location
+                </option>
+                {locations.map((location) => (
+                  <option key={location.id} value={location.name}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div className="detail-block">
+            <label htmlFor="admin-status">Operational status</label>
+            <select
+              id="admin-status"
+              value={form.status}
+              onChange={(event) =>
+                setForm({ ...form, status: event.target.value as AdminStatus })
+              }
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+              {!isEdit && (
+                <option value="PENDING_ACTIVATION">Pending activation</option>
+              )}
+            </select>
+          </div>
+          {isEdit && (
+            <div className="reason-box">
+              <span>Super Admin Governance</span>
+              <p>
+                Admin identity details are managed via profile credentials.
+                Super Admin governs operational status (Active / Inactive).
+              </p>
+            </div>
+          )}
+          {error && (
+            <div className="form-error" role="alert">
+              <CircleAlert size={16} />
+              {error}
+            </div>
+          )}
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button" disabled={saving}>
+              {saving ? "Saving…" : isEdit ? "Save status" : "Create admin"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
+
+function VendorDetailDrawer({
+  vendor,
+  onClose,
+}: {
+  vendor: VendorRecord;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close vendor details"
+        onClick={onClose}
+      />
+      <aside className="drawer vendor-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">ADMINISTRATION / VENDORS / DETAIL VIEW</p>
+            <h2>{vendor.name}</h2>
+            <small>#{vendor.id.toUpperCase()}</small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close vendor details"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          <div className="drawer-status">
+            <StatusBadge
+              status={
+                vendor.status === "PENDING_APPROVAL" ? vendor.status : "ACTIVE"
+              }
+            />
+            <span>
+              {vendor.status === "ACTIVE"
+                ? "Operational: Active"
+                : `Operational: ${vendor.status.toLowerCase()}`}
+            </span>
+          </div>
+          <div className="detail-block">
+            <span>Assigned location</span>
+            <strong>{vendor.location}</strong>
+          </div>
+          <div className="detail-block">
+            <span>Owner Admin</span>
+            <strong>{vendor.owner}</strong>
+          </div>
+          <div className="detail-block">
+            <span>Vendor identity & contact</span>
+            <strong>{vendor.description || "No description provided."}</strong>
+            <small>{vendor.contactEmail}</small>
+            <small>{vendor.phone || "Phone not available"}</small>
+          </div>
+          <div className="detail-block">
+            <span>Service engineer roster</span>
+            <strong>
+              {vendor.engineers
+                ? `${vendor.engineers} engineers bound`
+                : "No engineers bound"}
+            </strong>
+            <small>
+              {vendor.engineers
+                ? "Roster details are not available in the current canonical mock data."
+                : "Eligible engineers will appear after approval."}
+            </small>
+          </div>
+          <div className="reason-box">
+            <span>Governance</span>
+            <p>
+              Profile details are read-only here. Status changes must use the
+              approval request workflow.
+            </p>
+          </div>
+        </div>
+        <div className="drawer-footer">
+          <button className="secondary-button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+function VendorRequestDialog({
+  target,
+  onClose,
+  onConfirm,
+}: {
+  target: { vendor: VendorRecord; action: "ACTIVATE" | "DEACTIVATE" };
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close request confirmation"
+        onClick={onClose}
+      />
+      <div className="confirm-dialog" role="dialog" aria-modal="true">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">STATUS REQUEST</p>
+            <h2>
+              Request{" "}
+              {target.action === "ACTIVATE" ? "activation" : "deactivation"}
+            </h2>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close request confirmation"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          <p>
+            Submit a request to{" "}
+            {target.action === "ACTIVATE" ? "activate" : "deactivate"}{" "}
+            <strong>{target.vendor.name}</strong>?
+          </p>
+          <p className="muted-copy">
+            The vendor status will not change until a Super Admin reviews and
+            approves this request.
+          </p>
+        </div>
+        <div className="drawer-footer">
+          <button className="secondary-button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="primary-button" onClick={onConfirm}>
+            Confirm request
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function VendorDrawer({
+  vendor,
+  form,
+  setForm,
+  error,
+  saving,
+  onClose,
+  onSave,
+}: {
+  vendor: VendorRecord;
+  form: VendorForm;
+  setForm: (form: VendorForm) => void;
+  error: string;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (event: React.FormEvent) => void;
+}) {
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close vendor drawer"
+        onClick={onClose}
+      />
+      <aside className="drawer vendor-drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">ADMINISTRATION / VENDORS</p>
+            <h2>{vendor.id ? "Edit Vendor" : "Create Vendor"}</h2>
+            <small>
+              {vendor.id
+                ? `${vendor.name} · ${vendor.location}`
+                : "New vendors are submitted as Pending approval."}
+            </small>
+          </div>
+          <button
+            className="icon-button"
+            aria-label="Close vendor drawer"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <form className="drawer-body admin-form" onSubmit={onSave}>
+          <div className="detail-block">
+            <label htmlFor="vendor-name">
+              Vendor name <b>*</b>
+            </label>
+            <input
+              id="vendor-name"
+              value={form.name}
+              onChange={(event) =>
+                setForm({ ...form, name: event.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="detail-block">
+            <label htmlFor="vendor-email">
+              Contact email <b>*</b>
+            </label>
+            <input
+              id="vendor-email"
+              type="email"
+              value={form.contactEmail}
+              onChange={(event) =>
+                setForm({ ...form, contactEmail: event.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="detail-block">
+            <label htmlFor="vendor-phone">Business phone</label>
+            <input
+              id="vendor-phone"
+              value={form.phone}
+              onChange={(event) =>
+                setForm({ ...form, phone: event.target.value })
+              }
+            />
+          </div>
+          <div className="detail-block">
+            <label htmlFor="vendor-description">Description</label>
+            <textarea
+              id="vendor-description"
+              value={form.description}
+              onChange={(event) =>
+                setForm({ ...form, description: event.target.value })
+              }
+              rows={4}
+            />
+          </div>
+          <div className="reason-box">
+            <span>Governance</span>
+            <p>
+              {vendor.id
+                ? `Assigned to ${vendor.location}. Status remains ${vendor.status === "PENDING_APPROVAL" ? "Pending approval" : vendor.status.toLowerCase()}.`
+                : `Assigned to ${vendor.location}. Central approval is required before activation.`}
+            </p>
+          </div>
+          {error && (
+            <div className="form-error" role="alert">
+              <CircleAlert size={16} />
+              {error}
+            </div>
+          )}
+          <div className="drawer-footer">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="primary-button" disabled={saving}>
+              {saving
+                ? "Saving…"
+                : vendor.id
+                  ? "Save changes"
+                  : "Create vendor"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </>
+  );
+}
+
+function ApprovalDrawer({
+  approval,
+  onClose,
+  onDecide,
+}: {
+  approval: Approval;
+  onClose: () => void;
+  onDecide: (a: Approval, outcome: "APPROVED" | "REJECTED") => void;
+}) {
+  return (
+    <>
+      <button
+        className="drawer-scrim"
+        aria-label="Close drawer"
+        onClick={onClose}
+      />
+      <aside className="drawer">
+        <div className="drawer-header">
+          <div>
+            <p className="eyebrow">{approval.id}</p>
+            <h2>Review request</h2>
+          </div>
+          <button className="icon-button" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          <div className="drawer-status">
+            <StatusBadge status={approval.status} />
+            <span>{approval.created}</span>
+          </div>
+          <div className="detail-block">
+            <span>Request type</span>
+            <strong>{approval.type.replaceAll("_", " ")}</strong>
+          </div>
+          <div className="detail-block">
+            <span>Entity</span>
+            <strong>{approval.entity}</strong>
+            <small>Current status: {approval.current}</small>
+          </div>
+          <div className="detail-grid">
+            <div className="detail-block">
+              <span>Requested by</span>
+              <strong>{approval.requester}</strong>
+            </div>
+            <div className="detail-block">
+              <span>Location</span>
+              <strong>{approval.location}</strong>
+            </div>
+          </div>
+          <div className="reason-box">
+            <span>Reason supplied</span>
+            <p>{approval.reason}</p>
+          </div>
+        </div>
+        <div className="drawer-footer">
+          <button
+            className="secondary-button"
+            onClick={() => onDecide(approval, "REJECTED")}
+          >
+            <X size={16} />
+            Reject
+          </button>
+          <button
+            className="primary-button"
+            onClick={() => onDecide(approval, "APPROVED")}
+          >
+            <Check size={16} />
+            Approve request
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}

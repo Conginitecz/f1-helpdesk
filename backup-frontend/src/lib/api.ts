@@ -16,7 +16,7 @@ interface LoginResponse {
 }
 
 const SESSION_KEY = "f1-helpdesk-session";
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:7676").replace(/\/$/, "");
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(

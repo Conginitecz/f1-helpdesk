@@ -27,4 +27,9 @@ export class CreateEngineerDto {
   @Type(() => Number)
   @IsInt({ message: 'category_id must be an integer' })
   category_id?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'vendor_id must be an integer' })
+  vendor_id?: number | null;
 }
