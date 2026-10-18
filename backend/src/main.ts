@@ -17,9 +17,9 @@ async function bootstrap() {
   }
   else {
     allowedOrigins = process.env.CORS_ALLOWED_ORIGINS.split(';').filter(url => url.trim() !== '');
-    // console.log(allowedOrigins);
     
   }
+  console.log(allowedOrigins);
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: allowedOrigins,
