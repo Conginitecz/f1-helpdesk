@@ -11,9 +11,18 @@ async function bootstrap() {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not set in the environment (.env)');
   }
+  let allowedOrigins: string[] = [];
+  if (!process.env.CORS_ALLOWED_ORIGINS) {
+    throw new Error('CORS_ALLOWED_ORIGINS is not set in the environment (.env)');
+  }
+  else {
+    allowedOrigins = process.env.CORS_ALLOWED_ORIGINS.split(';').filter(url => url.trim() !== '');
+    // console.log(allowedOrigins);
+    
+  }
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['http://localhost:3000','http://localhost:3001'],
+    origin: allowedOrigins,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
